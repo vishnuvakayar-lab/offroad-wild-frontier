@@ -1,0 +1,139 @@
+{
+  "note": "headless Chrome + SwiftShader (CPU software GL) on the build box; relative comparison only, not representative of real GPUs/phones. draws = visible car meshes (draw calls per render pass); shadow pass adds the same for shadow-casting meshes.",
+  "before": {
+    "high": {
+      "vehicles": {
+        "scout": {
+          "draws": 65,
+          "tris": 1320
+        },
+        "voyager": {
+          "draws": 64,
+          "tris": 1188
+        },
+        "sahara": {
+          "draws": 70,
+          "tris": 1224
+        },
+        "pickup": {
+          "draws": 70,
+          "tris": 1284
+        },
+        "rally": {
+          "draws": 68,
+          "tris": 1424
+        },
+        "recovery": {
+          "draws": 67,
+          "tris": 1352
+        }
+      },
+      "garageFps": 10.8,
+      "mudFps": 11,
+      "sceneDrawCallsInMud": 115,
+      "sceneTrianglesInMud": 75016,
+      "errors": 0
+    },
+    "low": {
+      "vehicles": {
+        "scout": {
+          "draws": 65,
+          "tris": 1320
+        },
+        "voyager": {
+          "draws": 64,
+          "tris": 1188
+        },
+        "sahara": {
+          "draws": 70,
+          "tris": 1224
+        },
+        "pickup": {
+          "draws": 70,
+          "tris": 1284
+        },
+        "rally": {
+          "draws": 68,
+          "tris": 1424
+        },
+        "recovery": {
+          "draws": 67,
+          "tris": 1352
+        }
+      },
+      "garageFps": 19.1,
+      "mudFps": 18.3,
+      "sceneDrawCallsInMud": 77,
+      "sceneTrianglesInMud": 64672,
+      "errors": 0
+    }
+  },
+  "after": {
+    "high": {
+      "vehicles": {
+        "scout": {
+          "draws": 26,
+          "tris": 25796
+        },
+        "voyager": {
+          "draws": 26,
+          "tris": 26030
+        },
+        "sahara": {
+          "draws": 23,
+          "tris": 24456
+        },
+        "pickup": {
+          "draws": 24,
+          "tris": 23856
+        },
+        "rally": {
+          "draws": 23,
+          "tris": 20884
+        },
+        "recovery": {
+          "draws": 25,
+          "tris": 28990
+        }
+      },
+      "garageFps": 10.4,
+      "mudFps": 10,
+      "sceneDrawCallsInMud": 69,
+      "sceneTrianglesInMud": 124304,
+      "errors": 0
+    },
+    "low": {
+      "vehicles": {
+        "scout": {
+          "draws": 21,
+          "tris": 3484
+        },
+        "voyager": {
+          "draws": 21,
+          "tris": 3598
+        },
+        "sahara": {
+          "draws": 17,
+          "tris": 3484
+        },
+        "pickup": {
+          "draws": 18,
+          "tris": 3512
+        },
+        "rally": {
+          "draws": 18,
+          "tris": 3340
+        },
+        "recovery": {
+          "draws": 20,
+          "tris": 3350
+        }
+      },
+      "garageFps": 17,
+      "mudFps": 17.1,
+      "sceneDrawCallsInMud": 33,
+      "sceneTrianglesInMud": 66764,
+      "errors": 0
+    }
+  }
+}

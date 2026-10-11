@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
 import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES } from './terrain';
 import { Vehicle, SURFACE_PARAMS, type DriveInput } from './vehicle';
@@ -67,7 +68,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   await nextFrame();
   const tracks = new TrackMarks(scene);
   const paintFor = (id: string) => settings.paints[id] ?? vehicleById(id).defaultPaint;
-  let car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(settings.vehicle), paintFor(settings.vehicle));
+  const lodFor = (p: Preset) => (p === 'low' ? 0 : 1) as 0 | 1;
+  let car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(settings.vehicle), paintFor(settings.vehicle), lodFor(settings.preset));
+  let envTex: THREE.Texture | null = null;
   // spawn facing open ground towards the dunes (no trees on this line)
   const spawn = { x: 0, z: -8, yaw: Math.atan2(ZONES.sand.x - 0, ZONES.sand.z + 8) };
   const resetCar = (x = spawn.x, z = spawn.z, yaw = spawn.yaw) => car.reset(x, heightAt(x, z) + car.spawnLift, z, yaw);
@@ -98,12 +101,17 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     renderer.shadowMap.type = THREE.PCFShadowMap;
     rendererAA = aa;
     attachLook(canvas);
+    // studio reflection map for the vehicle materials only (regenerated with each GL context)
+    envTex?.dispose();
+    const pm = new THREE.PMREMGenerator(renderer); envTex = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+    car.setEnv(envTex, 1);
   }
 
   // ---------- settings application ----------
   const applyPreset = (p: Preset) => {
     const cfg = PRESETS[p];
     if (rendererAA !== cfg.aa) makeRenderer(cfg.aa);
+    if (car.lod !== lodFor(p)) car.rebuildVisual(lodFor(p));
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cfg.pixelRatio));
     renderer.shadowMap.enabled = cfg.shadows;
     sun.castShadow = cfg.shadows;
@@ -192,7 +200,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   function setVehicle(id: string) {
     if (car.spec.id === id) return;
     car.dispose();
-    car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(id), paintFor(id));
+    car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(id), paintFor(id), lodFor(settings.preset));
     resetCar();
     applyWeather(weather);
   }
@@ -215,7 +223,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     settings.vehicle = VEHICLES[gIndex].id; saveSettings(settings);
     setVehicle(settings.vehicle); renderGarage(); garageT = 0;
   };
-  let garageT = 0;
+  let camOverride: [[number, number, number], [number, number, number]] | null = null;
+  let garageT = 0; let garageHold: number | null = null;
   const openGarage = () => { gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle)); renderGarage(); resetCar(); garageT = 0; setPhase('garage'); };
   $('btn-garage').onclick = openGarage;
   $('g-prev').onclick = () => garageStep(-1);
@@ -468,7 +477,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       camera.fov = baseFov; camera.updateProjectionMatrix();
       camInit = false;
     } else if (phase === 'garage') {
-      garageT += dt;
+      garageT = garageHold ?? garageT + dt;
       const a = heading + 0.9 + garageT * 0.32, r = 6.5 + car.spec.chassis.hz * 0.9;
       const portrait = window.innerWidth < window.innerHeight;
       camera.position.set(p.x + Math.sin(a) * r, p.y + 1.6 + Math.sin(garageT * 0.4) * 0.4, p.z + Math.cos(a) * r);
@@ -492,6 +501,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       rim.position.set(p.x - tmpF.x * 4.5, p.y + 2.2, p.z - tmpF.z * 4.5);
       fill.intensity = fillEnabled ? w.fill : 0; rim.intensity = fillEnabled ? w.rim : 0;
       const studio = phase === 'garage';
+      car.setEnv(envTex, studio ? 1 : w.env);
+      if (studio) car.dirt = 0;
       keyL.intensity = studio ? 260 : 0; rimL.intensity = studio ? 200 : 0;
       if (studio) {
         keyL.position.set(p.x + Math.sin(heading + 0.8) * 7, p.y + 6, p.z + Math.cos(heading + 0.8) * 7); keyL.target.position.copy(p);
@@ -517,6 +528,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const s = car.surface(); const chip = $('hud-surface');
       chip.textContent = SURFACE_PARAMS[s].label + (car.inPuddle.some(Boolean) ? ' · water' : ''); chip.className = 'chip ' + s;
     }
+    if (camOverride) { // test/screenshot hook: camera fixed in vehicle space
+      camera.position.copy(car.group.localToWorld(new THREE.Vector3(...camOverride[0])));
+      camera.lookAt(car.group.localToWorld(new THREE.Vector3(...camOverride[1])));
+    }
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
@@ -538,10 +553,19 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
         introT };
     },
     measureEngineHz: () => audio.measureEngineHz(),
-    get vehicle() { return { id: car.spec.id, name: car.spec.name, paint: car.paint.color.getHex(), spawnLift: car.spawnLift }; },
+    get vehicle() { return { id: car.spec.id, name: car.spec.name, paint: car.paint.color.getHex(), spawnLift: car.spawnLift, lod: car.lod, dirt: car.dirt }; },
+    carStats: () => car.modelStats(),
+    setPaint: (hex: number) => car.setPaint(hex),
+    setDirt: (d: number) => { car.dirt = d; },
+    /** world-space hub/suspension sample for animation tests */
+    suspSample: () => { car.sync(); const g = car.group; g.updateMatrixWorld(true); const out: number[][] = [];
+      g.traverse((o: any) => { if (o.isInstancedMesh) { const m = new THREE.Matrix4(); for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); out.push(m.elements.slice(12, 15).concat([new THREE.Vector3().setFromMatrixScale(m).y, new THREE.Quaternion().setFromRotationMatrix(m).z])); } } });
+      return { hubs: car.wheelMeshes.map((w) => [w.position.x, w.position.y, w.position.z, w.rotation.y, (w.children[0] as THREE.Object3D).rotation.x]), inst: out }; },
     get spec() { return car.spec; },
     vehicles: VEHICLES.map((v) => v.id),
     setVehicle: (id: string) => { settings.vehicle = id; saveSettings(settings); setVehicle(id); },
+    camOverride: (c: [[number, number, number], [number, number, number]] | null) => { camOverride = c; },
+    garageHold: (t: number | null) => { garageHold = t; },
     setFill: (on: boolean) => { fillEnabled = on; const w = WEATHER[weather]; fill.intensity = on ? w.fill : 0; rim.intensity = on ? w.rim : 0; },
     /** mean luminance (0..255) of a box around the vehicle's projected centre, read straight from the GL buffer */
     carLuma: (half = 0.05) => {

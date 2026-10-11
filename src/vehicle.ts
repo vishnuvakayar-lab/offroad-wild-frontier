@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
 import { surfaceAt, puddleAt, type Surface } from './terrain';
 import { TrackMarks } from './tracks';
-import { type VehicleSpec, type Mats } from './vehicles';
+import { type VehicleSpec } from './vehicles';
+import { Kit, mergeStatic, type Mats, type Lod } from './kit';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export interface DriveInput { throttle: number; brake: number; steer: number; handbrake: boolean; }
 
@@ -44,7 +46,8 @@ export class Vehicle {
   spawnLift: number;
   private inertiaY = 4800;
 
-  constructor(world: RAPIER_NS.World, R: typeof RAPIER_NS, scene: THREE.Scene, tracks: TrackMarks, spec: VehicleSpec, paint: number) {
+  constructor(world: RAPIER_NS.World, R: typeof RAPIER_NS, scene: THREE.Scene, tracks: TrackMarks, spec: VehicleSpec, paint: number, lod: Lod = 1) {
+    this.lod = lod;
     this.tracks = tracks; this.spec = spec; this.world = world; this.scene = scene;
     const W = spec.wheel;
     this.conn = [
@@ -91,58 +94,166 @@ export class Vehicle {
     this.world.removeVehicleController(this.ctrl);
     this.world.removeRigidBody(this.body);
     this.scene.remove(this.group);
-    this.group.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.geometry) m.geometry.dispose();
-      if ((o as THREE.SpotLight).isSpotLight) (o as THREE.SpotLight).dispose();
-    });
-    for (const mat of this.mats) mat.dispose();
+    this.disposeVisual();
   }
   private mats: THREE.Material[] = [];
+  private geos: THREE.BufferGeometry[] = [];
   setPaint(hex: number) { this.paint.color.set(hex); }
+  /** visual level of detail (0 = Low preset) */
+  lod: Lod = 1;
+  /** 0..1 mud build-up on the lower body (cosmetic) */
+  dirt = 0;
+  private dirtU = { value: 0 };
+  private shocks: THREE.InstancedMesh | null = null;
+  private springs: THREE.InstancedMesh | null = null;
+  private links: THREE.InstancedMesh | null = null;
+  private calipers: THREE.Object3D[] = [];
+  private envTex: THREE.Texture | null = null;
+
+  /** Reflection map for paint/glass/chrome (car materials only) and its strength. */
+  setEnv(tex: THREE.Texture | null, intensity: number) {
+    this.envTex = tex;
+    for (const m of this.mats) {
+      const sm = m as THREE.MeshStandardMaterial;
+      if (!('envMapIntensity' in sm)) continue;
+      if (sm.envMap !== tex) { sm.envMap = tex; sm.needsUpdate = true; }
+      sm.envMapIntensity = intensity * ((sm.userData.envK as number) ?? 1);
+    }
+  }
+  /** Swap the visual model (e.g. preset change) without touching physics. */
+  rebuildVisual(lod: Lod) {
+    const paint = this.paint.color.getHex();
+    this.disposeVisual();
+    this.lod = lod;
+    this.buildModel(paint);
+    if (this.envTex) this.setEnv(this.envTex, 1);
+  }
+  private disposeVisual() {
+    for (const o of [...this.group.children]) this.group.remove(o);
+    this.group.traverse(() => {});
+    for (const g of this.geos) g.dispose();
+    for (const l of [...this.headlights, this.beam]) l?.dispose();
+    for (const m of this.mats) m.dispose();
+    this.geos = []; this.mats = []; this.headlights = []; this.wheelMeshes = []; this.calipers = [];
+    this.shocks = this.springs = this.links = null;
+  }
+  /** Mesh / triangle counts of the visual model (each visible mesh = one draw call per pass). */
+  modelStats() {
+    let draws = 0, tris = 0; const parts: { name: string; mat: string; color: number; tris: number }[] = [];
+    this.group.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.visible) return;
+      const g = mesh.geometry, n = g.index ? g.index.count : g.attributes.position.count;
+      const t = (n / 3) * ((mesh as THREE.InstancedMesh).isInstancedMesh ? (mesh as THREE.InstancedMesh).count : 1);
+      draws++; tris += t;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      parts.push({ name: mesh.name, mat: mat.name, color: mat.color?.getHex() ?? 0, tris: t });
+    });
+    return { draws, tris: Math.round(tris), parts };
+  }
 
   private buildModel(paintHex: number) {
-    const g = this.group, spec = this.spec;
+    const g = this.group, spec = this.spec, hi = this.lod > 0;
+    const std = (name: string, o: THREE.MeshStandardMaterialParameters, envK = 1) => {
+      const m = new THREE.MeshStandardMaterial(o); m.name = name; m.userData.envK = envK; return m;
+    };
+    const paint = hi
+      ? new THREE.MeshPhysicalMaterial({ color: paintHex, roughness: 0.42, metalness: 0.45, clearcoat: 0.85, clearcoatRoughness: 0.12 })
+      : new THREE.MeshStandardMaterial({ color: paintHex, roughness: 0.45, metalness: 0.35 });
+    paint.name = 'paint'; paint.userData.envK = 0.8;
+    // cosmetic mud layer: darkens/roughens the lower body as `dirt` builds up (vehicle-space height mask)
+    const dirtU = this.dirtU;
+    paint.onBeforeCompile = (sh) => {
+      sh.uniforms.uDirt = dirtU;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vCarPos;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvCarPos = position;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vCarPos;\nuniform float uDirt;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+        float dn = sin(vCarPos.z * 7.1 + vCarPos.x * 3.0) * 0.06 + sin(vCarPos.z * 23.0 + vCarPos.y * 17.0) * 0.03;
+        float dm = uDirt * (1.0 - smoothstep(-0.35, 0.25 + uDirt * 0.35, vCarPos.y + dn));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.16, 0.12, 0.08), clamp(dm, 0.0, 0.92));`);
+    };
+    paint.customProgramCacheKey = () => 'owf-paint-dirt';
+    const glass = hi
+      ? new THREE.MeshPhysicalMaterial({ color: 0x0c141c, roughness: 0.04, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.03, side: THREE.DoubleSide })
+      : new THREE.MeshStandardMaterial({ color: 0x15202b, roughness: 0.1, metalness: 0.6, side: THREE.DoubleSide });
+    glass.name = 'glass'; glass.userData.envK = 1.6;
     const m: Mats = {
-      paint: this.paint = new THREE.MeshStandardMaterial({ color: paintHex, roughness: 0.45, metalness: 0.35 }),
-      dark: new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: 0.8, metalness: 0.2 }),
-      glass: new THREE.MeshStandardMaterial({ color: 0x223040, roughness: 0.1, metalness: 0.6 }),
-      chrome: new THREE.MeshStandardMaterial({ color: 0xbfc3c7, roughness: 0.25, metalness: 0.9 }),
-      lamp: this.lampMat = new THREE.MeshStandardMaterial({ color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 2.0 }),
-      tail: new THREE.MeshStandardMaterial({ color: 0x700000, emissive: 0xff1a1a, emissiveIntensity: 1.2 }),
-      accent: new THREE.MeshStandardMaterial({ color: 0xece8de, roughness: 0.5, metalness: 0.1 }),
-      amber: new THREE.MeshStandardMaterial({ color: 0x7a4a00, emissive: 0xffa000, emissiveIntensity: 1.5 }),
+      paint: this.paint = paint,
+      dark: std('dark', { color: 0x1b1c1e, roughness: 0.78, metalness: 0.05 }, 0.3),
+      steel: std('steel', { color: 0x2c2f33, roughness: 0.5, metalness: 0.6 }, 0.6),
+      glass,
+      chrome: std('chrome', { color: 0xd8dbe0, roughness: 0.16, metalness: 1.0 }, 1.4),
+      lamp: this.lampMat = std('lamp', { color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 2.0, roughness: 0.2 }),
+      tail: std('tail', { color: 0x700000, emissive: 0xff1a1a, emissiveIntensity: 1.2, roughness: 0.25 }),
+      amber: std('amber', { color: 0x7a4a00, emissive: 0xffa000, emissiveIntensity: 1.5, roughness: 0.25 }),
+      accent: std('accent', { color: 0xece8de, roughness: 0.5, metalness: 0.1 }),
+      rubber: std('rubber', { color: 0x161616, roughness: 0.92, metalness: 0 }, 0.15),
+      alloy: std('alloy', { color: spec.rim.color, roughness: spec.rim.rough, metalness: spec.rim.metal }, 1.1),
+      caliper: std('caliper', { color: spec.spring, roughness: 0.4, metalness: 0.3 }),
     };
     this.mats.push(...Object.values(m));
-    spec.build(g, m, spec);
-    const chrome = m.chrome;
-    const WHEEL_R = spec.wheel.r, WW = spec.wheel.w;
+    const k = new Kit(g, m, this.lod);
+    spec.build(k, spec);
+    mergeStatic(g);
+    g.traverse((o) => { const mm = o as THREE.Mesh; if (mm.isMesh) this.geos.push(mm.geometry); });
 
-    // wheels
-    const tyreGeo = new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, WW, 22);
-    tyreGeo.rotateZ(Math.PI / 2);
-    const rimGeo = new THREE.CylinderGeometry(WHEEL_R * 0.55, WHEEL_R * 0.55, WW + 0.02, 8);
-    rimGeo.rotateZ(Math.PI / 2);
-    const lugGeo = new THREE.BoxGeometry(WW + 0.02, 0.08, 0.12);
-    const tyreMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.95 });
-    this.mats.push(tyreMat);
+    // ---- wheels: tread-pattern tyre + styled rim with brake disc (spin), caliper (steers, does not spin)
+    const R = spec.wheel.r, WW = spec.wheel.w, rr = R - Math.min(0.12, R * 0.28);
+    const tyreGeo = k.tyre(R, WW);
+    const rimGeo = this.rimGeometry(k, rr, WW);
+    const calGeo = new THREE.BoxGeometry(WW * 0.32, rr * 0.4, rr * 0.28);
+    this.geos.push(tyreGeo, rimGeo, calGeo);
     for (let i = 0; i < 4; i++) {
-      const pivot = new THREE.Group();      // steering + suspension
-      const spin = new THREE.Group();       // rolling
-      const t = new THREE.Mesh(tyreGeo, tyreMat); t.castShadow = true;
-      const r = new THREE.Mesh(rimGeo, chrome);
-      spin.add(t, r);
-      for (let k = 0; k < 8; k++) {         // chunky tread blocks so rotation is visible
-        const lug = new THREE.Mesh(lugGeo, tyreMat);
-        const a = (k / 8) * Math.PI * 2;
-        lug.position.set(0, Math.cos(a) * WHEEL_R, Math.sin(a) * WHEEL_R);
-        lug.rotation.x = -a;
-        spin.add(lug);
-      }
+      const side = i % 2 === 0 ? 1 : -1; // even = left (+x)
+      const pivot = new THREE.Group();
+      const spin = new THREE.Group();
+      const t = new THREE.Mesh(tyreGeo, m.rubber); t.castShadow = true; t.name = 'wheel:tyre';
+      const r = new THREE.Mesh(rimGeo, m.alloy); r.castShadow = hi; r.name = 'wheel:rim';
+      spin.add(t, r); spin.scale.x = side;
       pivot.add(spin);
+      if (hi) {
+        const c = new THREE.Mesh(calGeo, m.caliper); c.name = 'wheel:caliper';
+        c.position.set(side * WW * 0.08, rr * 0.5, -rr * 0.38); c.rotation.x = 0.6;
+        pivot.add(c); this.calipers.push(c);
+      }
       g.add(pivot);
       this.wheelMeshes.push(pivot);
     }
+    // ---- animated suspension: dampers (+ coil springs on High), solid axles or wishbones
+    const unitY = (geo: THREE.BufferGeometry) => { this.geos.push(geo); return geo; };
+    const damper = unitY(mergeGeometries([
+      new THREE.CylinderGeometry(0.04, 0.04, 0.55, hi ? 10 : 6).translate(0, -0.22, 0).toNonIndexed(),
+      new THREE.CylinderGeometry(0.018, 0.018, 0.5, 6).translate(0, 0.25, 0).toNonIndexed(),
+    ].map((x) => { x.deleteAttribute('uv'); return x; }))!);
+    this.shocks = new THREE.InstancedMesh(damper, m.steel, 4); this.shocks.name = 'susp:dampers';
+    g.add(this.shocks);
+    if (hi) {
+      const pts: THREE.Vector3[] = []; const turns = 6, n = turns * 14;
+      for (let j = 0; j <= n; j++) { const a = (j / 14) * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * 0.075, -0.4 + (j / n) * 0.8, Math.sin(a) * 0.075)); }
+      const coil = unitY(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n, 0.013, 5));
+      this.springs = new THREE.InstancedMesh(coil, m.caliper, 4); this.springs.name = 'susp:springs';
+      g.add(this.springs);
+    }
+    if (spec.axle === 'solid') {
+      const half = spec.wheel.x - WW * 0.5;
+      const axle = unitY(mergeGeometries([
+        new THREE.CylinderGeometry(0.05, 0.05, half * 2, 8).rotateZ(Math.PI / 2).toNonIndexed(),
+        new THREE.SphereGeometry(0.17, hi ? 12 : 6, hi ? 8 : 4).scale(1, 1, 0.8).translate(0.15, 0, 0).toNonIndexed(),
+        new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6).rotateX(Math.PI / 2).translate(0.15, 0, 0.45).toNonIndexed(),
+      ].map((x) => { x.deleteAttribute('uv'); return x; }))!);
+      this.links = new THREE.InstancedMesh(axle, m.steel, 2); this.links.name = 'susp:axles';
+    } else {
+      // wishbone (A-arm) of unit length along +x, scaled to the pivot->hub distance every frame
+      const arm = unitY(mergeGeometries([
+        new THREE.BoxGeometry(1, 0.04, 0.05).translate(0.5, 0, 0.14).rotateY(-0.25).toNonIndexed(),
+        new THREE.BoxGeometry(1, 0.04, 0.05).translate(0.5, 0, -0.14).rotateY(0.25).toNonIndexed(),
+      ].map((x) => { x.deleteAttribute('uv'); return x; }))!);
+      this.links = new THREE.InstancedMesh(arm, m.steel, 4); this.links.name = 'susp:wishbones';
+    }
+    g.add(this.links);
+    for (const im of [this.shocks, this.springs, this.links]) if (im) { im.castShadow = hi; im.frustumCulled = false; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); }
+
     // headlights (enabled on med/high presets)
     const L = spec.lamp;
     for (const x of [-L.x, L.x]) {
@@ -158,6 +269,36 @@ export class Vehicle {
     this.beam.shadow.mapSize.set(1024, 1024);
     this.beam.shadow.camera.near = 0.5; this.beam.shadow.camera.far = 70; this.beam.shadow.bias = -0.0008;
     g.add(this.beam, this.beam.target);
+    this.sync();
+  }
+
+  /** Rim (axis along X, face towards +x) with brake disc and lug nuts, merged into one geometry. */
+  private rimGeometry(k: Kit, rr: number, w: number) {
+    const hi = k.lod > 0, st = this.spec.rim.style, parts: THREE.BufferGeometry[] = [];
+    const P = (geo: THREE.BufferGeometry) => { const x = geo.index ? geo.toNonIndexed() : geo; if (x.attributes.uv) x.deleteAttribute('uv'); parts.push(x); };
+    const seg = hi ? 28 : 12;
+    const face = w * 0.5 - (st === 'truck' ? 0.1 : 0.04);
+    P(new THREE.CylinderGeometry(rr, rr, w * 0.92, seg, 1, true).rotateZ(Math.PI / 2));                 // barrel
+    P(new THREE.TorusGeometry(rr, 0.015, 4, seg).rotateY(Math.PI / 2).translate(w * 0.46, 0, 0));      // outer lip
+    P(new THREE.CylinderGeometry(rr * 0.25, rr * 0.3, 0.08, hi ? 14 : 8).rotateZ(Math.PI / 2).translate(face, 0, 0)); // hub
+    if (hi) P(new THREE.CylinderGeometry(rr * 0.72, rr * 0.72, 0.025, 24).rotateZ(Math.PI / 2).translate(-w * 0.05, 0, 0)); // brake disc
+    if (st === 'steel' || st === 'truck') {
+      // pressed dish with a ring of vent holes (holes = dark inset discs merged into the tyre material is avoided; drawn as recessed rings)
+      P(new THREE.CylinderGeometry(rr * 0.97, rr * 0.97, 0.02, seg).rotateZ(Math.PI / 2).translate(face - 0.01, 0, 0));
+      const n = st === 'truck' ? 8 : 5;
+      for (let j = 0; j < n && hi; j++) { const a = (j / n) * Math.PI * 2; P(new THREE.TorusGeometry(rr * 0.12, 0.012, 4, 10).rotateY(Math.PI / 2).translate(face + 0.006, Math.cos(a) * rr * 0.62, Math.sin(a) * rr * 0.62)); }
+      if (st === 'truck') P(new THREE.CylinderGeometry(rr * 0.45, rr * 0.45, 0.1, 16).rotateZ(Math.PI / 2).translate(face + 0.04, 0, 0));
+    } else {
+      const n = st === 'twin' ? 12 : st === 'rally' ? 5 : 6;
+      for (let j = 0; j < n; j++) {
+        const a = (j / n) * Math.PI * 2 + (st === 'twin' && j % 2 ? -0.12 : 0);
+        const sp = new THREE.BoxGeometry(0.03, rr * 0.75, st === 'rally' ? rr * 0.3 : st === 'twin' ? rr * 0.09 : rr * 0.18);
+        sp.translate(face, rr * 0.55, 0); sp.rotateX(a); P(sp);
+      }
+    }
+    const lugs = st === 'truck' ? 10 : 6;
+    for (let j = 0; j < lugs && hi; j++) { const a = (j / lugs) * Math.PI * 2; P(new THREE.CylinderGeometry(0.014, 0.014, 0.04, 6).rotateZ(Math.PI / 2).translate(face + 0.04, Math.cos(a) * rr * 0.18, Math.sin(a) * rr * 0.18)); }
+    return mergeGeometries(parts)!;
   }
 
   reset(x: number, y: number, z: number, yaw: number) {
@@ -194,6 +335,12 @@ export class Vehicle {
   step(dt: number, inp: DriveInput) {
     const ctrl = this.ctrl;
     const speed = this.forwardSpeed();
+    { // cosmetic mud build-up (visual only; no effect on physics)
+      let mudW = 0, sandW = 0; for (const s of this.surfaces) { if (s === 'mud') mudW++; else if (s === 'sand') sandW++; }
+      const sp = Math.min(1, (Math.abs(speed) + 1) / 6);
+      if (mudW) this.dirt = Math.min(1, this.dirt + dt * 0.08 * (mudW / 4) * sp);
+      else if (sandW && this.dirt < 0.3) this.dirt = Math.min(0.3, this.dirt + dt * 0.01 * sp);
+    }
     // speed-sensitive steering, smoothed
     const sp0 = this.spec;
     const maxSteer = sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 28);
@@ -315,5 +462,44 @@ export class Vehicle {
         }
       } else this.tracks.lift(i);
     }
+    this.syncSuspension();
+    this.dirtU.value = this.dirt;
+  }
+
+  private static _m = new THREE.Matrix4(); private static _q = new THREE.Quaternion(); private static _v = new THREE.Vector3();
+  private static _a = new THREE.Vector3(); private static _b = new THREE.Vector3(); private static _s = new THREE.Vector3();
+  private static _up = new THREE.Vector3(0, 1, 0); private static _x = new THREE.Vector3(1, 0, 0);
+  /** Place a unit-length part between a and b (axis = `axis`), stretched along it. */
+  private static between(im: THREE.InstancedMesh, i: number, a: THREE.Vector3, b: THREE.Vector3, axis: THREE.Vector3, centre: boolean) {
+    const V = Vehicle, d = V._v.subVectors(b, a), len = d.length();
+    V._q.setFromUnitVectors(axis, d.divideScalar(len || 1));
+    V._s.set(axis === V._x ? len : 1, axis === V._up ? len : 1, 1);
+    const p = centre ? V._b.copy(a).add(b).multiplyScalar(0.5) : V._b.copy(a);
+    im.setMatrixAt(i, V._m.compose(p, V._q, V._s));
+  }
+  /** Dampers/springs stretch between body mounts and hubs; axles tilt / wishbones swing with wheel travel. */
+  private syncSuspension() {
+    if (!this.shocks) return;
+    const V = Vehicle, W = this.spec.wheel, hubs = this.wheelMeshes.map((w) => w.position);
+    for (let i = 0; i < 4; i++) {
+      const sx = i % 2 === 0 ? 1 : -1, h = hubs[i];
+      const top = V._a.set(sx * (W.x - 0.28), W.y + 0.12, h.z - 0.12);
+      const bot = new THREE.Vector3(sx * (W.x - W.w * 0.5 - 0.1), h.y + 0.02, h.z - 0.1);
+      V.between(this.shocks, i, bot, top, V._up, true);
+      if (this.springs) V.between(this.springs, i, bot.clone().lerp(top, 0.12), top.clone().lerp(bot, 0.06), V._up, true);
+      if (this.links && this.spec.axle === 'independent') {
+        const piv = new THREE.Vector3(sx * 0.32, W.y - this.spec.susp.rest + 0.02, h.z);
+        V.between(this.links, i, piv, new THREE.Vector3(sx * (W.x - W.w * 0.5 - 0.02), h.y, h.z), V._x, false);
+      }
+    }
+    if (this.links && this.spec.axle === 'solid') {
+      for (const [k, l, r] of [[0, 0, 1], [1, 2, 3]]) {
+        const a = hubs[l], b = hubs[r];
+        V._q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.atan2(a.y - b.y, a.x - b.x));
+        if (k === 0) V._q.multiply(new THREE.Quaternion().setFromAxisAngle(V._up, Math.PI)); // front diff faces rearwards
+        this.links.setMatrixAt(k, V._m.compose(V._b.set(0, (a.y + b.y) / 2, (a.z + b.z) / 2), V._q, V._s.set(1, 1, 1)));
+      }
+    }
+    for (const im of [this.shocks, this.springs, this.links]) if (im) im.instanceMatrix.needsUpdate = true;
   }
 }

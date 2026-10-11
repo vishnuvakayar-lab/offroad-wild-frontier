@@ -1,0 +1,132 @@
+{
+  "high": {
+    "scout": {
+      "draws": 26,
+      "tris": 25796,
+      "lod": 1
+    },
+    "voyager": {
+      "draws": 26,
+      "tris": 26030,
+      "lod": 1
+    },
+    "sahara": {
+      "draws": 23,
+      "tris": 24456,
+      "lod": 1
+    },
+    "pickup": {
+      "draws": 24,
+      "tris": 23856,
+      "lod": 1
+    },
+    "rally": {
+      "draws": 23,
+      "tris": 20884,
+      "lod": 1
+    },
+    "recovery": {
+      "draws": 25,
+      "tris": 28990,
+      "lod": 1
+    }
+  },
+  "low": {
+    "scout": {
+      "draws": 21,
+      "tris": 3484,
+      "lod": 0
+    },
+    "voyager": {
+      "draws": 21,
+      "tris": 3598,
+      "lod": 0
+    },
+    "sahara": {
+      "draws": 17,
+      "tris": 3484,
+      "lod": 0
+    },
+    "pickup": {
+      "draws": 18,
+      "tris": 3512,
+      "lod": 0
+    },
+    "rally": {
+      "draws": 18,
+      "tris": 3340,
+      "lod": 0
+    },
+    "recovery": {
+      "draws": 20,
+      "tris": 3350,
+      "lod": 0
+    }
+  },
+  "anim": {
+    "scout": {
+      "hubTravel": 0.22831058502197266,
+      "spin": true,
+      "steerFront": 0.32072290435610856,
+      "steerRear": 0,
+      "damperStretch": 0.12154653765392659,
+      "linkMove": 0.16762080788612366,
+      "instances": 10
+    },
+    "voyager": {
+      "hubTravel": 0.23017525672912603,
+      "spin": true,
+      "steerFront": 0.30418639679879966,
+      "steerRear": 0,
+      "damperStretch": 0.10276678139229317,
+      "linkMove": 0.15790897607803345,
+      "instances": 10
+    },
+    "sahara": {
+      "hubTravel": 0.2330892682075501,
+      "spin": true,
+      "steerFront": 0.2657302099947161,
+      "steerRear": 0,
+      "damperStretch": 0.12017778027010412,
+      "linkMove": 0.12259472155791912,
+      "instances": 12
+    },
+    "pickup": {
+      "hubTravel": 0.1933013796806336,
+      "spin": true,
+      "steerFront": 0.28399375490582895,
+      "steerRear": 0,
+      "damperStretch": 0.09988207723412784,
+      "linkMove": 0.12990182638168335,
+      "instances": 10
+    },
+    "rally": {
+      "hubTravel": 0.19673031568527222,
+      "spin": true,
+      "steerFront": 0.34687201279243907,
+      "steerRear": 0,
+      "damperStretch": 0.15025902120223356,
+      "linkMove": 0.1581372571286147,
+      "instances": 12
+    },
+    "recovery": {
+      "hubTravel": 0.11971497535705566,
+      "spin": true,
+      "steerFront": 0.2843568183305542,
+      "steerRear": 0,
+      "damperStretch": 0.07930170179717183,
+      "linkMove": 0.07204481959342957,
+      "instances": 10
+    }
+  },
+  "budget": {
+    "high": {
+      "draws": 32,
+      "tris": 35000
+    },
+    "low": {
+      "draws": 24,
+      "tris": 6000
+    }
+  }
+}
