@@ -1,4 +1,4 @@
-# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–5)
+# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–5b)
 
 Original 3D off-road game. One shared TypeScript codebase targets Web (desktop + mobile browsers) first;
 Android/iOS shells come later by wrapping the same build.
@@ -69,3 +69,18 @@ Six original, procedurally modelled vehicles (no licensed names, logos or meshes
 - **Night visibility**: subtle camera-side fill + opposite rim point light that follow the car (night/fog/rain/sunset only; off in clear daylight).
 - **Steering**: lock at speed raised (Scout 0.18→0.26 rad) plus a capped yaw assist on the ground; Scout full-lock yaw @80 km/h 29.7→41.0°/s with all four wheels down.
 - Screenshots: `screenshots/phase5/`.
+
+## Phase 5b — Detailed vehicle models
+
+All six bodies were rebuilt procedurally (`src/kit.ts` helpers, `src/models.ts` builders) and **physics/handling is unchanged** (same specs; acceptance numbers identical). Each model follows the silhouette, proportions and signature design cues of a well-known off-roader class — **design-cue level only: no manufacturer names, logos, badges or emblems, and no copied meshes**; in-game names stay original.
+
+- Scout — classic short-wheelbase utility 4×4 cues: slab sides, flat clamshell bonnet and wing tops, near-vertical screen, contrast roof with alpine windows, round lamps in a black grille panel, exposed hinges, side-hinged rear door with spare.
+- Voyager — long-running utility-wagon cues: long boxy wagon, bonnet power bulge, wide slat grille with rectangular lamps, big flares, asymmetric barn doors; roof tent, bull bar + winch, snorkel, ladder.
+- Sahara — full-size luxury desert SUV cues: rounded-square body, high beltline, large chrome grille with heavy bars, swept lamps + light strip, body-colour arch blisters, chrome mouldings/rails/running boards, wraparound tail lamps.
+- Pickup — mid-size double-cab cues: sloping bonnet to a tall trapezoid grille, slim swept lamps, four doors, separate bed + tailgate, sports bar, chrome step bumper.
+- Rally — world-rally hatch cues: short/wide/low, box arches, splitter and intakes, roof scoop, roof-level wing, diffuser, light pod, livery bands (no text).
+- Recovery — cab-over recovery truck cues: flat tilt cab, split screen, slat grille, visor, beacon bar, tall mirrors, exhaust stack, fuel tank, lockers, boom + ram + hook, under-lift, winch.
+
+Common: bevelled extruded side-profile panels with real wheel-arch cut-outs, tinted clear-coat glass, shut lines/handles/hinges, lamp housings with emissive lenses, mirrors, tow hooks, underbody (rails, tank, exhaust, skid plate); tread-block tyres, style-specific rims (steel / 6-spoke / twin-spoke / rally / truck) with brake discs and lug nuts, calipers that steer but don't spin; animated dampers + coil springs and solid axles (or wishbones on the Sahara/rally) driven by the suspension; clear-coat metallic paint (Medium/High), studio reflection map on car materials only, and a cosmetic mud layer that builds up on the lower body in the mud basin.
+
+Performance: static parts are merged per material and suspension parts are instanced, so the car went from 64–70 meshes to 23–26 (High/Medium) / 17–21 (Low). Low preset swaps live to a simplified model (~3.5k triangles instead of ~21–29k). Numbers: `screenshots/phase5b/model-stats.json`, `perf-before-after.json`; comparison script `tests/phase5b-compare.mjs`.

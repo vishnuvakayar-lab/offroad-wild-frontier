@@ -253,7 +253,9 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   // camera: speed-based FOV and obstacle avoidance
   await page.evaluate(() => window.__game.teleport(-32, 0, Math.PI / 2)); await page.waitForTimeout(1500);
   const fov0 = (await st(page)).camera.fov;
-  await drive(G); await page.waitForTimeout(3000); const fov1 = (await st(page)).camera.fov; await drive(null);
+  await drive(G); // render-paced physics: wait (max 8 s wall clock) until the car is actually at speed
+  for (let t = 0; t < 8000 && (await st(page)).speed < 15; t += 250) await page.waitForTimeout(250);
+  await page.waitForTimeout(500); const fov1 = (await st(page)).camera.fov; await drive(null);
   ok('camera: FOV widens with speed', fov1 > fov0 + 3, `${fov0.toFixed(1)} deg at rest -> ${fov1.toFixed(1)} deg at speed`);
   const cam = await page.evaluate(async () => {
     const g = window.__game;
