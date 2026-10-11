@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 2155 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 1967 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -32,22 +32,22 @@
   {
     "name": "intro: Play starts the intro and Skip ends it",
     "pass": true,
-    "detail": "phase after Play=intro, skip->playing in 279 ms"
+    "detail": "phase after Play=intro, skip->playing in 109 ms"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.1 Hz set, 902 rpm -> throttle: 156.1 Hz measured / 160.0 Hz set, 4800 rpm (gear 3)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 156.1 Hz measured / 167.1 Hz set, 5012 rpm (gear 3)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 13.50 m, speed 50.9 km/h (render-paced)"
+    "detail": "moved 14.71 m, speed 52.6 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 45.9 deg"
+    "detail": "heading change 73.6 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -72,7 +72,7 @@
   {
     "name": "holding brake at standstill reverses",
     "pass": true,
-    "detail": "-25.3 km/h"
+    "detail": "-25.2 km/h"
   },
   {
     "name": "vehicle stays upright through tests",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "70 track decals in 5 s"
+    "detail": "82 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.5 fps, Low preset 17.7 fps"
+    "detail": "High preset 10.8 fps, Low preset 18.9 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 2121 ms"
+    "detail": "load 1662 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -127,12 +127,12 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 16.87 m, heading change 43.2 deg, airborne samples 0/6"
+    "detail": "moved 19.70 m, heading change 65.0 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
     "pass": true,
-    "detail": "14.1 fps @ preset medium"
+    "detail": "10.8 fps @ preset medium"
   },
   {
     "name": "mobile-portrait-390x844: rotation -> canvas resizes to new viewport",
@@ -147,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 1898 ms"
+    "detail": "load 1493 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -157,7 +157,7 @@
   {
     "name": "mobile-landscape-844x390: settings drawer partial",
     "pass": true,
-    "detail": "covers 0%"
+    "detail": "covers 40%"
   },
   {
     "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
@@ -177,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 19.02 m, heading change 38.0 deg, airborne samples 0/6"
+    "detail": "moved 25.74 m, heading change 58.6 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "13.4 fps @ preset medium"
+    "detail": "11.2 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,22 +197,22 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 0 / mud 206 / sand 226; slip dirt 0.08 / mud 0.59 / sand 0.26"
+    "detail": "dirt 0 / mud 249 / sand 180; slip dirt 0.07 / mud 0.58 / sand 0.27"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "t=4.95 s, wheels in water=true, peak splash particles 217, chassis y in puddle 0.62 vs water level -0.10"
+    "detail": "t=4.65 s, wheels in water=true, peak splash particles 209, chassis y in puddle 0.65 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "76 ribbon segments"
+    "detail": "80 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
     "pass": true,
-    "detail": "62.5 deg at rest -> 68.9 deg at speed"
+    "detail": "62.9 deg at rest -> 69.0 deg at speed"
   },
   {
     "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
@@ -227,42 +227,42 @@
   {
     "name": "weather: clear loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "10.4 fps (High)"
   },
   {
     "name": "weather: sunset loads without console errors",
     "pass": true,
-    "detail": "11.6 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "14.8 fps (High)"
+    "detail": "10.0 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
     "pass": true,
-    "detail": "10.0 fps (High)"
+    "detail": "10.4 fps (High)"
   },
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "10.4 fps (High)"
+    "detail": "11.6 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "16.9 fps, 34 draw calls, 68240 tris, particles {\"mud\":107,\"dust\":0,\"splash\":0,\"spawned\":4658}"
+    "detail": "16.5 fps, 34 draw calls, 68432 tris, particles {\"mud\":113,\"dust\":0,\"splash\":0,\"spawned\":4981}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 70 draw calls, 126916 tris, particles {\"mud\":196,\"dust\":0,\"splash\":0,\"spawned\":5088}"
+    "detail": "12.2 fps, 70 draw calls, 127116 tris, particles {\"mud\":203,\"dust\":0,\"splash\":0,\"spawned\":5421}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 70 draw calls, 127212 tris, particles {\"mud\":284,\"dust\":0,\"splash\":0,\"spawned\":5792}"
+    "detail": "10.0 fps, 70 draw calls, 127444 tris, particles {\"mud\":282,\"dust\":0,\"splash\":0,\"spawned\":6199}"
   },
   {
     "name": "AA toggled without page reload",
@@ -367,7 +367,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 39.3 -> 67.8; clear 102.9 vs 102.9 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 102.0 vs 102.0 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -462,7 +462,7 @@
   {
     "name": "Low preset swaps to simplified model live (no reload)",
     "pass": true,
-    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.24"
+    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.27"
   },
   {
     "name": "mud builds up on the body in the mud basin (cosmetic)",
@@ -657,7 +657,7 @@
   {
     "name": "p6 portrait: mode select fits, mission HUD inside viewport, small, clear of touch controls",
     "pass": true,
-    "detail": "modes 49%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 62, touch overlap false, winch on-screen true, hook tap attached true"
+    "detail": "modes 49%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true"
   },
   {
     "name": "p6 portrait: no console errors",
