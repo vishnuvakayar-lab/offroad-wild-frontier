@@ -188,7 +188,7 @@ body.touch .desktop-only, body:not(.touch) .touch-only { display: none; }
 .swatches button.locked { opacity: .35; position: relative; } .swatches button.locked::after { content: '🔒'; font-size: 13px; }
 @media (orientation: portrait) and (max-width: 700px) {
   .modes { left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); top: auto; bottom: calc(10px + var(--sab)); transform: none; width: auto; max-height: 60%; padding: 14px; }
-  #mhud { top: calc(62px + var(--sat)); max-width: calc(100% - 20px); }
+  #mhud { top: calc(104px + var(--sat)); max-width: calc(100% - 20px); }
   .mh-box b { font-size: 19px; } .mh-box { padding: 3px 10px 4px; min-width: 0; max-width: 100%; } .mh-msg { font-size: 13px; }
   .g-upgrades { gap: 3px 6px; }
 }

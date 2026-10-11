@@ -42,7 +42,7 @@ export class MissionWorld {
       const p = new THREE.Mesh(postGeo, posts); p.position.set(x, y + 2.3, z); grp.add(p); top = Math.max(top, y + 4.4);
     }
     const b = new THREE.Mesh(this.geo(new THREE.PlaneGeometry(g.w, 1.6)), banner);
-    b.position.set(g.x, top, g.z); b.rotation.y = g.yaw; grp.add(b);
+    b.position.set(g.x, top, g.z); b.rotation.y = g.yaw + Math.PI; grp.add(b); // text faces drivers approaching the gate
     this.group.add(grp); this.gates.push({ g: grp, banner, posts });
   }
   /** highlight the next gate, dim passed ones */
@@ -51,7 +51,7 @@ export class MissionWorld {
       x.g.visible = i >= next;
       const on = i === next;
       x.posts.color.set(on ? 0xffb03a : 0xf2f2f2); x.posts.emissive.set(on ? 0x7a4a00 : 0x000000);
-      x.banner.emissiveIntensity = on ? 0.7 : 0.12; x.banner.color.set(on ? 0xffc060 : 0xb0b0b0);
+      x.banner.emissiveIntensity = on ? 0.7 : 0.12; x.banner.color.set(on ? 0xffc060 : 0xb0b0b0); x.banner.emissive.set(on ? 0xffa628 : 0xffffff);
     });
   }
   addFlag(x: number, z: number) {
