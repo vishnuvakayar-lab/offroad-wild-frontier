@@ -14,7 +14,17 @@ export const ZONES = {
   spawn: { x: 0, z: 0, r: 42 },
   mud: { x: -72, z: 40, r: 40 },
   sand: { x: 88, z: -55, r: 62, flat: 30 },
+  /** rocky ridge (Phase 6 hill-climb): summit plateau at the centre */
+  ridge: { x: -92, z: -92, r: 50, h: 17 },
 };
+/** Hill-climb trail: start at the foot of the ridge, summit flag on the plateau. */
+export const RIDGE_TRAIL = { start: { x: -50, z: -50 }, summit: { x: -92, z: -92 } };
+/** distance from the straight climb line (used to keep the line clear of trees/boulders) */
+export function distToTrail(x: number, z: number) {
+  const a = RIDGE_TRAIL.start, b = RIDGE_TRAIL.summit, dx = b.x - a.x, dz = b.z - a.z;
+  const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
+  return Math.hypot(x - (a.x + dx * t), z - (a.z + dz * t));
+}
 
 // ---------- deterministic value noise ----------
 function hash(x: number, z: number): number {
@@ -79,6 +89,13 @@ function baseHeight(x: number, z: number): number {
   const edge = Math.max(Math.abs(x), Math.abs(z));
   h += sstep(105, 158, edge) * (14 + fbm(x * 0.05, z * 0.05, 4) * 14);
 
+  // rocky ridge: smooth cone with a summit plateau, rough rocky lumps on the flanks (smoother along the trail)
+  const dr = dist(x, z, ZONES.ridge);
+  if (dr < ZONES.ridge.r + 2) {
+    const k = 1 - sstep(5, ZONES.ridge.r, dr);
+    const rough = (fbm(x * 0.35, z * 0.35, 3) - 0.5) * 1.6 * Math.min(1, distToTrail(x, z) / 7 + 0.25);
+    h = Math.max(h, h * (1 - k) + (ZONES.ridge.h * k + rough * k * (1 - k) * 3));
+  }
   // spawn flat
   const ds = dist(x, z, ZONES.spawn);
   const ws = 1 - sstep(ZONES.spawn.r - 4, ZONES.spawn.r + 14, ds);
@@ -209,7 +226,7 @@ function scatterProps(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER: typeof
   const rocks = new THREE.InstancedMesh(rockGeo, rockMat, NR);
   for (const m of [trunks, crowns, rocks]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3();
-  const ok = (x: number, z: number, margin: number) => Math.abs(z - STRIP.z) > STRIP.half + 14 &&
+  const ok = (x: number, z: number, margin: number) => Math.abs(z - STRIP.z) > STRIP.half + 14 && distToTrail(x, z) > 7 &&
     surfaceAt(x, z) === 'ground' && dist(x, z, ZONES.spawn) > ZONES.spawn.r + margin &&
     dist(x, z, ZONES.mud) > ZONES.mud.r + margin && dist(x, z, ZONES.sand) > ZONES.sand.r + margin;
   let t = 0, guard = 0;
