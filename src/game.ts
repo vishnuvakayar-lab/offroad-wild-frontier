@@ -274,6 +274,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   /** leaving the garage while previewing a locked vehicle returns to the selected (unlocked) one */
   const leaveGarage = () => { if (car.spec.id !== settings.vehicle) setVehicle(settings.vehicle); };
   let camOverride: [[number, number, number], [number, number, number]] | null = null;
+  let camWorld: [[number, number, number], [number, number, number]] | null = null;
   let garageT = 0; let garageHold: number | null = null;
   const openGarage = (ret: Phase = 'menu') => { garageReturn = ret; gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle)); renderGarage(); resetCar(); garageT = 0; setPhase('garage'); };
   $('btn-garage').onclick = () => openGarage('menu');
@@ -761,6 +762,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       camera.position.copy(car.group.localToWorld(new THREE.Vector3(...camOverride[0])));
       camera.lookAt(car.group.localToWorld(new THREE.Vector3(...camOverride[1])));
     }
+    if (camWorld) { camera.position.set(...camWorld[0]); camera.lookAt(new THREE.Vector3(...camWorld[1])); }
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
@@ -813,6 +815,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     vehicles: VEHICLES.map((v) => v.id),
     setVehicle: (id: string) => { settings.vehicle = id; saveSettings(settings); setVehicle(id); },
     camOverride: (c: [[number, number, number], [number, number, number]] | null) => { camOverride = c; },
+    /** screenshot hook: fixed world-space camera (null = normal camera) */
+    camWorld: (c: [[number, number, number], [number, number, number]] | null) => { camWorld = c; },
     garageHold: (t: number | null) => { garageHold = t; },
     setFill: (on: boolean) => { fillEnabled = on; const w = WEATHER[weather]; fill.intensity = on ? w.fill : 0; rim.intensity = on ? w.rim : 0; },
     /** mean luminance (0..255) of a box around the vehicle's projected centre, read straight from the GL buffer */
