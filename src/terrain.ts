@@ -6,6 +6,10 @@ export type Surface = 'ground' | 'mud' | 'sand';
 export const MAP_SIZE = 320;
 const SEG = 160;
 
+/** Flat proving-ground strip used for top-speed runs. */
+export const STRIP = { z: 100, half: 7, len: 104 };
+export const onStrip = (x: number, z: number) => Math.abs(z - STRIP.z) < STRIP.half && Math.abs(x) < STRIP.len;
+
 export const ZONES = {
   spawn: { x: 0, z: 0, r: 42 },
   mud: { x: -72, z: 40, r: 40 },
@@ -93,6 +97,9 @@ function baseHeight(x: number, z: number): number {
   const dunes = (Math.sin(x * 0.11 + Math.sin(z * 0.05) * 2.2) * 0.5 + 0.5) * 3.2 + fbm(x * 0.04, z * 0.04, 3) * 2.5;
   const sandH = 0.2 + dunes * duneAmt;
   h = h * (1 - wd) + sandH * wd;
+  // proving-ground strip: long flat straight along z = STRIP.z
+  const ws2 = (1 - sstep(STRIP.half - 1, STRIP.half + 9, Math.abs(z - STRIP.z))) * (1 - sstep(STRIP.len - 6, STRIP.len + 8, Math.abs(x)));
+  h = h * (1 - ws2) + 0.3 * ws2;
   return h;
 }
 
@@ -103,6 +110,7 @@ const C_MUD_WET = new THREE.Color(0x2a1e14);
 const C_SAND = new THREE.Color(0xd9b77a);
 const C_SAND_D = new THREE.Color(0xc29a5c);
 const C_ROCK = new THREE.Color(0x7c7770);
+const C_STRIP = new THREE.Color(0x9a8a72);
 
 export const TREES: { x: number; z: number }[] = [];
 export const wetMaterials: THREE.MeshStandardMaterial[] = [];
@@ -130,6 +138,7 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
     else if (s === 'sand') c.copy(C_SAND).lerp(C_SAND_D, n * 0.8);
     else {
       c.copy(C_GRASS).lerp(C_DIRT, Math.min(1, n * 0.9 + (dist(x, z, ZONES.spawn) < 30 ? 0.35 : 0)));
+      if (onStrip(x, z)) c.copy(C_STRIP).lerp(C_DIRT, n * 0.5);
       if (slope > 0.12 || Math.max(Math.abs(x), Math.abs(z)) > 125) c.lerp(C_ROCK, Math.min(1, slope * 4 + 0.3));
     }
     colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
@@ -165,6 +174,14 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
   }
   wetMaterials.push(mat);
 
+  // proving-ground marker posts every 20 m (visual only)
+  const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.1, 6);
+  const postMat = new THREE.MeshStandardMaterial({ color: 0xf2f2f2, emissive: 0x402000, roughness: 0.6 });
+  const xs: number[] = []; for (let x = -100; x <= 100; x += 20) xs.push(x);
+  const posts = new THREE.InstancedMesh(postGeo, postMat, xs.length * 2);
+  const PM = new THREE.Matrix4(); let pi = 0;
+  for (const x of xs) for (const sz of [-1, 1]) { const z = STRIP.z + sz * (STRIP.half + 0.8); PM.makeTranslation(x, heightAt(x, z) + 0.55, z); posts.setMatrixAt(pi++, PM); }
+  posts.castShadow = true; scene.add(posts);
   scatterProps(scene, world, RAPIER, ground);
   return mesh;
 }
@@ -192,7 +209,7 @@ function scatterProps(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER: typeof
   const rocks = new THREE.InstancedMesh(rockGeo, rockMat, NR);
   for (const m of [trunks, crowns, rocks]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3();
-  const ok = (x: number, z: number, margin: number) =>
+  const ok = (x: number, z: number, margin: number) => Math.abs(z - STRIP.z) > STRIP.half + 14 &&
     surfaceAt(x, z) === 'ground' && dist(x, z, ZONES.spawn) > ZONES.spawn.r + margin &&
     dist(x, z, ZONES.mud) > ZONES.mud.r + margin && dist(x, z, ZONES.sand) > ZONES.sand.r + margin;
   let t = 0, guard = 0;

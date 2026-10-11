@@ -32,10 +32,10 @@
 
     <section id="menu" class="panel menu hidden" aria-label="Main menu">
       <div class="logo small"><span>OFFROAD</span><small>WILD FRONTIER</small></div>
-      <p class="tag">Prototype build · Phase 4 test track</p>
+      <p class="tag">Prototype build · Phase 5 garage</p>
       <button id="btn-play" class="btn primary">Play — Test Track</button>
       <button id="btn-settings" class="btn">Settings</button>
-      <button class="btn" disabled title="Coming in Phase 5">Garage <em>soon</em></button>
+      <button id="btn-garage" class="btn">Garage <em id="menu-vehicle"></em></button>
       <button class="btn" disabled title="Coming in Phase 7">Multiplayer <em>soon</em></button>
       <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset · T weather · M mute · Esc pause · drag to look</p>
       <p class="hint touch-only">Left thumb steers · right thumb gas / brake / handbrake · drag the view to look around</p>
@@ -75,6 +75,19 @@
     </div>
     <div id="toast" class="toast hidden"></div>
 
+    <section id="garage" class="panel garage hidden" aria-label="Garage">
+      <header class="g-head">
+        <button id="g-prev" class="round" aria-label="Previous vehicle">‹</button>
+        <div class="g-title"><small id="g-class"></small><h2 id="g-name"></h2><div id="g-dots" class="g-dots"></div></div>
+        <button id="g-next" class="round" aria-label="Next vehicle">›</button>
+      </header>
+      <p id="g-desc" class="g-desc"></p>
+      <div id="g-stats" class="g-stats"></div>
+      <label class="group-label">Paint · <span id="g-paint-name"></span></label>
+      <div id="g-colors" class="swatches"></div>
+      <div class="g-actions"><button id="g-back" class="btn">Back</button><button id="g-drive" class="btn primary">Drive</button></div>
+    </section>
+
     <section id="pause" class="panel pause hidden" aria-label="Paused">
       <h2>Paused</h2>
       <button id="btn-resume" class="btn primary">Resume</button>
@@ -102,7 +115,7 @@
       </div>
       <label class="row"><input type="checkbox" id="chk-fps" /> Show FPS counter</label>
       <label class="row"><input type="checkbox" id="chk-intro" /> Play intro flyover</label>
-      <p class="note">Build 0.2.0 · Phases 1–4 prototype</p>
+      <p class="note">Build 0.3.0 · Phases 1–5 prototype</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>

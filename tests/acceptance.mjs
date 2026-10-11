@@ -1,4 +1,4 @@
-// Acceptance tests for Phases 1-3. Run against `npm run preview` (http://127.0.0.1:4173).
+// Acceptance tests for Phases 1-5. Run against `npm run preview` (http://127.0.0.1:4173).
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 
@@ -314,6 +314,138 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   ok('phase4: no console errors', errors.length === 0, errors.slice(0, 5).join(' | '));
   fs.writeFileSync(SHOTS4 + 'fps.json', JSON.stringify({ note: 'headless Chrome + SwiftShader (CPU software GL); not representative of real GPUs', weatherHigh: wfps, presetsClearMud: pf }, null, 2));
   await ctx.close();
+}
+// ---------------- Phase 5: garage, vehicle roster, tuning, persistence, night visibility ----------------
+{
+  const SHOTS5 = SHOTS + 'phase5/'; fs.mkdirSync(SHOTS5, { recursive: true });
+  const { ctx, page, errors } = await openPage({ viewport: { width: 1280, height: 720 } }, 'phase5');
+  // Physics per vehicle (deterministic fixed-step simulate, independent of render FPS)
+  const rows = await page.evaluate(() => {
+    const g = window.__game, out = [];
+    const I = (t, b, s, h) => ({ throttle: t, brake: b, steer: s, handbrake: h });
+    const z = g.zones;
+    for (const id of g.vehicles) {
+      g.setVehicle(id);
+      const r = { id, name: g.vehicle.name };
+      // spawn + settle at the real spawn point
+      g.teleport(0, -8, Math.atan2(z.sand.x, z.sand.z + 8)); g.simulate(I(0, 0, 0, true), 2);
+      let s = g.state(); r.spawnUp = s.up; r.spawnClear = s.y - g.heightAt(s.x, s.z);
+      // scripted drive: full throttle over the rolling ground toward the dunes (bumps), then a hard turn
+      let minUp = 1, air = 0, n = 0, maxDist = 0; const p0 = { x: s.x, z: s.z };
+      for (let k = 0; k < 60; k++) { g.simulate(I(1, 0, 0, false), 0.1); s = g.state(); minUp = Math.min(minUp, s.up); n++; if (s.wheels.filter(Boolean).length < 2) air++; }
+      const yawA = g.state().yaw;
+      for (let k = 0; k < 25; k++) { g.simulate(I(0.7, 0, 0.8, false), 0.1); s = g.state(); minUp = Math.min(minUp, s.up); n++; if (s.wheels.filter(Boolean).length < 2) air++; }
+      g.simulate(I(0, 0.6, 0, false), 1.5); s = g.state();
+      let dy = s.yaw - yawA; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+      r.driveDist = Math.hypot(s.x - p0.x, s.z - p0.z); r.driveMinUp = minUp; r.driveFinalUp = s.up; r.driveAirPct = 100 * air / n; r.driveTurnDeg = Math.abs(dy * 180 / Math.PI); r.driveSurfaceEnd = s.surface;
+      // 0-60 km/h
+      g.teleport(-32, 0, Math.PI / 2); g.simulate(I(0, 0, 0, true), 1);
+      let t = 0; r.t60 = null; while (t < 10) { g.simulate(I(1, 0, 0, false), 0.05); t += 0.05; if (g.state().speed >= 16.667) { r.t60 = +t.toFixed(2); break; } }
+      // top speed reached in 7 s on the flat proving-ground strip
+      g.teleport(-100, 100, Math.PI / 2); g.simulate(I(0, 0, 0, true), 1);
+      let vmax = 0; for (let k = 0; k < 70; k++) { g.simulate(I(1, 0, 0, false), 0.1); vmax = Math.max(vmax, g.state().speed); }
+      r.top7 = vmax * 3.6;
+      // turning rate at 50 km/h (full steer, part throttle, 1.5 s)
+      g.teleport(-32, 0, Math.PI / 2); g.simulate(I(0, 0, 0, true), 1);
+      for (let k = 0; k < 200 && g.state().speed < 13.9; k++) g.simulate(I(1, 0, 0, false), 0.05);
+      const y0 = g.state().yaw; r.turnV = g.state().speed * 3.6; let tu = 1;
+      for (let k = 0; k < 15; k++) { g.simulate(I(0.4, 0, 1, false), 0.1); tu = Math.min(tu, g.state().up); }
+      let d = g.state().yaw - y0; d = Math.atan2(Math.sin(d), Math.cos(d));
+      r.turnRate = Math.abs(d * 180 / Math.PI / 1.5); r.turnMinUp = tu;
+      // mud basin: settle, then full throttle 3 s (Phase 3 protocol)
+      g.teleport(-102, 40, Math.PI / 2); g.simulate(I(0, 1, 0, true), 1.5);
+      r.mud3 = g.simulate(I(1, 0, 0, false), 3).finalSpeed * 3.6;
+      out.push(r);
+    }
+    return out;
+  });
+  for (const r of rows) {
+    ok(`vehicle ${r.id}: spawns upright`, r.spawnUp > 0.98 && r.spawnClear > 0.4 && r.spawnClear < 2.2, `up ${r.spawnUp.toFixed(3)}, body ${r.spawnClear.toFixed(2)} m above ground`);
+    ok(`vehicle ${r.id}: stays upright through scripted drive (bumps + turn)`, r.driveMinUp > 0.6 && r.driveFinalUp > 0.95 && r.driveDist > 40 && r.driveTurnDeg > 30,
+      `${r.driveDist.toFixed(0)} m, turned ${r.driveTurnDeg.toFixed(0)}°, min up ${r.driveMinUp.toFixed(2)}, final up ${r.driveFinalUp.toFixed(2)}, airborne ${r.driveAirPct.toFixed(0)}% of samples, ended on ${r.driveSurfaceEnd}`);
+    console.log(`   ${r.id.padEnd(9)} 0-60 ${r.t60}s | top in 7s ${r.top7.toFixed(1)} km/h | turn ${r.turnRate.toFixed(1)} deg/s @${r.turnV.toFixed(0)} km/h | mud 3s ${r.mud3.toFixed(1)} km/h`);
+  }
+  const spread = (k) => { const v = rows.map((r) => r[k]); return { min: Math.min(...v), max: Math.max(...v) }; };
+  const s60 = spread('t60'), sTop = spread('top7'), sTurn = spread('turnRate'), sMud = spread('mud3');
+  const distinct = (k, eps) => rows.every((a, i) => rows.every((b, j) => i === j || ['t60', 'top7', 'turnRate', 'mud3'].some((kk) => Math.abs(a[kk] - b[kk]) > ({ t60: 0.15, top7: 2, turnRate: 1, mud3: 1 })[kk])));
+  ok('vehicles: performance differs (0-60, top speed, turn rate, mud)', s60.max / s60.min > 1.8 && sTop.max - sTop.min > 30 && sTurn.max - sTurn.min > 10 && sMud.max - sMud.min > 8 && distinct(),
+    `0-60 ${s60.min}-${s60.max}s, top ${sTop.min.toFixed(0)}-${sTop.max.toFixed(0)} km/h, turn ${sTurn.min.toFixed(1)}-${sTurn.max.toFixed(1)} deg/s, mud ${sMud.min.toFixed(1)}-${sMud.max.toFixed(1)} km/h; every pair differs`);
+  const R = Object.fromEntries(rows.map((r) => [r.id, r]));
+  ok('vehicles: character matches class', R.rally.t60 === s60.min && R.rally.top7 === sTop.max && R.rally.mud3 === sMud.min && R.recovery.top7 === sTop.min && R.recovery.t60 === s60.max,
+    'rally quickest/fastest but worst in mud; recovery truck slowest');
+  // Steering lightening at speed (Scout): baseline vs Phase 5
+  const steer = await page.evaluate(() => {
+    const g = window.__game; g.setVehicle('scout');
+    const sp = g.spec, keep = { sh: sp.steerHigh, as: sp.assist };
+    const run = (v) => { g.teleport(-100, 100, Math.PI / 2); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 1);
+      for (let k = 0; k < 300 && g.state().speed < v; k++) g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 0.05);
+      const y0 = g.state().yaw; let mu = 1, mw = 4; for (let k = 0; k < 10; k++) { g.simulate({ throttle: 0.5, brake: 0, steer: 1, handbrake: false }, 0.1); const s = g.state(); mu = Math.min(mu, s.up); mw = Math.min(mw, s.wheels.filter(Boolean).length); }
+      let d = g.state().yaw - y0; d = Math.atan2(Math.sin(d), Math.cos(d)); return { rate: Math.abs(d * 180 / Math.PI), minUp: mu, minWheels: mw }; };
+    const out = {};
+    sp.steerHigh = 0.18; sp.assist = 0; out.before = [run(13.9), run(22.2)];
+    sp.steerHigh = keep.sh; sp.assist = keep.as; out.after = [run(13.9), run(22.2)];
+    return out;
+  });
+  ok('steering lighter at speed without losing stability', steer.after[1].rate > steer.before[1].rate * 1.12 && steer.after.every((x) => x.minUp > 0.95 && x.minWheels >= 3),
+    `Scout full-lock yaw @50/@80 km/h: before ${steer.before.map((x) => x.rate.toFixed(1)).join('/')} -> after ${steer.after.map((x) => x.rate.toFixed(1)).join('/')} deg/s; min up ${steer.after.map((x) => x.minUp.toFixed(2)).join('/')}, min wheels ${steer.after.map((x) => x.minWheels).join('/')}`);
+  await page.evaluate(() => window.__game.setVehicle('scout'));
+
+  // Garage UI: per-vehicle desktop screenshots + coverage
+  await page.click('#btn-garage'); await page.waitForFunction(() => window.__game.phase === 'garage'); await page.waitForTimeout(800);
+  const gDesk = await area(page, '#garage');
+  ok('garage desktop: panel leaves the showcase visible', gDesk > 0.15 && gDesk < 0.5, `panel covers ${(gDesk * 100).toFixed(0)}% of 1280x720`);
+  const ids = await page.evaluate(() => window.__game.vehicles);
+  const seen = [];
+  for (let i = 0; i < ids.length; i++) {
+    const v = await page.evaluate(() => window.__game.vehicle);
+    seen.push(v.id);
+    await page.waitForTimeout(900);
+    await page.screenshot({ path: `${SHOTS5}garage-desktop-${i + 1}-${v.id}.png` });
+    await page.click('#g-next'); await page.waitForTimeout(300);
+  }
+  ok('garage: cycles through all vehicles', new Set(seen).size === ids.length && ids.length >= 5, seen.join(', '));
+  // choose Pickup in Rescue Red via the UI, then reload
+  while ((await page.evaluate(() => window.__game.vehicle.id)) !== 'pickup') await page.click('#g-next');
+  await page.click('#g-colors button[title="Rescue Red"]'); await page.waitForTimeout(300);
+  const chosen = await page.evaluate(() => window.__game.vehicle);
+  await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 }); await page.waitForTimeout(1200);
+  const after = await page.evaluate(() => ({ v: window.__game.vehicle, label: document.getElementById('menu-vehicle').textContent }));
+  await page.click('#btn-play'); await page.waitForTimeout(400); await page.click('#btn-skip'); await page.waitForFunction(() => window.__game.phase === 'playing');
+  const inPlay = await page.evaluate(() => window.__game.vehicle);
+  ok('garage: selection + colour persist across reload and are used in Free Roam', chosen.id === 'pickup' && chosen.paint === 0xb3261e && after.v.id === 'pickup' && after.v.paint === 0xb3261e && inPlay.id === 'pickup' && inPlay.paint === 0xb3261e,
+    `chosen ${chosen.id}/#${chosen.paint.toString(16)}, after reload ${after.v.id}/#${after.v.paint.toString(16)} (menu shows "${after.label}"), in play ${inPlay.id}`);
+
+  // Night visibility: fill/rim light on vs off (default Scout in its default tan, comparable to Phase 4 shots)
+  await page.evaluate(() => { window.__game.setInput(null); window.__game.setVehicle('scout'); window.__game.setWeather('night'); window.__game.teleport(-32, 0, Math.PI / 2); });
+  await page.waitForTimeout(1800);
+  const offL = await page.evaluate(() => { window.__game.setFill(false); return window.__game.carLuma(0.04); });
+  await page.screenshot({ path: SHOTS5 + 'night-before-fill-off.png' });
+  const onL = await page.evaluate(() => { window.__game.setFill(true); return window.__game.carLuma(0.04); });
+  await page.screenshot({ path: SHOTS5 + 'night-after-fill-on.png' });
+  const clr = await page.evaluate(() => { window.__game.setWeather('clear'); window.__game.setFill(false); const a = window.__game.carLuma(0.04); window.__game.setFill(true); return [a, window.__game.carLuma(0.04)]; });
+  ok('night: car body visibility improved by fill/rim light', onL > offL * 3 && onL > 25 && Math.abs(clr[0] - clr[1]) < 2,
+    `mean luma around car (0-255): night ${offL.toFixed(1)} -> ${onL.toFixed(1)}; clear ${clr[0].toFixed(1)} vs ${clr[1].toFixed(1)} (fill disabled in daylight)`);
+  await page.evaluate(() => { window.__game.setWeather('night'); window.__game.teleport(-60, 20, 0.6); window.__game.setInput({ throttle: 0.8, brake: 0, steer: 0.15, handbrake: false }); });
+  await page.waitForTimeout(3000);
+  await page.screenshot({ path: SHOTS5 + 'night-gameplay.png' });
+  await page.evaluate(() => { window.__game.setInput(null); window.__game.setWeather('clear'); });
+  ok('phase5 desktop: no console errors', errors.length === 0, errors.slice(0, 5).join(' | '));
+  fs.writeFileSync(SHOTS5 + 'vehicles.json', JSON.stringify({ rows, steer, nightLuma: { off: offL, on: onL } }, null, 2));
+  await ctx.close();
+
+  // Garage layout coverage: portrait + landscape phones
+  for (const [label, vp] of [['portrait', { width: 390, height: 844 }], ['landscape', { width: 844, height: 390 }]]) {
+    const o = await openPage({ viewport: vp, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }, 'garage-' + label);
+    await o.page.tap('#btn-garage'); await o.page.waitForFunction(() => window.__game.phase === 'garage'); await o.page.waitForTimeout(1000);
+    const a = await area(o.page, '#garage');
+    const fits = await o.page.evaluate(() => { const ids = ['g-prev', 'g-next', 'g-drive', 'g-back']; return ids.every((id) => { const r = document.getElementById(id).getBoundingClientRect(); return r.width > 0 && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1; }); });
+    await o.page.screenshot({ path: `${SHOTS5}garage-${label}.png` });
+    await o.page.tap('#g-next'); await o.page.waitForTimeout(300);
+    const v = await o.page.evaluate(() => window.__game.vehicle.id);
+    ok(`garage ${label}: panel sized, controls reachable`, a > 0.2 && a < 0.62 && fits && v !== 'scout', `panel covers ${(a * 100).toFixed(0)}% of ${vp.width}x${vp.height}; buttons on-screen ${fits}; tap next -> ${v}`);
+    ok(`garage ${label}: no console errors`, o.errors.length === 0, o.errors.slice(0, 5).join(' | '));
+    await o.ctx.close();
+  }
 }
 await browser.close();
 const failed = results.filter((r) => !r.pass);

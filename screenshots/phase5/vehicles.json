@@ -1,0 +1,142 @@
+{
+  "rows": [
+    {
+      "id": "scout",
+      "name": "Frontier Scout",
+      "spawnUp": 0.9999888077045722,
+      "spawnClear": 0.9758475513424918,
+      "driveDist": 110.8044353653912,
+      "driveMinUp": 0.9253124379028677,
+      "driveFinalUp": 0.9999149872689695,
+      "driveAirPct": 16.470588235294116,
+      "driveTurnDeg": 111.25680040152253,
+      "driveSurfaceEnd": "sand",
+      "t60": 2.2,
+      "top7": 99.20920396419109,
+      "turnV": 50.702584990492475,
+      "turnRate": 48.84034236074272,
+      "turnMinUp": 0.999855857816323,
+      "mud3": 33.152152306679874
+    },
+    {
+      "id": "voyager",
+      "name": "Voyager Expedition",
+      "spawnUp": 0.9999892157392184,
+      "spawnClear": 1.0654996152916834,
+      "driveDist": 104.75754307950503,
+      "driveMinUp": 0.9226673700162134,
+      "driveFinalUp": 0.9998985482184365,
+      "driveAirPct": 12.941176470588236,
+      "driveTurnDeg": 106.61425492301736,
+      "driveSurfaceEnd": "sand",
+      "t60": 2.6,
+      "top7": 98.32080920011978,
+      "turnV": 50.121246932439234,
+      "turnRate": 43.573219949533886,
+      "turnMinUp": 0.9998076703307918,
+      "mud3": 34.77862359679165
+    },
+    {
+      "id": "sahara",
+      "name": "Sahara GT",
+      "spawnUp": 0.9999872755565159,
+      "spawnClear": 1.0859519101135622,
+      "driveDist": 118.03663499453549,
+      "driveMinUp": 0.9256396907719853,
+      "driveFinalUp": 0.999899303236283,
+      "driveAirPct": 18.823529411764707,
+      "driveTurnDeg": 113.64009634967297,
+      "driveSurfaceEnd": "sand",
+      "t60": 2.1,
+      "top7": 112.16959697820037,
+      "turnV": 51.09770898558309,
+      "turnRate": 43.82354251492243,
+      "turnMinUp": 0.9999118149328609,
+      "mud3": 32.37561927663142
+    },
+    {
+      "id": "pickup",
+      "name": "Workhorse Trail",
+      "spawnUp": 0.9999676132046313,
+      "spawnClear": 1.0514805646592038,
+      "driveDist": 99.74599657643148,
+      "driveMinUp": 0.9314655983095448,
+      "driveFinalUp": 0.9998576283110802,
+      "driveAirPct": 10.588235294117647,
+      "driveTurnDeg": 105.49357448244409,
+      "driveSurfaceEnd": "sand",
+      "t60": 2.8,
+      "top7": 93.54149796941648,
+      "turnV": 50.394988611812735,
+      "turnRate": 44.29842113559175,
+      "turnMinUp": 0.999755818560685,
+      "mud3": 31.98719953037384
+    },
+    {
+      "id": "rally",
+      "name": "Apex R4",
+      "spawnUp": 0.9999882759309994,
+      "spawnClear": 0.7544104956421119,
+      "driveDist": 93.3474503397417,
+      "driveMinUp": 0.9270712267375436,
+      "driveFinalUp": 0.9999371100477142,
+      "driveAirPct": 21.176470588235293,
+      "driveTurnDeg": 101.49407425549057,
+      "driveSurfaceEnd": "sand",
+      "t60": 1.55,
+      "top7": 128.33600831584155,
+      "turnV": 51.228876680199235,
+      "turnRate": 53.57700146519735,
+      "turnMinUp": 0.9998423088931002,
+      "mud3": 22.416808856137568
+    },
+    {
+      "id": "recovery",
+      "name": "Atlas Recovery",
+      "spawnUp": 0.9999946750710901,
+      "spawnClear": 1.0264763313146485,
+      "driveDist": 90.07872782098966,
+      "driveMinUp": 0.9351607893211358,
+      "driveFinalUp": 0.9999783581881873,
+      "driveAirPct": 8.235294117647058,
+      "driveTurnDeg": 89.3456897607083,
+      "driveSurfaceEnd": "sand",
+      "t60": 3.8,
+      "top7": 76.15085728735264,
+      "turnV": 50.14803095316839,
+      "turnRate": 36.59059894393278,
+      "turnMinUp": 0.9997859947123086,
+      "mud3": 32.4998396899653
+    }
+  ],
+  "steer": {
+    "before": [
+      {
+        "rate": 38.49021564457402,
+        "minUp": 0.9998924576274957,
+        "minWheels": 4
+      },
+      {
+        "rate": 29.680421339887364,
+        "minUp": 0.9999515932892241,
+        "minWheels": 4
+      }
+    ],
+    "after": [
+      {
+        "rate": 44.65553179298254,
+        "minUp": 0.9998916811333198,
+        "minWheels": 4
+      },
+      {
+        "rate": 40.98393564297493,
+        "minUp": 0.999933969893029,
+        "minWheels": 4
+      }
+    ]
+  },
+  "nightLuma": {
+    "off": 2.65447981744423,
+    "on": 45.4560064570675
+  }
+}
