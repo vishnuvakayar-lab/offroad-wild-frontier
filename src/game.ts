@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
-import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES, setTerrainDetail, surfaceAt, TRAIL } from './terrain';
+import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES, setTerrainDetail, surfaceAt, TRAIL, SCREE, HAIRPINS } from './terrain';
 import { Vehicle, SURFACE_PARAMS, type DriveInput } from './vehicle';
 import { TrackMarks } from './tracks';
 import { VEHICLES, PAINTS, vehicleById, stats } from './vehicles';
@@ -10,7 +10,7 @@ import { GameAudio } from './audio';
 import { Particles, Rain } from './particles';
 import { WEATHER, WEATHER_ORDER, makeStars, type WeatherId } from './weather';
 import { loadSettings, saveSettings, PRESETS, isCoarse, type Preset, type TouchMode } from './settings';
-import { MISSIONS, missionById, medalFor, MissionRunner, type Mode, type Pose } from './missions';
+import { MISSIONS, missionById, medalFor, MissionRunner, BOT_TIMES, MEDAL_FACTORS, TOW_MARGIN, TOW_HOLD, type Mode, type Pose } from './missions';
 import { MissionWorld } from './missionWorld';
 import { loadSave, storeSave, migrate, award, applyUpgrades, upgradesOf, vehicleUnlocked, paintUnlocked, devMode, levelOf, upgradeCost,
   VEHICLE_UNLOCK, PAINT_LEVEL, UPGRADE_KINDS, MAX_UPGRADE, XP_PER_LEVEL, SAVE_KEY, type UpgradeKind, type Medal } from './save';
@@ -804,7 +804,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     saveKey: SAVE_KEY,
     migrate: (raw: unknown) => migrate(raw),
     medalFor: (t: number, id: string) => medalFor(t, missionById(id)!.targets),
-    missions: MISSIONS.map((m) => ({ id: m.id, mode: m.mode, type: m.type, start: m.start, gates: m.gates, zone: m.zone ?? null, stuck: m.stuck ?? null, limit: m.limit, targets: m.targets })),
+    missions: MISSIONS.map((m) => ({ id: m.id, mode: m.mode, type: m.type, start: m.start, gates: m.gates, zone: m.zone ?? null, stuck: m.stuck ?? null, limit: m.limit, targets: m.targets, reward: m.reward, laps: m.laps ?? 1, noReset: !!m.noReset })),
+    botTimes: BOT_TIMES, medalFactors: MEDAL_FACTORS, towRule: { margin: TOW_MARGIN, hold: TOW_HOLD },
     startMission: (id: string) => startMission(id),
     endMission: () => { endMission(); setPhase('menu'); },
     skipCountdown: () => { if (mission && mission.state === 'countdown') mission.countdown = 0.0001; },
@@ -860,12 +861,17 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const f1 = car.forward();
       return { yaw: Math.atan2(f1.x, f1.z), distance: Math.hypot(t1.x - start.x, t1.z - start.z), finalSpeed: car.forwardSpeed(), surface: car.surface(), trace };
     },
-    zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt, surfaceAt, trail: TRAIL.map((p) => ({ x: p.x, z: p.z, h: p.h, hw: p.hw })),
+    zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt, surfaceAt, trail: TRAIL.map((p) => ({ x: p.x, z: p.z, h: p.h, hw: p.hw })), hairpins: HAIRPINS.map((h) => ({ ...h })),
     get audioRock() { return audio.rockLevel; },
     /** tow camera check: distance from the towed vehicle's centre to the camera->player sight line (m) */
     towOcclusion: () => { if (!stuck) return null; const a = camera.position, t = car.body.translation(), b = new THREE.Vector3(t.x, t.y + 1, t.z), st = stuck.body.translation();
       const ab = b.clone().sub(a), u = Math.max(0, Math.min(1, new THREE.Vector3(st.x, st.y + 0.8, st.z).sub(a).dot(ab) / ab.lengthSq()));
       return a.clone().addScaledVector(ab, u).distanceTo(new THREE.Vector3(st.x, st.y + 0.8, st.z)); },
+    /** test hook: put the stuck vehicle at a pose (rope released) */
+    placeStuck: (x: number, z: number, yaw: number) => { if (!stuck || !mission) return false; if (rope) { world.removeImpulseJoint(rope, true); rope = null; mission.attached = false; }
+      placeAt(stuck, { x, z, yaw }); stuck.sync(); return true; },
+    setPreset: (p: Preset) => { settings.preset = p; applyPreset(p); },
+    screeCount: () => SCREE.mesh?.count ?? 0,
     get dusk() { return { k: duskK, exposure: renderer.toneMappingExposure, sun: sun.intensity }; },
     /** test hook: roll the car onto its roof in place */
     flip: () => { const t = car.body.translation(), r = car.body.rotation(); const q = new THREE.Quaternion(r.x, r.y, r.z, r.w).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
@@ -874,7 +880,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     /** Test bot: steers toward the current mission objective using the deterministic fixed step; returns the mission state. */
     /** Test bots. Clean bot: pure-pursuit along the mission's driving line with curvature-based speed control.
      *  human:true adds a reaction delay, steering/throttle noise, softer inputs and slower corner speeds (seeded). */
-    botRun: (maxSeconds: number, o: { throttle?: number; slowZone?: boolean; autoHook?: boolean; human?: boolean; seed?: number } = {}) => {
+    botRun: (maxSeconds: number, o: { throttle?: number; slowZone?: boolean; autoHook?: boolean; human?: boolean; seed?: number; untilAttached?: boolean } = {}) => {
       if (!mission) return null;
       if (mission.state === 'countdown') mission.countdown = 0.0001;
       const def = mission.def, H = !!o.human;
@@ -884,18 +890,20 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const at = (s: number) => { s = Math.min(cum[cum.length - 1], Math.max(0, s)); let i = 1; while (i < cum.length - 1 && cum[i] < s) i++; const u = (s - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1); return { x: line[i - 1].x + (line[i].x - line[i - 1].x) * u, z: line[i - 1].z + (line[i].z - line[i - 1].z) * u }; };
       let prog = 0; // arc-length progress along the line (monotonic, local search)
       const project = (x: number, z: number) => { let best = prog, bd = Infinity; for (let s = Math.max(0, prog - 10); s <= Math.min(cum[cum.length - 1], prog + 40); s += 1) { const p = at(s), d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; best = s; } } prog = best; return Math.sqrt(bd); };
-      let stuckT = 0, rev = 0, lastP = sampleCar(), steerNoise = 0, thrNoise = 0, lift = 0, offT = 0;
+      let stuckT = 0, rev = 0, lastP = sampleCar(), steerNoise = 0, thrNoise = 0, lift = 0, offT = 0, hookWait = 0;
       const delayQ: number[] = []; let steerOut = 0, thrOut = 0;
-      for (let k = 0; k < Math.round(maxSeconds / STEP) && !mission.finished; k++) {
+      for (let k = 0; k < Math.round(maxSeconds / STEP) && !mission.finished && !(o.untilAttached && mission.attached); k++) {
         const c = sampleCar();
         let tg: { x: number; z: number }, vmax = 30;
         if (def.type === 'tow' && stuck && !mission.attached) {
-          const st = stuck.body.translation(), sf = stuck.forward(); tg = { x: st.x + sf.x * 9, z: st.z + sf.z * 9 }; vmax = 12;
-          if (Math.hypot(c.x - tg.x, c.z - tg.z) < 4 || toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront())) < 8) { if (o.autoHook !== false) toggleHook(); }
+          const st = stuck.body.translation(), sf = stuck.forward(); tg = { x: st.x + sf.x * 9, z: st.z + sf.z * 9 }; vmax = H ? 8 : 12;
+          if (Math.hypot(c.x - tg.x, c.z - tg.z) < 4 || toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront())) < 8) {
+            hookWait++; if (o.autoHook !== false && hookWait > (H ? 90 : 0)) toggleHook(); // a player takes ~1.5 s to line up and hook
+          }
         } else if (def.type === 'tow') {
           // drag the towed 4x4 through the zone centre: aim beyond it, ease off once it is well inside
           const st = stuck!.body.translation(), z0 = def.zone!, dx = z0.x - st.x, dz = z0.z - st.z, dd = Math.hypot(dx, dz) || 1;
-          tg = { x: z0.x + (dx / dd) * 12, z: z0.z + (dz / dd) * 12 }; vmax = dd < 2.5 ? 0 : dd < 6 ? 3 : 7;
+          tg = { x: z0.x + (dx / dd) * 12, z: z0.z + (dz / dd) * 12 }; vmax = dd < 2.5 ? 0 : dd < 6 ? 3 : H ? 5 : 7;
         }
         else {
           let off = project(c.x, c.z);

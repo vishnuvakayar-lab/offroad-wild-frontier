@@ -81,9 +81,10 @@ export async function runPhase6({ openPage, ok, area }) {
     ok('p6 results: medal, reward and retry/next/menu shown', /complete/.test(resUI.title) && /gold|silver|bronze/.test(resUI.medal) && /credits/.test(resUI.reward) && resUI.btns && resA < 0.6,
       `"${resUI.title}" ${resUI.medal.replace(/\s+/g, ' ')} · ${resUI.reward}; panel ${(resA * 100).toFixed(0)}%`);
     const expCredits = rd.results.credits + rl.results.credits;
-    ok('p6 progression: credits/XP awarded by medal', rd.results.credits === Math.round(300 * { gold: 2, silver: 1.5, bronze: 1.2, none: 1 }[rd.results.medal]) && rl.save.credits === expCredits && rl.save.xp === rd.results.xp + rl.results.xp && rl.save.runs === 2,
+    const RW = await page.evaluate(() => window.__game.missions.find((m) => m.id === 'race-dash').reward); // 6b: reward read from the mission (was hard-coded 300)
+    ok('p6 progression: credits/XP awarded by medal', rd.results.credits === Math.round(RW * { gold: 2, silver: 1.5, bronze: 1.2, none: 1 }[rd.results.medal]) && rl.save.credits === expCredits && rl.save.xp === rd.results.xp + rl.results.xp && rl.save.runs === 2,
       `race-dash ${rd.results.medal} +${rd.results.credits} cr/+${rd.results.xp} XP, race-loop ${rl.results.medal} +${rl.results.credits} cr/+${rl.results.xp} XP -> ${rl.save.credits} cr, ${rl.save.xp} XP`);
-    ok('p6 results: best time + medal stored', rl.save.best['race-dash']?.time === rd.results.time && rl.save.best['race-dash'].medal === rd.results.medal && rl.save.best['race-dash'].splits?.length === 7,
+    ok('p6 results: best time + medal stored', rl.save.best['race-dash']?.time === rd.results.time && rl.save.best['race-dash'].medal === rd.results.medal && rl.save.best['race-dash'].splits?.length === rd.splits.length && rd.splits.length >= 7, // 6b: Canyon Dash now has 13 gates
       `best race-dash ${rl.save.best['race-dash']?.time.toFixed(2)} s ${rl.save.best['race-dash']?.medal}, splits ${rl.save.best['race-dash']?.splits?.length}`);
     // retry button restarts the same mission; "next" moves on
     await page.click('#r-retry'); const rt = await page.evaluate(() => ({ ph: window.__game.phase, m: window.__game.mission }));
@@ -102,18 +103,18 @@ export async function runPhase6({ openPage, ok, area }) {
       const g = window.__game, out = {};
       g.startMission('ch-mud'); out.mudOk = g.botRun(30);
       g.startMission('ch-mud'); g.skipCountdown(); g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 2); g.missionReset(); out.mudReset = g.mission;
-      g.startMission('ch-mud'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 18.2); out.mudTime = g.mission;
-      g.startMission('ch-climb'); out.climbOk = g.botRun(30); out.climbPose = g.pose();
-      g.startMission('ch-climb'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 20.2); out.climbTime = g.mission;
+      g.startMission('ch-mud'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 30.2); out.mudTime = g.mission; // 6b: limit 18 -> 30 s
+      g.startMission('ch-climb'); out.climbOk = g.botRun(150); out.climbPose = g.pose(); // 6b: switchback climb ~50 s
+      g.startMission('ch-climb'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 150.2); out.climbTime = g.mission; // 6b: limit 20 -> 150 s
       g.startMission('ch-climb'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 0.2);
       g.flip(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 3.5); out.climbFlip = g.mission;
       g.endMission(); return out;
     });
     metrics.challenges = { mud: +ch.mudOk.t.toFixed(2), climb: +ch.climbOk.t.toFixed(2) };
-    ok('p6 challenge mud: bot crosses both gates in time without reset', ch.mudOk.state === 'success' && ch.mudOk.next === 2, `${ch.mudOk.state} in ${ch.mudOk.t.toFixed(2)} s (limit 18 s)`);
-    ok('p6 challenge mud: reset = fail, timeout = fail', ch.mudReset.state === 'fail' && ch.mudTime.state === 'fail', `reset -> ${ch.mudReset.state} ("${ch.mudReset.failReason}"); idle 18.2 s -> ${ch.mudTime.state} ("${ch.mudTime.failReason}")`);
+    ok('p6 challenge mud: bot crosses both gates in time without reset', ch.mudOk.state === 'success' && ch.mudOk.next === 2, `${ch.mudOk.state} in ${ch.mudOk.t.toFixed(2)} s (limit 30 s)`);
+    ok('p6 challenge mud: reset = fail, timeout = fail', ch.mudReset.state === 'fail' && ch.mudTime.state === 'fail', `reset -> ${ch.mudReset.state} ("${ch.mudReset.failReason}"); idle 30.2 s -> ${ch.mudTime.state} ("${ch.mudTime.failReason}")`);
     ok('p6 challenge climb: bot reaches summit flag', ch.climbOk.state === 'success' && ch.climbPose.y > 15, `${ch.climbOk.state} in ${ch.climbOk.t.toFixed(2)} s, summit y=${ch.climbPose.y.toFixed(1)} m`);
-    ok('p6 challenge climb: timeout and rollover fail', ch.climbTime.state === 'fail' && ch.climbFlip.state === 'fail', `idle 20.2 s -> "${ch.climbTime.failReason}"; rolled over -> "${ch.climbFlip.failReason}"`);
+    ok('p6 challenge climb: timeout and rollover fail', ch.climbTime.state === 'fail' && ch.climbFlip.state === 'fail', `idle 150.2 s -> "${ch.climbTime.failReason}"; rolled over -> "${ch.climbFlip.failReason}"`);
 
     // rescue: tow (rope joint) + delivery
     await page.evaluate(() => window.__game.startMission('rs-tow'));
@@ -129,15 +130,15 @@ export async function runPhase6({ openPage, ok, area }) {
     metrics.tow = { t: +tw1.r.t.toFixed(2), moved: +Math.hypot(tw1.b.x - tw1.a.x, tw1.b.z - tw1.a.z).toFixed(1), zoneDist: +zd.toFixed(2) };
     ok('p6 tow: stuck 4x4 stays put in the mud on its own', Math.hypot(tw0.b.x - tw0.a.x, tw0.b.z - tw0.a.z) < 0.5 && tw0.a.surface === 'mud' && tw0.far === false,
       `drift ${Math.hypot(tw0.b.x - tw0.a.x, tw0.b.z - tw0.a.z).toFixed(2)} m in 5 s on ${tw0.a.surface}; hook from start refused`);
-    ok('p6 tow: H attaches the rope joint, towing drags the 4x4 into the safe zone', tw1.m0.attached && tw1.m0.ropeLen > 2 && tw1.r.state === 'success' && zd < tw0.zone.r && metrics.tow.moved > 25,
+    ok('p6 tow: H attaches the rope joint, towing drags the 4x4 into the safe zone', tw1.m0.attached && tw1.m0.ropeLen > 2 && tw1.r.state === 'success' && zd <= tw0.zone.r - 2 && metrics.tow.moved > 25, // 6b: must be well inside (<= r-2 m)
       `attached (rope ${tw1.m0.ropeLen.toFixed(1)} m); stuck vehicle moved ${metrics.tow.moved} m, ends ${zd.toFixed(1)} m from safe-zone centre (r=${tw0.zone.r}) in ${tw1.r.t.toFixed(1)} s`);
     const dv = await page.evaluate(() => { const g = window.__game, out = {};
-      g.startMission('rs-deliver'); out.ok = g.botRun(30, { slowZone: true });
-      g.startMission('rs-deliver'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 25.2); out.late = g.mission;
+      g.startMission('rs-deliver'); out.ok = g.botRun(120, { slowZone: true }); // 6b: route ~45-65 s
+      g.startMission('rs-deliver'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 120.2); out.late = g.mission; // 6b: limit 25 -> 120 s
       g.endMission(); return out; });
     metrics.deliver = +dv.ok.t.toFixed(2);
     ok('p6 deliver: bot reaches camp and stops before dark; idle -> night fail', dv.ok.state === 'success' && dv.late.state === 'fail' && /night|dark/i.test(dv.late.failReason),
-      `delivered in ${dv.ok.t.toFixed(2)} s (limit 25 s); idle -> "${dv.late.failReason}"`);
+      `delivered in ${dv.ok.t.toFixed(2)} s (limit 120 s); idle -> "${dv.late.failReason}"`);
 
     // unlock with earned credits; persistence across reload
     const before = await page.evaluate(() => window.__game.save);

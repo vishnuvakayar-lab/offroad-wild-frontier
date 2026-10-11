@@ -2,6 +2,7 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { runPhase6 } from './phase6-block.mjs';
+import { runPhase6b } from './phase6b-block.mjs';
 
 const APP_URL = process.env.URL || 'http://127.0.0.1:4173/';
 const SHOTS = new URL('../screenshots/', import.meta.url).pathname;
@@ -552,6 +553,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
 }
 // ---------------- Phase 6: missions, results, progression, upgrades, save migration ----------------
 await runPhase6({ openPage, ok, area });
+await runPhase6b({ openPage, ok, area });
 await browser.close();
 const failed = results.filter((r) => !r.pass);
 fs.writeFileSync(new URL('../screenshots/test-results.json', import.meta.url), JSON.stringify(results, null, 2));
