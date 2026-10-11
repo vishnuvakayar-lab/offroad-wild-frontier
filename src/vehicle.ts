@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
-import { surfaceAt, type Surface } from './terrain';
+import { surfaceAt, puddleAt, type Surface } from './terrain';
 import { TrackMarks } from './tracks';
 
 export interface DriveInput { throttle: number; brake: number; steer: number; handbrake: boolean; }
@@ -35,8 +35,18 @@ export class Vehicle {
   surfaces: (Surface | null)[] = [null, null, null, null];
   private extraSpin = [0, 0, 0, 0];
   private tracks: TrackMarks;
-  private lastMark: (THREE.Vector3 | null)[] = [null, null, null, null];
   headlights: THREE.SpotLight[] = [];
+  /** shadow-casting centre beam used at night / in fog */
+  beam!: THREE.SpotLight;
+  paint!: THREE.MeshStandardMaterial;
+  lampMat!: THREE.MeshStandardMaterial;
+  /** per-wheel telemetry for particles/audio */
+  slip = [0, 0, 0, 0];
+  contact: (THREE.Vector3 | null)[] = [null, null, null, null];
+  inPuddle = [false, false, false, false];
+  throttle = 0;
+  rpm = 900;
+  gear = 1;
 
   constructor(world: RAPIER_NS.World, R: typeof RAPIER_NS, scene: THREE.Scene, tracks: TrackMarks) {
     this.tracks = tracks;
@@ -69,11 +79,11 @@ export class Vehicle {
 
   private buildModel() {
     const g = this.group;
-    const paint = new THREE.MeshStandardMaterial({ color: 0xb8823a, roughness: 0.45, metalness: 0.35 });
+    const paint = this.paint = new THREE.MeshStandardMaterial({ color: 0xb8823a, roughness: 0.45, metalness: 0.35 });
     const dark = new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: 0.8, metalness: 0.2 });
     const glass = new THREE.MeshStandardMaterial({ color: 0x223040, roughness: 0.1, metalness: 0.6 });
     const chrome = new THREE.MeshStandardMaterial({ color: 0xbfc3c7, roughness: 0.25, metalness: 0.9 });
-    const lamp = new THREE.MeshStandardMaterial({ color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 2.0 });
+    const lamp = this.lampMat = new THREE.MeshStandardMaterial({ color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 2.0 });
     const tail = new THREE.MeshStandardMaterial({ color: 0x700000, emissive: 0xff1a1a, emissiveIntensity: 1.2 });
     const add = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, rx = 0) => {
       const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.x = rx;
@@ -138,6 +148,12 @@ export class Vehicle {
       g.add(s, s.target);
       this.headlights.push(s);
     }
+    this.beam = new THREE.SpotLight(0xfff1d0, 0, 70, 0.42, 0.6, 1.0);
+    this.beam.position.set(0, 0.6, 2.3);
+    this.beam.target.position.set(0, -1, 16);
+    this.beam.shadow.mapSize.set(1024, 1024);
+    this.beam.shadow.camera.near = 0.5; this.beam.shadow.camera.far = 70; this.beam.shadow.bias = -0.0008;
+    g.add(this.beam, this.beam.target);
   }
 
   reset(x: number, y: number, z: number, yaw: number) {
@@ -147,7 +163,7 @@ export class Vehicle {
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
     this.steer = 0;
-    this.lastMark = [null, null, null, null];
+    this.tracks.reset();
   }
 
   forward(out = new THREE.Vector3()) {
@@ -192,17 +208,31 @@ export class Vehicle {
     if (inp.throttle <= 0.01 && inp.brake <= 0.01) brake = 4; // engine braking / rolling resistance
 
     let contacts = 0, dragSum = 0;
+    const v = this.body.linvel();
+    const r = this.body.rotation();
+    const right = new THREE.Vector3(-1, 0, 0).applyQuaternion(new THREE.Quaternion(r.x, r.y, r.z, r.w));
+    const latV = Math.abs(v.x * right.x + v.y * right.y + v.z * right.z);
     for (let i = 0; i < 4; i++) {
       const inContact = ctrl.wheelIsInContact(i);
       let s: Surface | null = null;
+      this.inPuddle[i] = false;
       if (inContact) {
         const p = ctrl.wheelContactPoint(i);
         s = p ? surfaceAt(p.x, p.z) : 'ground';
+        if (p) { (this.contact[i] ??= new THREE.Vector3()).set(p.x, p.y, p.z); this.inPuddle[i] = !!puddleAt(p.x, p.z); }
         contacts++;
-      }
+      } else this.contact[i] = null;
       this.surfaces[i] = s;
       const sp = SURFACE_PARAMS[s ?? 'ground'];
-      dragSum += inContact ? sp.drag : 0;
+      dragSum += inContact ? sp.drag + (this.inPuddle[i] ? 0.35 : 0) : 0;
+      // slip estimate: requested drive force vs available grip (Rapier clamps the forward impulse at
+      // suspensionForce * frictionSlip) plus sideways sliding
+      if (inContact) {
+        const grip = (ctrl.wheelSuspensionForce(i) ?? 0) * sp.slip;
+        const req = Math.abs(engine) + (inp.handbrake && i >= 2 ? 3000 : 0);
+        const lon = req > grip && req > 0 ? (req - grip) / req : 0;
+        this.slip[i] = Math.min(1, lon + latV / 7);
+      } else this.slip[i] = 0;
       const rear = i >= 2;
       ctrl.setWheelFrictionSlip(i, sp.slip);
       ctrl.setWheelSideFrictionStiffness(i, sp.side * (rear && inp.handbrake ? 0.35 : 1));
@@ -210,10 +240,23 @@ export class Vehicle {
       ctrl.setWheelEngineForce(i, engine / 1); // per wheel (4WD)
       ctrl.setWheelBrake(i, rear && inp.handbrake ? 160 : brake);
       // visual wheel-spin on loose surfaces under power
-      const loose = s === 'mud' ? 1 : s === 'sand' ? 0.6 : 0;
-      this.extraSpin[i] += Math.sign(engine) * Math.abs(inp.throttle || inp.brake) * loose * dt * 14;
+      this.extraSpin[i] += Math.sign(engine) * (inContact ? this.slip[i] : Math.abs(engine) / ENGINE_FORCE) * dt * 20;
     }
     ctrl.updateVehicle(dt);
+
+    // simple automatic gearbox -> engine RPM for audio/HUD
+    this.throttle = Math.max(inp.throttle, engine < 0 ? inp.brake : 0);
+    const kmh = Math.abs(speed) * 3.6;
+    const GEARS = [0, 18, 36, 58, 82, 108, 140];
+    let gI = 1; while (gI < GEARS.length - 1 && kmh > GEARS[gI]) gI++;
+    this.gear = speed < -0.5 ? -1 : gI;
+    const lo = GEARS[gI - 1], hi = GEARS[gI];
+    const avgSlip = (this.slip[0] + this.slip[1] + this.slip[2] + this.slip[3]) / 4;
+    const frac = Math.min(1, (kmh - lo) / (hi - lo));
+    let rpmT = gI === 1 ? 900 + frac * 4300 : 2400 + frac * 2800;
+    rpmT += this.throttle * (900 + avgSlip * 2600) * (contacts ? 1 : 2.5);
+    rpmT = Math.min(6500, Math.max(850, rpmT));
+    this.rpm += (rpmT - this.rpm) * Math.min(1, dt * 6);
 
     // surface resistance (mud suction, sand ploughing) + light aero drag
     if (contacts > 0) {
@@ -238,20 +281,15 @@ export class Vehicle {
       w.rotation.y = i < 2 ? this.steer : 0;
       const spin = w.children[0];
       spin.rotation.x = (this.ctrl.wheelRotation(i) ?? 0) + this.extraSpin[i];
-      // tracks
+      // continuous tyre tracks on soft ground
       const s = this.surfaces[i];
-      if (s && s !== 'ground' && this.ctrl.wheelIsInContact(i)) {
+      if (s && s !== 'ground' && this.ctrl.wheelIsInContact(i) && !this.inPuddle[i]) {
         const p = this.ctrl.wheelContactPoint(i);
         if (p) {
-          const pv = new THREE.Vector3(p.x, p.y, p.z);
-          const last = this.lastMark[i];
-          if (!last || last.distanceToSquared(pv) > 0.16) {
-            const n = this.ctrl.wheelContactNormal(i);
-            this.tracks.add(pv, n ? new THREE.Vector3(n.x, n.y, n.z) : new THREE.Vector3(0, 1, 0), this.forward(), s);
-            this.lastMark[i] = pv;
-          }
+          const n = this.ctrl.wheelContactNormal(i);
+          this.tracks.add(i, new THREE.Vector3(p.x, p.y, p.z), n ? new THREE.Vector3(n.x, n.y, n.z) : new THREE.Vector3(0, 1, 0), this.forward(), s);
         }
-      } else this.lastMark[i] = null;
+      } else this.tracks.lift(i);
     }
   }
 }

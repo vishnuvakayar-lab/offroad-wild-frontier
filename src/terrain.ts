@@ -46,7 +46,29 @@ export function surfaceAt(x: number, z: number): Surface {
   return 'ground';
 }
 
+/** Deeper drivable puddles: a depression in the terrain filled with a water plane. */
+export interface Puddle { x: number; z: number; r: number; depth: number; level: number; }
+export const PUDDLES: Puddle[] = [
+  [-70, 42, 5.5], [-58, 56, 4.2], [-50, 28, 3.6], [-82, 18, 4.2], [-66, 72, 3.4], [-92, 60, 3.8], [-44, 46, 3.2],
+  [-20, -30, 4.2],
+].map(([x, z, r]) => ({ x, z, r, depth: 0.5, level: 0 }));
+for (const p of PUDDLES) p.level = baseHeight(p.x, p.z) - 0.12;
+
+export function puddleAt(x: number, z: number): Puddle | null {
+  for (const p of PUDDLES) if ((x - p.x) ** 2 + (z - p.z) ** 2 < p.r * p.r) return p;
+  return null;
+}
+
 export function heightAt(x: number, z: number): number {
+  let h = baseHeight(x, z);
+  for (const p of PUDDLES) {
+    const d = Math.hypot(x - p.x, z - p.z);
+    if (d < p.r + 1.5) h -= p.depth * (1 - sstep(p.r * 0.45, p.r + 1.5, d));
+  }
+  return h;
+}
+
+function baseHeight(x: number, z: number): number {
   // rolling hills
   let h = (fbm(x * 0.018 + 10, z * 0.018 - 7, 5) - 0.45) * 9;
   // rocky mountain rim towards map edges
@@ -81,6 +103,10 @@ const C_MUD_WET = new THREE.Color(0x2a1e14);
 const C_SAND = new THREE.Color(0xd9b77a);
 const C_SAND_D = new THREE.Color(0xc29a5c);
 const C_ROCK = new THREE.Color(0x7c7770);
+
+export const TREES: { x: number; z: number }[] = [];
+export const wetMaterials: THREE.MeshStandardMaterial[] = [];
+export const waterMat = new THREE.MeshStandardMaterial({ color: 0x6a604e, roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.8 });
 
 export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER: typeof RAPIER_NS) {
   const geo = new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE, SEG, SEG);
@@ -130,19 +156,14 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx, 60, hz).setTranslation(x, 20, z), ground);
   }
 
-  // shallow muddy water puddles in the mud basin (visual)
-  const puddleMat = new THREE.MeshStandardMaterial({ color: 0x2b2116, roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.85 });
-  const rnd = mulberry(7);
-  for (let i = 0; i < 9; i++) {
-    const a = rnd() * Math.PI * 2, r = rnd() * (ZONES.mud.r - 10);
-    const x = ZONES.mud.x + Math.cos(a) * r, z = ZONES.mud.z + Math.sin(a) * r;
-    const p = new THREE.Mesh(new THREE.CircleGeometry(2 + rnd() * 3, 20), puddleMat);
-    p.rotation.x = -Math.PI / 2;
-    p.position.set(x, heightAt(x, z) + 0.06, z);
-    p.scale.set(1, 0.6 + rnd() * 0.6, 1);
-    p.receiveShadow = true;
-    scene.add(p);
+  // water surfaces for the puddles
+  const water = waterMat;
+  for (const p of PUDDLES) {
+    const m = new THREE.Mesh(new THREE.CircleGeometry(p.r * 0.92, 28), water);
+    m.rotation.x = -Math.PI / 2; m.position.set(p.x, p.level, p.z); m.receiveShadow = true; m.name = 'water';
+    scene.add(m);
   }
+  wetMaterials.push(mat);
 
   scatterProps(scene, world, RAPIER, ground);
   return mesh;
@@ -177,11 +198,12 @@ function scatterProps(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER: typeof
   let t = 0, guard = 0;
   while (t < NT && guard++ < 5000) {
     const x = (rnd() - 0.5) * (MAP_SIZE - 30), z = (rnd() - 0.5) * (MAP_SIZE - 30);
-    if (!ok(x, z, 6)) continue;
+    if (!ok(x, z, 6) || puddleAt(x, z)) continue;
     const y = heightAt(x, z), s = 0.8 + rnd() * 0.7;
     Q.setFromEuler(new THREE.Euler(0, rnd() * 6.28, 0));
     trunks.setMatrixAt(t, M.compose(P.set(x, y + 1.2 * s, z), Q, S.set(s, s, s)));
     crowns.setMatrixAt(t, M.compose(P.set(x, y + (2.4 + 2.0) * s, z), Q, S.set(s, s, s)));
+    TREES.push({ x, z });
     world.createCollider(RAPIER.ColliderDesc.cylinder(1.5 * s, 0.3 * s).setTranslation(x, y + 1.5 * s, z), ground);
     t++;
   }
@@ -189,7 +211,7 @@ function scatterProps(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER: typeof
   let r = 0; guard = 0;
   while (r < NR && guard++ < 5000) {
     const x = (rnd() - 0.5) * (MAP_SIZE - 30), z = (rnd() - 0.5) * (MAP_SIZE - 30);
-    if (!ok(x, z, 2)) continue;
+    if (!ok(x, z, 2) || puddleAt(x, z)) continue;
     const y = heightAt(x, z), s = 0.5 + rnd() * 1.6;
     Q.setFromEuler(new THREE.Euler(rnd() * 3, rnd() * 3, rnd() * 3));
     rocks.setMatrixAt(r, M.compose(P.set(x, y + s * 0.3, z), Q, S.set(s * 1.3, s, s * 1.1)));

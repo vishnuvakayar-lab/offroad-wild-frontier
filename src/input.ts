@@ -8,9 +8,11 @@ export class Input {
   override: DriveInput | null = null; // used by automated tests
   onPause: () => void = () => {};
   onReset: () => void = () => {};
+  onKey: (code: string) => boolean = () => false; // return true to swallow the key
 
   constructor() {
     window.addEventListener('keydown', (e) => {
+      if (!e.repeat && this.onKey(e.code)) { e.preventDefault(); return; }
       if (e.code === 'Escape' || e.code === 'KeyP') { this.onPause(); return; }
       if (e.code === 'KeyR' && !e.repeat) this.onReset();
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();

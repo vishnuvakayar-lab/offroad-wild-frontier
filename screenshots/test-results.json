@@ -2,12 +2,22 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 649 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 783 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  {
+    "name": "audio: no AudioContext before any user gesture",
+    "pass": true,
+    "detail": "state=none"
   },
   {
     "name": "desktop: menu panel does not cover whole game",
     "pass": true,
-    "detail": "covers 17% of viewport"
+    "detail": "covers 18% of viewport"
+  },
+  {
+    "name": "audio: AudioContext created and running after first click",
+    "pass": true,
+    "detail": "state=running"
   },
   {
     "name": "desktop: settings drawer partial",
@@ -20,14 +30,24 @@
     "detail": "preset=medium"
   },
   {
+    "name": "intro: Play starts the intro and Skip ends it",
+    "pass": true,
+    "detail": "phase after Play=intro, skip->playing in 165 ms"
+  },
+  {
+    "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
+    "pass": true,
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 900 rpm -> throttle: 156.1 Hz measured / 151.9 Hz set, 4557 rpm (gear 4)"
+  },
+  {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 32.28 m, speed 69.9 km/h (render-paced)"
+    "detail": "moved 37.81 m, speed 64.4 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 70.4 deg"
+    "detail": "heading change 56.0 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -62,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "146 track decals in 5 s"
+    "detail": "126 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.7 fps, Low preset 15.6 fps"
+    "detail": "High preset 11.1 fps, Low preset 25.8 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -77,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 1152 ms"
+    "detail": "load 669 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -87,7 +107,17 @@
   {
     "name": "mobile-portrait-390x844: settings drawer partial",
     "pass": true,
-    "detail": "covers 48%"
+    "detail": "covers 54%"
+  },
+  {
+    "name": "mobile-portrait-390x844: intro plays and tap on Skip ends it",
+    "pass": true,
+    "detail": "intro -> playing"
+  },
+  {
+    "name": "mobile-portrait-390x844: audio running after tap",
+    "pass": true,
+    "detail": "state=running"
   },
   {
     "name": "mobile-portrait-390x844: touch controls visible, >=48px, on-screen",
@@ -97,12 +127,12 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 60.12 m, heading change 55.3 deg"
+    "detail": "moved 33.01 m, heading change 78.6 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
     "pass": true,
-    "detail": "14.5 fps @ preset medium"
+    "detail": "16.3 fps @ preset medium"
   },
   {
     "name": "mobile-portrait-390x844: rotation -> canvas resizes to new viewport",
@@ -117,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 1156 ms"
+    "detail": "load 607 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -130,6 +160,16 @@
     "detail": "covers 40%"
   },
   {
+    "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
+    "pass": true,
+    "detail": "intro -> playing"
+  },
+  {
+    "name": "mobile-landscape-844x390: audio running after tap",
+    "pass": true,
+    "detail": "state=running"
+  },
+  {
     "name": "mobile-landscape-844x390: touch controls visible, >=48px, on-screen",
     "pass": true,
     "detail": "left:66x66 right:66x66 hand:50x50 brake:66x66 gas:70x96"
@@ -137,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 44.73 m, heading change 47.8 deg"
+    "detail": "moved 29.50 m, heading change 61.9 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "13.5 fps @ preset medium"
+    "detail": "16.9 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -151,6 +191,86 @@
   },
   {
     "name": "mobile-landscape-844x390: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "particles: mud and sand emit more than dirt under full throttle",
+    "pass": true,
+    "detail": "dirt 10 / mud 478 / sand 440; slip dirt 0.00 / mud 0.51 / sand 0.21"
+  },
+  {
+    "name": "puddles: vehicle drives through a deep puddle and it splashes",
+    "pass": true,
+    "detail": "wheels in water=true, peak splash particles 161, chassis y in puddle 0.57 vs water level -0.10"
+  },
+  {
+    "name": "tracks: continuous ribbon segments laid",
+    "pass": true,
+    "detail": "144 ribbon segments"
+  },
+  {
+    "name": "camera: FOV widens with speed",
+    "pass": true,
+    "detail": "62.0 deg at rest -> 69.3 deg at speed"
+  },
+  {
+    "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
+    "pass": true,
+    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.04 m above ground"
+  },
+  {
+    "name": "weather: HUD quick toggle and T key cycle presets",
+    "pass": true,
+    "detail": "clear -> sunset -> fog"
+  },
+  {
+    "name": "weather: clear loads without console errors",
+    "pass": true,
+    "detail": "11.7 fps (High)"
+  },
+  {
+    "name": "weather: sunset loads without console errors",
+    "pass": true,
+    "detail": "12.7 fps (High)"
+  },
+  {
+    "name": "weather: fog loads without console errors",
+    "pass": true,
+    "detail": "11.2 fps (High)"
+  },
+  {
+    "name": "weather: rain loads without console errors",
+    "pass": true,
+    "detail": "10.4 fps (High)"
+  },
+  {
+    "name": "weather: night loads without console errors",
+    "pass": true,
+    "detail": "10.8 fps (High)"
+  },
+  {
+    "name": "preset low: renders after switch, AA=false",
+    "pass": true,
+    "detail": "24.6 fps, 77 draw calls, 67372 tris, particles {\"mud\":112,\"dust\":0,\"splash\":0,\"spawned\":7983}"
+  },
+  {
+    "name": "preset medium: renders after switch, AA=true",
+    "pass": true,
+    "detail": "10.8 fps, 113 draw calls, 78488 tris, particles {\"mud\":218,\"dust\":0,\"splash\":0,\"spawned\":8833}"
+  },
+  {
+    "name": "preset high: renders after switch, AA=true",
+    "pass": true,
+    "detail": "10.0 fps, 113 draw calls, 79064 tris, particles {\"mud\":292,\"dust\":0,\"splash\":0,\"spawned\":10186}"
+  },
+  {
+    "name": "AA toggled without page reload",
+    "pass": true,
+    "detail": "navigations=1"
+  },
+  {
+    "name": "phase4: no console errors",
     "pass": true,
     "detail": ""
   }
