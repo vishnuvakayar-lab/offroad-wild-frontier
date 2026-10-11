@@ -61,10 +61,14 @@ export class MissionRunner {
   msg = ''; msgT = 0; wrongT = 0; flipT = 0; failReason = '';
   last: Pose; attached = false; reached = false;
   private prev: { x: number; z: number } | null = null;
+  /** the car was teleported (reset/start): don't treat the jump as a gate crossing */
+  jumped() { this.prev = null; }
   constructor(public def: MissionDef) { this.last = { ...def.start }; }
 
   get finished() { return this.state === 'success' || this.state === 'fail'; }
-  say(m: string, t = 1.6) { this.msg = m; this.msgT = t; }
+  /** recent distinct messages (for tests / debugging) */
+  log: string[] = [];
+  say(m: string, t = 1.6) { if (this.log[this.log.length - 1] !== m) { this.log.push(m); if (this.log.length > 30) this.log.shift(); } this.msg = m; this.msgT = t; }
 
   /** returns true when the reset is allowed (and it should teleport to `last`) */
   requestReset(): boolean {

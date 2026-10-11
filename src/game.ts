@@ -81,7 +81,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   let envTex: THREE.Texture | null = null;
   // spawn facing open ground towards the dunes (no trees on this line)
   const spawn = { x: 0, z: -8, yaw: Math.atan2(ZONES.sand.x - 0, ZONES.sand.z + 8) };
-  const resetCar = (x = spawn.x, z = spawn.z, yaw = spawn.yaw) => car.reset(x, heightAt(x, z) + car.spawnLift, z, yaw);
+  let onTeleport: (() => void) | null = null; // set by the mission block
+  const resetCar = (x = spawn.x, z = spawn.z, yaw = spawn.yaw) => { car.reset(x, heightAt(x, z) + car.spawnLift, z, yaw); onTeleport?.(); };
   resetCar();
 
   const mudP = new Particles(scene, 1800, 9.8, 0.6, 0.95);
@@ -288,6 +289,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   let stuck: Vehicle | null = null;
   let rope: RAPIER_NS.ImpulseJoint | null = null, ropeLen = 0, winching = false, winchAcc = 0;
   let resultT = 0, lastResult: any = null, modeTab: Mode = 'challenge';
+  onTeleport = () => mission?.jumped();
   const NO_TRACKS = { add() {}, lift() {}, reset() {} } as unknown as TM;
   const STUCK_IN: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: false };
   const placeAt = (v: Vehicle, p: Pose) => v.reset(p.x, heightAt(p.x, p.z) + v.spawnLift, p.z, p.yaw);
@@ -310,7 +312,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   }
   function sampleCar() {
     const t = car.body.translation(), f = car.forward();
-    return { x: t.x, z: t.z, yaw: Math.atan2(f.x, f.z), speed: car.forwardSpeed(), up: car.group.up.clone().applyQuaternion(car.group.quaternion).y };
+    const q = car.body.rotation();
+    return { x: t.x, z: t.z, yaw: Math.atan2(f.x, f.z), speed: car.forwardSpeed(), up: 1 - 2 * (q.x * q.x + q.z * q.z) }; // body up-vector y (fresh every physics step)
   }
   /** one fixed physics step (player, tow target, world, mission logic) — shared by the render loop and the test simulate hook */
   function physStep(drive: DriveInput) {
@@ -790,7 +793,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     startMission: (id: string) => startMission(id),
     endMission: () => { endMission(); setPhase('menu'); },
     skipCountdown: () => { if (mission && mission.state === 'countdown') mission.countdown = 0.0001; },
-    get mission() { if (!mission) return null; const m = mission; return { id: m.def.id, state: m.state, t: m.t, next: m.next, splits: m.splits.slice(), rejected: m.rejected, resets: m.resets, msg: m.msg, attached: m.attached, reached: m.reached, failReason: m.failReason, countdown: m.countdown, ropeLen: rope ? ropeLen : 0 }; },
+    get mission() { if (!mission) return null; const m = mission; return { id: m.def.id, state: m.state, t: m.t, next: m.next, splits: m.splits.slice(), rejected: m.rejected, resets: m.resets, msg: m.msg, log: m.log.slice(), attached: m.attached, reached: m.reached, failReason: m.failReason, countdown: m.countdown, ropeLen: rope ? ropeLen : 0 }; },
     missionReset: () => missionReset(),
     hook: () => toggleHook(),
     winch: (on: boolean) => { winching = on; },
@@ -841,6 +844,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       return { yaw: Math.atan2(f1.x, f1.z), distance: Math.hypot(t1.x - start.x, t1.z - start.z), finalSpeed: car.forwardSpeed(), surface: car.surface(), trace };
     },
     zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt,
+    /** test hook: roll the car onto its roof in place */
+    flip: () => { const t = car.body.translation(), r = car.body.rotation(); const q = new THREE.Quaternion(r.x, r.y, r.z, r.w).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
+      car.body.setTranslation({ x: t.x, y: t.y + 1.8, z: t.z }, true); car.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true); car.body.setLinvel({ x: 0, y: 0, z: 0 }, true); car.body.setAngvel({ x: 0, y: 0, z: 0 }, true); },
     pose: () => { const c = sampleCar(); const t = car.body.translation(); return { ...c, y: t.y }; },
     /** Test bot: steers toward the current mission objective using the deterministic fixed step; returns the mission state. */
     botRun: (maxSeconds: number, o: { throttle?: number; slowZone?: boolean; autoHook?: boolean } = {}) => {

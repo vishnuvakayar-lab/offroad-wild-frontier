@@ -1,4 +1,4 @@
-// Acceptance tests for Phases 1-5 (+5b detailed models). Run against `npm run preview` (http://127.0.0.1:4173).
+// Acceptance tests for Phases 1-6 (+5b detailed models, 6 missions/progression). Run against `npm run preview` (http://127.0.0.1:4173).
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 
@@ -15,7 +15,7 @@ const browser = await chromium.launch({
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 });
 
-async function openPage(ctxOpts, label) {
+async function openPage(ctxOpts, label, query = '') {
   const ctx = await browser.newContext(ctxOpts);
   const page = await ctx.newPage();
   const errors = [];
@@ -23,7 +23,7 @@ async function openPage(ctxOpts, label) {
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url()));
   const t0 = Date.now();
-  await page.goto(APP_URL);
+  await page.goto(APP_URL + query);
   await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
   const loadMs = Date.now() - t0;
   await page.waitForTimeout(1200); // loading screen fade
@@ -320,7 +320,8 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
 // ---------------- Phase 5: garage, vehicle roster, tuning, persistence, night visibility ----------------
 {
   const SHOTS5 = SHOTS + 'phase5/'; fs.mkdirSync(SHOTS5, { recursive: true });
-  const { ctx, page, errors } = await openPage({ viewport: { width: 1280, height: 720 } }, 'phase5');
+  // Phase 6 adjustment: vehicles/paints are now unlocked by progression, so the Phase 5 roster/garage checks run with the dev override (?dev=1)
+  const { ctx, page, errors } = await openPage({ viewport: { width: 1280, height: 720 } }, 'phase5', '?dev=1');
   // Physics per vehicle (deterministic fixed-step simulate, independent of render FPS)
   const rows = await page.evaluate(() => {
     const g = window.__game, out = [];
