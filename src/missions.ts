@@ -41,21 +41,29 @@ const climbGates: Gate[] = LEG_MID.map((i) => { const a = TRAIL[Math.max(0, i - 
 const deliverGates = gatesFrom(DELIVER_PTS, 14).slice(1);
 const deliverStart: Pose = { x: DELIVER_PTS[0][0] + 8, z: DELIVER_PTS[0][1] - 10, yaw: yawOf(DELIVER_PTS[1][0] - DELIVER_PTS[0][0] - 8, DELIVER_PTS[1][1] - DELIVER_PTS[0][1] + 10) };
 
+/** Medal targets from the clean test bot's time on the Scout (deterministic, tests/phase6b): gold = bot x 1.2,
+ *  silver = x 1.5, bronze = x 2 (rounded to 0.5 s). The human-like bot (reaction delay, input noise, slower corners)
+ *  must still reach bronze; see tests/phase6b-block.mjs. */
+export const BOT_TIMES: Record<string, number> = { 'race-loop': 31.07, 'race-dash': 26.35, 'ch-mud': 9.1, 'ch-climb': 48.13, 'rs-tow': 25.7, 'rs-deliver': 45.63 };
+export const MEDAL_FACTORS = { gold: 1.2, silver: 1.5, bronze: 2 };
+const r05 = (x: number) => Math.round(x * 2) / 2;
+const fromBot = (id: string) => ({ gold: r05(BOT_TIMES[id] * MEDAL_FACTORS.gold), silver: r05(BOT_TIMES[id] * MEDAL_FACTORS.silver), bronze: r05(BOT_TIMES[id] * MEDAL_FACTORS.bronze) });
+
 export const MISSIONS: MissionDef[] = [
   { id: 'race-loop', mode: 'race', type: 'race', title: 'Dune Loop', desc: 'Two laps of the desert: flat apron and rolling dunes. 16 checkpoints.',
-    start: startBefore(loopGates[0], -4), gates: loop2, laps: 2, limit: null, targets: { gold: 40, silver: 50, bronze: 66 }, reward: 320 },
-  { id: 'race-dash', mode: 'race', type: 'race', title: 'Canyon Dash', desc: 'Point-to-point sprint across the dune field and up the canyon rim. 11 checkpoints.',
-    start: startBefore(dashGates[0]), gates: dashGates, limit: null, targets: { gold: 30, silver: 38, bronze: 50 }, reward: 320 },
+    start: startBefore(loopGates[0], -4), gates: loop2, laps: 2, limit: null, targets: fromBot('race-loop'), reward: 320 },
+  { id: 'race-dash', mode: 'race', type: 'race', title: 'Canyon Dash', desc: 'Point-to-point sprint across the dune field and up the canyon rim and back to base. 13 checkpoints.',
+    start: startBefore(dashGates[0]), gates: dashGates, limit: null, targets: fromBot('race-dash'), reward: 320 },
   { id: 'ch-mud', mode: 'challenge', type: 'mudrun', title: 'Mud Crossing', desc: 'Cross the mud basin through both gates within the time limit. No resets allowed.',
-    start: { x: -72, z: 1, yaw: 0 }, gates: gatesFrom([[-72, 30], [-72, 78]], 14), limit: 30, noReset: true, targets: { gold: 11, silver: 14, bronze: 18 }, reward: 250 },
+    start: { x: -72, z: 1, yaw: 0 }, gates: gatesFrom([[-72, 30], [-72, 78]], 14), limit: 30, noReset: true, targets: fromBot('ch-mud'), reward: 250 },
   { id: 'ch-climb', mode: 'challenge', type: 'climb', title: 'Ridge Climb', desc: 'Switchback trail up the rocky mountain: steep loose-rock sections and tight hairpins. Reach the summit flag; do not roll over.',
-    start: { ...RIDGE_TRAIL.start }, gates: climbGates, limit: 150, zone: { x: RIDGE_TRAIL.summit.x, z: RIDGE_TRAIL.summit.z, r: 7 }, path: pathOf(TRAIL), targets: { gold: 50, silver: 65, bronze: 90 }, reward: 420 },
+    start: { ...RIDGE_TRAIL.start }, gates: climbGates, limit: 150, zone: { x: RIDGE_TRAIL.summit.x, z: RIDGE_TRAIL.summit.z, r: 7 }, path: pathOf(TRAIL), targets: fromBot('ch-climb'), reward: 420 },
   { id: 'rs-tow', mode: 'rescue', type: 'tow', title: 'Bogged Down', desc: 'A 4x4 is stuck deep in the mud basin. Reach it, hook up the tow rope (H / Hook) and drag it well inside the safe zone.',
     start: { x: -14, z: 34, yaw: -Math.PI / 2 }, gates: [], limit: 150, zone: { x: -22, z: 48, r: 7 }, stuck: { x: -60, z: 46, yaw: Math.PI / 2 },
-    targets: { gold: 30, silver: 50, bronze: 150 }, reward: 450 },
+    targets: fromBot('rs-tow'), reward: 450 },
   { id: 'rs-deliver', mode: 'rescue', type: 'deliver', title: 'Supply Run', desc: 'Cross the map with supplies — mud basin, proving ground, eastern hills and dunes — and stop at the stranded camp before night falls.',
-    start: deliverStart, gates: deliverGates, limit: 150, zone: { x: DELIVER_CAMP.x, z: DELIVER_CAMP.z, r: 8 },
-    path: [{ x: deliverStart.x, z: deliverStart.z }, ...DELIVER_PTS.map(([x, z]) => ({ x, z })), DELIVER_CAMP], targets: { gold: 60, silver: 80, bronze: 120 }, reward: 500 },
+    start: deliverStart, gates: deliverGates, limit: 120, zone: { x: DELIVER_CAMP.x, z: DELIVER_CAMP.z, r: 8 },
+    path: [{ x: deliverStart.x, z: deliverStart.z }, ...DELIVER_PTS.map(([x, z]) => ({ x, z })), DELIVER_CAMP], targets: fromBot('rs-deliver'), reward: 500 },
 ];
 export const missionById = (id: string) => MISSIONS.find((m) => m.id === id);
 
@@ -107,6 +115,8 @@ export class MissionRunner {
       for (let j = 0; j < d.gates.length; j++) {
         const g = d.gates[j], dir = cross(this.prev, c, g);
         if (!dir) continue;
+        // lap races repeat gates: a crossing of a later copy of the current gate is the current gate
+        if (j > this.next && d.gates.findIndex((q) => Math.hypot(q.x - g.x, q.z - g.z) < 0.5) < j) continue;
         if (dir < 0) { this.say('Wrong way!'); continue; }
         if (j === this.next) {
           this.splits.push(this.t); this.next++;

@@ -92,10 +92,12 @@ export function nearTrail(x: number, z: number) {
   return { d: best.d, h: a.h + (b.h - a.h) * t, hw: a.hw + (b.hw - a.hw) * t, rough: a.rough + (b.rough - a.rough) * t, s: a.s + (b.s - a.s) * t };
 }
 /** Mission routes that cross open terrain (trees are kept off a corridor around them). */
-export const DASH_PTS: [number, number][] = [[30, -20], [48, -38], [58, -60], [70, -82], [92, -100], [116, -86], [130, -60], [126, -30], [110, -8], [88, 4], [64, -2]];
-export const DELIVER_PTS: [number, number][] = [[-30, -20], [-50, 15], [-64, 58], [-40, 95], [20, 100], [75, 94], [115, 55], [122, 5], [100, -35], [70, -75], [42, -104]];
+export const DASH_PTS: [number, number][] = [[30, -20], [48, -38], [58, -60], [70, -82], [92, -100], [116, -86], [130, -60], [126, -30], [110, -8], [88, 4], [64, -2], [46, 12], [26, 26]];
+export const DELIVER_PTS: [number, number][] = [[-30, -20], [-50, 15], [-64, 58], [-96, 82], [-70, 120], [-30, 104], [20, 100], [75, 94], [115, 55], [122, 5], [100, -35], [70, -75], [42, -104]];
 export const DELIVER_CAMP = { x: 18, z: -116 };
-const ROUTES: [number, number][][] = [DASH_PTS, [...DELIVER_PTS, [DELIVER_CAMP.x, DELIVER_CAMP.z]]];
+/** Bogged Down: the tow line from the stuck 4x4 to the safe zone must stay clear */
+export const TOW_LINE: [number, number][] = [[-64, 46], [-22, 48], [-10, 40]];
+const ROUTES: [number, number][][] = [DASH_PTS, [...DELIVER_PTS, [DELIVER_CAMP.x, DELIVER_CAMP.z]], TOW_LINE];
 export function distToRoutes(x: number, z: number) {
   let d = Infinity;
   for (const R of ROUTES) for (let i = 0; i < R.length - 1; i++) {

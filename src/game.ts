@@ -94,7 +94,6 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
 
   let weather: WeatherId = settings.weather;
   const sunDir = new THREE.Vector3();
-  const terrainMat = wetMaterials[0];
 
   function makeRenderer(aa: boolean) {
     const old = rendererAA === null ? null : renderer;
@@ -149,7 +148,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     hemi.color.set(w.hemiSky); hemi.groundColor.set(w.hemiGround); hemi.intensity = w.hemiI;
     renderer.toneMappingExposure = w.exposure;
     stars.visible = w.stars; rain.mesh.visible = w.rain;
-    terrainMat.roughness = w.wet ? 0.45 : 0.95; terrainMat.metalness = w.wet ? 0.08 : 0; terrainMat.color.set(w.wet ? 0xa8a8a8 : 0xffffff);
+    for (const tm of wetMaterials) { tm.roughness = w.wet ? 0.45 : 0.95; tm.metalness = w.wet ? 0.08 : 0; tm.color.set(w.wet ? 0xa8a8a8 : 0xffffff); }
     car.paint.roughness = w.wet ? 0.15 : 0.45;
     waterMat.color.set(0x4a4030).lerp(new THREE.Color(w.fog), 0.3);
     for (const ps of allP) ps.uniforms.uTint.value.set(w.tint);
@@ -420,6 +419,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   winchBtn.addEventListener('pointerdown', () => { winching = true; });
   for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) winchBtn.addEventListener(ev, () => { winching = false; });
   const camDir = new THREE.Vector3();
+  let duskK = 0;
   function updateMissionHud(dt: number) {
     if (!mission) return;
     const m = mission, def = m.def, c = sampleCar();
@@ -454,7 +454,11 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     show('btn-winch', !!rope);
     mworld?.setGateState(m.next);
     if (stuck) { stuck.sync(); mworld?.setRope(rope ? toWorld(car, anchorRear()) : null, rope ? toWorld(stuck, anchorFront()) : undefined); }
-    if (def.type === 'deliver' && !m.finished) renderer.toneMappingExposure = WEATHER.sunset.exposure * (1 - 0.6 * sstep(0.25, 1, m.t / def.limit!));
+    if (def.type === 'deliver' && !m.finished) { // nightfall runs on the mission clock: dusk at 25 % of the limit, dark at the limit
+      duskK = sstep(0.25, 1, m.t / def.limit!);
+      renderer.toneMappingExposure = WEATHER.sunset.exposure * (1 - 0.6 * duskK);
+      sun.intensity = WEATHER.sunset.sunI * (1 - 0.85 * duskK); hemi.intensity = WEATHER.sunset.hemiI * (1 - 0.6 * duskK);
+    }
     if (m.finished && phase === 'playing') { resultT += dt; if (resultT > 1.2) finishMission(); }
   }
 
@@ -611,7 +615,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
 
   // ---------- main loop ----------
   const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
-  let camInit = false, camHeading = 0;
+  let camInit = false, camHeading = 0, towCamK = 0;
   let acc = 0, last = performance.now(), menuT = 0, clock = 0;
   let fpsFrames = 0, fpsT = 0, fps = 0;
   const fpsHistory: number[] = [];
@@ -626,8 +630,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camHeading += d * Math.min(1, dt * (2.5 + sp * 0.08));
     if (dragging === null) { lookYaw *= Math.max(0, 1 - dt * 1.5); lookPitch *= Math.max(0, 1 - dt * 1.5); }
     const yaw = camHeading + lookYaw;
-    const dist = 7.4 + Math.min(3, Math.abs(fs) * 0.085);
-    const height = 2.7 + Math.min(0.9, sp * 0.03) + lookPitch * 6;
+    // towing: lift and pull back the camera so it looks over the towed vehicle instead of into it
+    towCamK += ((rope ? 1 : 0) - towCamK) * Math.min(1, dt * 2);
+    const dist = 7.4 + Math.min(3, Math.abs(fs) * 0.085) + towCamK * 3.2;
+    const height = 2.7 + Math.min(0.9, sp * 0.03) + lookPitch * 6 + towCamK * 3.4;
     pivot.set(p.x, p.y + 1.6, p.z);
     want.set(p.x - Math.sin(yaw) * dist, p.y + height, p.z - Math.cos(yaw) * dist);
     // terrain avoidance along the camera line
@@ -638,7 +644,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     }
     // obstacle avoidance (trees, rocks, walls): ray from the vehicle to the camera, ignoring the vehicle
     dir.subVectors(want, pivot); const len = dir.length(); dir.divideScalar(len);
-    const hit = world.castRay(new RAPIER.Ray(pivot, dir), len, true, undefined, undefined, undefined, car.body);
+    const towed = stuck?.body; // the towed 4x4 never pulls the camera in (it would fill the screen)
+    const hit = world.castRay(new RAPIER.Ray(pivot, dir), len, true, undefined, undefined, undefined, car.body, towed ? (c: RAPIER_NS.Collider) => c.parent()?.handle !== towed.handle : undefined);
     let pulled = false;
     if (hit && hit.timeOfImpact < len) { want.copy(pivot).addScaledVector(dir, Math.max(1.2, hit.timeOfImpact - 0.35)); pulled = true; }
     if (snap || !camInit) { camPos.copy(want); camHeading = heading; camInit = true; }
@@ -855,6 +862,11 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     },
     zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt, surfaceAt, trail: TRAIL.map((p) => ({ x: p.x, z: p.z, h: p.h, hw: p.hw })),
     get audioRock() { return audio.rockLevel; },
+    /** tow camera check: distance from the towed vehicle's centre to the camera->player sight line (m) */
+    towOcclusion: () => { if (!stuck) return null; const a = camera.position, t = car.body.translation(), b = new THREE.Vector3(t.x, t.y + 1, t.z), st = stuck.body.translation();
+      const ab = b.clone().sub(a), u = Math.max(0, Math.min(1, new THREE.Vector3(st.x, st.y + 0.8, st.z).sub(a).dot(ab) / ab.lengthSq()));
+      return a.clone().addScaledVector(ab, u).distanceTo(new THREE.Vector3(st.x, st.y + 0.8, st.z)); },
+    get dusk() { return { k: duskK, exposure: renderer.toneMappingExposure, sun: sun.intensity }; },
     /** test hook: roll the car onto its roof in place */
     flip: () => { const t = car.body.translation(), r = car.body.rotation(); const q = new THREE.Quaternion(r.x, r.y, r.z, r.w).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
       car.body.setTranslation({ x: t.x, y: t.y + 1.8, z: t.z }, true); car.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true); car.body.setLinvel({ x: 0, y: 0, z: 0 }, true); car.body.setAngvel({ x: 0, y: 0, z: 0 }, true); },
@@ -880,7 +892,11 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
         if (def.type === 'tow' && stuck && !mission.attached) {
           const st = stuck.body.translation(), sf = stuck.forward(); tg = { x: st.x + sf.x * 9, z: st.z + sf.z * 9 }; vmax = 12;
           if (Math.hypot(c.x - tg.x, c.z - tg.z) < 4 || toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront())) < 8) { if (o.autoHook !== false) toggleHook(); }
-        } else if (def.type === 'tow') { tg = def.zone!; vmax = 8; }
+        } else if (def.type === 'tow') {
+          // drag the towed 4x4 through the zone centre: aim beyond it, ease off once it is well inside
+          const st = stuck!.body.translation(), z0 = def.zone!, dx = z0.x - st.x, dz = z0.z - st.z, dd = Math.hypot(dx, dz) || 1;
+          tg = { x: z0.x + (dx / dd) * 12, z: z0.z + (dz / dd) * 12 }; vmax = dd < 2.5 ? 0 : dd < 6 ? 3 : 7;
+        }
         else {
           let off = project(c.x, c.z);
           // like a player: lost / fallen off the line for 2 s -> reset to the last checkpoint
