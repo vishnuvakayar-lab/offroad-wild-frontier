@@ -1,13 +1,14 @@
 export type Preset = 'low' | 'medium' | 'high';
 export type TouchMode = 'auto' | 'on' | 'off';
 import type { WeatherId } from './weather';
-export interface Settings { preset: Preset; showFps: boolean; touch: TouchMode; weather: WeatherId; volume: number; muted: boolean; intro: boolean; vehicle: string; paints: Record<string, number>; }
+import type { ControlScheme } from './input';
+export interface Settings { preset: Preset; showFps: boolean; touch: TouchMode; weather: WeatherId; volume: number; muted: boolean; intro: boolean; vehicle: string; paints: Record<string, number>; controls: ControlScheme; autoThrottle: boolean; }
 
 const KEY = 'owf.settings.v1';
 export const isCoarse = () => window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 
 export function loadSettings(): Settings {
-  const def: Settings = { preset: isCoarse() ? 'medium' : 'high', showFps: true, touch: 'auto', weather: 'clear', volume: 0.8, muted: false, intro: true, vehicle: 'scout', paints: {} };
+  const def: Settings = { preset: isCoarse() ? 'medium' : 'high', showFps: true, touch: 'auto', weather: 'clear', volume: 0.8, muted: false, intro: true, vehicle: 'scout', paints: {}, controls: 'tilt', autoThrottle: isCoarse() };
   try { return { ...def, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return def; }
 }
 export function saveSettings(s: Settings) {

@@ -10,14 +10,18 @@ import { GameAudio } from './audio';
 import { Particles, Rain } from './particles';
 import { WEATHER, WEATHER_ORDER, makeStars, type WeatherId } from './weather';
 import { loadSettings, saveSettings, PRESETS, isCoarse, type Preset, type TouchMode } from './settings';
-import { MISSIONS, missionById, medalFor, MissionRunner, BOT_TIMES, MEDAL_FACTORS, TOW_MARGIN, TOW_HOLD, type Mode, type Pose } from './missions';
+import { MISSIONS, medalFor, MissionRunner, BOT_TIMES, MEDAL_FACTORS, TOW_MARGIN, TOW_HOLD, type Mode, type Pose } from './missions';
 import { MissionWorld } from './missionWorld';
 import { loadSave, storeSave, migrate, award, applyUpgrades, upgradesOf, vehicleUnlocked, paintUnlocked, devMode, levelOf, upgradeCost,
   VEHICLE_UNLOCK, PAINT_LEVEL, UPGRADE_KINDS, MAX_UPGRADE, XP_PER_LEVEL, SAVE_KEY, type UpgradeKind, type Medal } from './save';
 import type { TrackMarks as TM } from './tracks';
 import { OnlineSession } from './online';
+import { setNatureDetail, updateNature, natureStats, NATURE_COUNTS } from './nature';
+import { groundUniforms, setGroundDetail, NOISE_GLSL } from './groundShader';
+import { groundMaterials } from './terrain';
+import { LEVELS, LEVEL_MISSIONS, missionById, levelDone, levelUnlocked, levelOfMission } from './levels';
 
-type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results' | 'lobby';
+type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results' | 'lobby' | 'levels';
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
 const IDLE: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: true };
@@ -49,11 +53,19 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   scene.add(hemi, sun, sun.target);
   const skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { top: { value: new THREE.Color() }, bottom: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(0, 1, 0) }, sunCol: { value: new THREE.Color() } },
+    uniforms: { top: { value: new THREE.Color() }, bottom: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(0, 1, 0) }, sunCol: { value: new THREE.Color() },
+      uCloud: { value: 0.5 }, uCloudCol: { value: new THREE.Color(1, 1, 1) }, uTime: groundUniforms.uTime },
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-    fragmentShader: `uniform vec3 top; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vP;
-      void main(){ float t = smoothstep(-0.02, 0.45, vP.y); vec3 c = mix(bottom, top, t);
-        float s = max(0.0, dot(normalize(vP), normalize(sunDir))); c += sunCol * (pow(s, 600.0) * 3.0 + pow(s, 12.0) * 0.25);
+    fragmentShader: `uniform vec3 top; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunCol; uniform float uCloud; uniform vec3 uCloudCol; uniform float uTime; varying vec3 vP;
+      ${NOISE_GLSL}
+      void main(){ vec3 d = normalize(vP); float t = smoothstep(-0.02, 0.45, d.y); vec3 c = mix(bottom, top, t);
+        float s = max(0.0, dot(d, normalize(sunDir))); c += sunCol * (pow(s, 600.0) * 3.0 + pow(s, 12.0) * 0.25);
+        // drifting cloud layer projected on a dome; lit edge towards the sun
+        vec2 cu = d.xz / (d.y + 0.12) * 1.6 + vec2(uTime * 0.004, uTime * 0.002);
+        float cn = owFB(cu * 1.3) * 0.75 + owFB(cu * 4.0 + 2.0) * 0.25;
+        float cov = smoothstep(1.0 - uCloud * 0.75, 1.05 - uCloud * 0.45, cn) * smoothstep(0.0, 0.18, d.y);
+        vec3 cc = uCloudCol * (0.82 + 0.3 * cn) + sunCol * pow(s, 6.0) * 0.35;
+        c = mix(c, cc, cov * 0.92);
         gl_FragColor = vec4(c, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -96,6 +108,19 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   let weather: WeatherId = settings.weather;
   const sunDir = new THREE.Vector3();
 
+  // outdoor reflection map rendered from the sky dome (water, wet ground, vehicle paint); rebuilt per weather
+  const skyEnvScene = new THREE.Scene();
+  skyEnvScene.add(new THREE.Mesh(sky.geometry, skyMat));
+  let pmrem: THREE.PMREMGenerator | null = null, skyEnvRT: THREE.WebGLRenderTarget | null = null;
+  let skyEnvKey = '';
+  function rebuildSkyEnv() {
+    if (!pmrem || (skyEnvRT && skyEnvKey === weather)) return;
+    skyEnvKey = weather;
+    skyEnvRT?.dispose();
+    skyEnvRT = pmrem.fromScene(skyEnvScene, 0, 1, 1000);
+    waterMat.envMap = skyEnvRT.texture; waterMat.needsUpdate = true;
+    for (const m of groundMaterials) { m.envMap = skyEnvRT.texture; m.envMapIntensity = 1; m.needsUpdate = true; }
+  }
   function makeRenderer(aa: boolean) {
     const old = rendererAA === null ? null : renderer;
     if (old) {
@@ -114,6 +139,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     envTex?.dispose();
     const pm = new THREE.PMREMGenerator(renderer); envTex = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
     car.setEnv(envTex, 1);
+    pmrem?.dispose(); pmrem = new THREE.PMREMGenerator(renderer); skyEnvRT = null;
   }
 
   // ---------- settings application ----------
@@ -130,6 +156,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     }
     for (const ps of allP) ps.budget = cfg.particles;
     setTerrainDetail(p === 'low' ? 0 : p === 'medium' ? 1 : 2);
+    setNatureDetail(p === 'low' ? 0 : p === 'medium' ? 1 : 2);
+    setGroundDetail(groundMaterials, p !== 'low');
     rain.setDensity(cfg.rain);
     $('preset-note').textContent = p === 'low' ? 'No shadows, no anti-aliasing, fewer particles — best for older phones.'
       : p === 'medium' ? 'Shadows, anti-aliasing, balanced resolution and particles.' : 'Full resolution, high-res shadows, max particles.';
@@ -151,7 +179,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     stars.visible = w.stars; rain.mesh.visible = w.rain;
     for (const tm of wetMaterials) { tm.roughness = w.wet ? 0.45 : 0.95; tm.metalness = w.wet ? 0.08 : 0; tm.color.set(w.wet ? 0xa8a8a8 : 0xffffff); }
     car.paint.roughness = w.wet ? 0.15 : 0.45;
-    waterMat.color.set(0x4a4030).lerp(new THREE.Color(w.fog), 0.3);
+    waterMat.color.set(0x2b241a).lerp(new THREE.Color(w.fog), 0.12);
+    groundUniforms.uWetAll.value = w.wet ? 1 : 0;
+    skyMat.uniforms.uCloud.value = w.cloud; skyMat.uniforms.uCloudCol.value.set(w.cloudCol);
+    rebuildSkyEnv();
     for (const ps of allP) ps.uniforms.uTint.value.set(w.tint);
     const night = id === 'night';
     for (const h of car.headlights) h.intensity = w.headlights && settings.preset !== 'low' ? (night ? 90 : 45) : 0;
@@ -181,6 +212,28 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // ---------- input & UI ----------
   const input = new Input();
   document.querySelectorAll<HTMLElement>('#touch .tbtn').forEach((el) => input.bindHold(el, el.dataset.k as any));
+  input.scheme = settings.controls; input.autoThrottle = settings.autoThrottle;
+  input.bindZones($('tzones'), (l, r) => { $('tzones').querySelector('.tz.l')!.classList.toggle('on', l); $('tzones').querySelector('.tz.r')!.classList.toggle('on', r); });
+  input.bindHold($('tp-hb'), 'hand');
+  $('tp-cal').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.calibrateTilt(); toast('Tilt centred'); });
+  let tiltFallback = false, tiltCheck = 0;
+  /** called from Play / Start taps (user gestures): asks iOS for motion access when tilt steering is selected */
+  const prepControls = () => {
+    if (!touchOn() || settings.controls !== 'tilt' || input.tiltState === 'granted') return;
+    input.requestTilt().then(() => refreshUI());
+  };
+  const onPlayingStarted = () => {
+    clearTimeout(tiltCheck);
+    if (!input.touchActive || settings.controls !== 'tilt') return;
+    tiltFallback = false; input.scheme = 'tilt';
+    setTimeout(() => input.calibrateTilt(), 250);
+    tiltCheck = window.setTimeout(() => { // no motion data -> touch halves for this session (setting kept)
+      if (phase === 'playing' && input.scheme === 'tilt' && input.tiltEvents === 0) {
+        tiltFallback = true; input.scheme = 'halves'; refreshUI();
+        toast(input.tiltState === 'denied' ? 'Motion access denied — using touch halves' : 'No tilt sensor data — using touch halves');
+      } else input.calibrateTilt();
+    }, 1800);
+  };
   let phase: Phase = 'loading';
   const show = (id: string, on: boolean) => $(id).classList.toggle('hidden', !on);
   const drawer = $('drawer');
@@ -192,17 +245,33 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     show('menu', phase === 'menu');
     show('garage', phase === 'garage');
     show('modes', phase === 'modes');
+    show('levels', phase === 'levels');
     show('lobby', phase === 'lobby');
     if (phase !== 'playing') $('ohud').classList.add('hidden');
     show('results', phase === 'results');
     show('mhud', !!mission && (phase === 'playing' || phase === 'paused'));
     show('btn-quit', !!mission);
     $('btn-reset').textContent = mission ? 'Reset to checkpoint' : 'Reset vehicle';
-    const lvl = levelOf(save.xp), prog = `Lv ${lvl} · ${save.credits.toLocaleString()} cr · ${save.xp % XP_PER_LEVEL}/${XP_PER_LEVEL} XP${devMode() ? ' · DEV' : ''}`;
-    $('menu-prog').textContent = prog; $('modes-prog').textContent = prog;
+    const lvl = levelOf(save.xp), prog = `Lv ${lvl} · ${save.credits.toLocaleString()} pts · ${save.xp % XP_PER_LEVEL}/${XP_PER_LEVEL} XP${devMode() ? ' · DEV' : ''}`;
+    $('menu-prog').textContent = prog; $('modes-prog').textContent = prog; $('levels-prog').textContent = prog;
     show('pause', phase === 'paused');
     show('hud', phase === 'playing' || phase === 'paused');
-    show('touch', phase === 'playing' && touchOn());
+    const tOn = phase === 'playing' && touchOn();
+    input.touchActive = tOn;
+    if (!tiltFallback) input.scheme = settings.controls;
+    input.autoThrottle = settings.autoThrottle;
+    show('touch', tOn && input.scheme === 'buttons');
+    show('tzones', tOn && input.scheme !== 'buttons');
+    const sc = input.scheme;
+    $('tz-l').textContent = sc === 'halves' ? '◀ STEER' : 'BRAKE';
+    $('tz-r').textContent = sc === 'halves' ? 'STEER ▶' : settings.autoThrottle ? 'AUTO-GAS' : 'GAS';
+    $('tz-hint').textContent = sc === 'halves' ? 'Drives forward · hold both sides to brake / reverse' : sc === 'tilt' ? 'Tilt the phone to steer' : '';
+    show('tp-cal', sc === 'tilt');
+    document.querySelectorAll('#seg-ctrl button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.controls));
+    $<HTMLInputElement>('chk-auto').checked = settings.autoThrottle;
+    $('ctrl-note').textContent = settings.controls === 'tilt' ? `Tilt the phone like a steering wheel. Right half = gas, left half = brake/reverse. Motion access: ${input.tiltState}${tiltFallback ? ' (using touch halves)' : ''}.`
+      : settings.controls === 'halves' ? 'Hold the left or right half of the screen to steer. The car drives forward by itself; hold both halves to brake or reverse.'
+      : 'Compact buttons: ◀ ▶ steer, GAS / BRAKE / HB.';
     $('hud-fps').classList.toggle('hidden', !settings.showFps);
     document.querySelectorAll('#seg-preset button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.preset));
     document.querySelectorAll('#seg-touch button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.touch));
@@ -212,7 +281,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     $<HTMLInputElement>('rng-volume').value = String(settings.volume);
     $('btn-mute').textContent = settings.muted ? '🔇' : '🔊';
   };
-  const setPhase = (p: Phase) => { phase = p; if (p !== 'paused' && p !== 'menu') openDrawer(false); input.clearTouch(); refreshUI(); };
+  const setPhase = (p: Phase) => { const was = phase; phase = p; if (p !== 'paused' && p !== 'menu') openDrawer(false); input.clearTouch(); refreshUI(); if (p === 'playing' && was !== 'paused') onPlayingStarted(); };
 
   // ---- garage ----
   let gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle));
@@ -242,16 +311,16 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     show('g-lock', !unlocked);
     $<HTMLButtonElement>('g-drive').disabled = !unlocked;
     if (!unlocked) {
-      $('g-lock-text').textContent = `🔒 Requires level ${req.level} · ${req.price.toLocaleString()} cr`;
+      $('g-lock-text').textContent = `🔒 Requires level ${req.level} · ${req.price.toLocaleString()} pts`;
       const btn = $<HTMLButtonElement>('g-unlock'); btn.disabled = lvl < req.level || save.credits < req.price;
-      btn.textContent = lvl < req.level ? `Level ${req.level}` : `Unlock ${req.price.toLocaleString()} cr`;
+      btn.textContent = lvl < req.level ? `Level ${req.level}` : `Unlock ${req.price.toLocaleString()} pts`;
       btn.onclick = () => { if (unlockVehicle(spec.id)) toast(`${spec.name} unlocked!`); };
     }
     const up = upgradesOf(save, spec.id), NAMES: Record<UpgradeKind, string> = { engine: 'Engine', tyres: 'Tyres', susp: 'Suspension' };
     $('g-upgrades').innerHTML = unlocked ? UPGRADE_KINDS.map((k) => `<span>${NAMES[k]}</span><span class="pips">${Array.from({ length: MAX_UPGRADE }, (_, i) => `<i class="${i < up[k] ? 'on' : ''}"></i>`).join('')}</span>` +
-      `<button class="btn small" data-up="${k}" ${up[k] >= MAX_UPGRADE || save.credits < upgradeCost(up[k]) ? 'disabled' : ''}>${up[k] >= MAX_UPGRADE ? 'Max' : '+ ' + upgradeCost(up[k]) + ' cr'}</button>`).join('') : '';
+      `<button class="btn small" data-up="${k}" ${up[k] >= MAX_UPGRADE || save.credits < upgradeCost(up[k]) ? 'disabled' : ''}>${up[k] >= MAX_UPGRADE ? 'Max' : '+ ' + upgradeCost(up[k]) + ' pts'}</button>`).join('') : '';
     $('g-upgrades').querySelectorAll<HTMLElement>('button').forEach((b) => b.onclick = () => { if (buyUpgrade(spec.id, b.dataset.up as UpgradeKind)) toast(`${NAMES[b.dataset.up as UpgradeKind]} upgraded`); });
-    $('g-credits').textContent = `${save.credits.toLocaleString()} credits · level ${lvl}`;
+    $('g-credits').textContent = `${save.credits.toLocaleString()} points · level ${lvl}`;
     $('menu-vehicle').textContent = vehicleById(settings.vehicle).name;
   }
   const garageStep = (d: number) => {
@@ -284,7 +353,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $('g-prev').onclick = () => garageStep(-1);
   $('g-next').onclick = () => garageStep(1);
   $('g-back').onclick = () => { leaveGarage(); setPhase(garageReturn); };
-  $('g-drive').onclick = () => { if (!vehicleUnlocked(save, car.spec.id)) return; garageReturn === 'modes' ? (setPhase('modes'), renderModes()) : $('btn-play').click(); };
+  $('g-drive').onclick = () => { if (!vehicleUnlocked(save, car.spec.id)) return; garageReturn === 'modes' ? (setPhase('modes'), renderModes()) : garageReturn === 'levels' ? openLevels() : $('btn-play').click(); };
   let garageReturn: Phase = 'menu';
 
   // ---------- Phase 6: missions ----------
@@ -293,6 +362,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   let stuck: Vehicle | null = null;
   let rope: RAPIER_NS.ImpulseJoint | null = null, ropeLen = 0, winching = false, winchAcc = 0;
   let resultT = 0, lastResult: any = null, modeTab: Mode = 'challenge';
+  let forcedWeather: WeatherId | null = null;
   onTeleport = () => mission?.jumped();
   const NO_TRACKS = { add() {}, lift() {}, reset() {} } as unknown as TM;
   const STUCK_IN: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: false };
@@ -345,7 +415,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       for (let k = 0; k < 90; k++) { stuck.step(STEP, { ...STUCK_IN, handbrake: true }); world.step(); } // settle into the mud
       stuck.sync();
     }
-    if (def.type === 'deliver') applyWeather('sunset');
+    forcedWeather = def.weather ?? (def.type === 'deliver' ? 'sunset' : null);
+    if (forcedWeather) applyWeather(forcedWeather);
     resetCar(def.start.x, def.start.z, def.start.yaw); car.dirt = 0;
     resultT = 0; camInit = false; settings.intro && $('intro').classList.add('hidden');
     show('btn-mreset', !def.noReset);
@@ -356,9 +427,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (rope) { world.removeImpulseJoint(rope, true); rope = null; }
     if (stuck) { stuck.dispose(); stuck = null; }
     mworld?.dispose(); mworld = null;
-    const wasDeliver = mission.def.type === 'deliver';
     mission = null; winching = false;
-    if (wasDeliver) applyWeather(settings.weather);
+    if (forcedWeather) { forcedWeather = null; applyWeather(settings.weather); }
     $('countdown').classList.add('hidden');
     refreshUI();
   }
@@ -390,13 +460,40 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     m.splits.forEach((t, i) => rows.push([`Split ${i + 1}`, fmt(t)]));
     if (m.rejected) rows.push(['Missed-gate warnings', String(m.rejected)]);
     $('r-grid').innerHTML = rows.slice(0, 7).map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('') + (rows.length > 7 ? `<span>…</span><b>${rows.length - 7} more splits</b>` : '');
-    $('r-reward').textContent = `+${r.credits} credits · +${r.xp} XP` + (r.levelUp ? ` · LEVEL ${r.levelUp}!` : '');
+    const lv = levelOfMission(def.id), nextLv = lv ? LEVELS.find((l) => l.n === lv.n + 1) : null;
+    lastResult.level = lv?.n ?? null; lastResult.nextUnlocked = !!(ok && nextLv && levelUnlocked(save.best, nextLv));
+    $('r-reward').textContent = `+${r.credits} points · +${r.xp} XP` + (r.levelUp ? ` · LEVEL ${r.levelUp}!` : '') +
+      (lv && ok ? ` · Level ${lv.n} complete` + (nextLv && lastResult.nextUnlocked ? ` — Level ${nextLv.n} unlocked!` : '') : '');
+    $('r-kicker').textContent = lv ? `Level ${lv.n} · ${lv.difficulty}` : $('r-kicker').textContent;
     setPhase('results');
   }
-  const nextMissionId = (id: string) => MISSIONS[(MISSIONS.findIndex((m) => m.id === id) + 1) % MISSIONS.length].id;
+  const nextMissionId = (id: string) => {
+    const lv = levelOfMission(id);
+    if (lv) { const nx = LEVELS.find((l) => l.n > lv.n && l.missionId && levelUnlocked(save.best, l, devMode())); return nx?.missionId ?? null; }
+    return MISSIONS[(MISSIONS.findIndex((m) => m.id === id) + 1) % MISSIONS.length].id;
+  };
   $('r-retry').onclick = () => { const id = mission?.def.id; if (id) startMission(id); };
-  $('r-next').onclick = () => { const id = mission?.def.id; if (id) startMission(nextMissionId(id)); };
-  $('r-menu').onclick = () => { endMission(); setPhase('modes'); renderModes(); };
+  $('r-next').onclick = () => { const id = mission?.def.id; const nx = id ? nextMissionId(id) : null; if (nx) startMission(nx); else if (id && levelOfMission(id)) { endMission(); openLevels(); } };
+  $('r-menu').onclick = () => { const wasLevel = !!(mission && levelOfMission(mission.def.id)); endMission(); if (wasLevel) openLevels(); else { setPhase('modes'); renderModes(); } };
+  const STATUS_LABEL = { playable: 'Playable', prototype: 'Prototype', online: 'Needs server', planned: 'Not built yet' } as const;
+  function renderLevels() {
+    const dev = devMode();
+    $('lv-list').innerHTML = LEVELS.map((L) => {
+      const done = levelDone(save.best, L), unl = levelUnlocked(save.best, L, dev), b = L.missionId ? save.best[L.missionId] : null;
+      const canStart = !!L.missionId && unl;
+      const meta = (done && b ? `${MEDAL_ICON[b.medal]} best ${fmt(b.time)} · ` : unl ? '' : '🔒 locked · ') + L.difficulty;
+      const btn = L.status === 'online' ? `<button class="btn small" data-online>Online</button>`
+        : canStart ? `<button class="btn primary small" data-level="${L.missionId}">${done ? 'Replay' : 'Start'}</button>` : `<button class="btn small" disabled>${L.status === 'planned' ? 'Soon' : '🔒'}</button>`;
+      return `<div class="m-card lv-card ${unl ? '' : 'locked'}" data-n="${L.n}"><h3><span class="lvn">${L.n}</span>${L.title}<span class="st ${L.status}">${STATUS_LABEL[L.status]}</span></h3>` +
+        `<div class="meta">${meta}</div>${btn}<p>${L.objective}${L.note ? ' <em>' + L.note + '</em>' : ''}${L.unlock && !done ? ' · ' + L.unlock : ''}</p></div>`;
+    }).join('');
+    $('lv-list').querySelectorAll<HTMLElement>('[data-level]').forEach((b) => b.onclick = () => { prepControls(); startMission(b.dataset.level!); });
+    $('lv-list').querySelectorAll<HTMLElement>('[data-online]').forEach((b) => b.onclick = () => $('btn-online').click());
+  }
+  const openLevels = () => { renderLevels(); setPhase('levels'); };
+  $('btn-levels').onclick = () => openLevels();
+  $('lv-back').onclick = () => setPhase('menu');
+  $('lv-garage').onclick = () => openGarage('levels');
   function renderModes() {
     document.querySelectorAll<HTMLElement>('#m-tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.mode === modeTab); b.onclick = () => { modeTab = b.dataset.mode as Mode; renderModes(); }; });
     const list = $('m-list');
@@ -405,11 +502,11 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     } else {
       list.innerHTML = MISSIONS.filter((m) => m.mode === modeTab).map((m) => {
         const b = save.best[m.id];
-        return `<div class="m-card"><h3>${m.title}</h3><div class="meta">${b ? MEDAL_ICON[b.medal] + ' best ' + fmt(b.time) : 'not completed'} · ${m.limit ? 'limit ' + fmt(m.limit) : 'no limit'} · ${m.reward} cr</div>` +
+        return `<div class="m-card"><h3>${m.title}</h3><div class="meta">${b ? MEDAL_ICON[b.medal] + ' best ' + fmt(b.time) : 'not completed'} · ${m.limit ? 'limit ' + fmt(m.limit) : 'no limit'} · ${m.reward} pts</div>` +
           `<button class="btn primary small" data-start="${m.id}">Start</button><p>${m.desc}</p></div>`;
       }).join('');
     }
-    list.querySelectorAll<HTMLElement>('[data-start]').forEach((b) => b.onclick = () => startMission(b.dataset.start!));
+    list.querySelectorAll<HTMLElement>('[data-start]').forEach((b) => b.onclick = () => { prepControls(); startMission(b.dataset.start!); });
     list.querySelector<HTMLElement>('[data-free]')?.addEventListener('click', () => $('btn-play').click());
     refreshUI();
   }
@@ -438,7 +535,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const st = stuck.body.translation();
       target = m.attached ? def.zone! : { x: st.x, z: st.z };
       sub = m.attached ? `Tow to safe zone · ${Math.hypot(st.x - def.zone!.x, st.z - def.zone!.z).toFixed(0)} m` : 'Reach the stuck 4x4 and hook up';
-    } else if (def.zone) { target = def.zone; sub = def.type === 'deliver' ? 'Deliver to camp before dark' : 'Reach the summit flag'; }
+    } else if (def.zone) { target = def.zone; sub = def.type === 'deliver' ? 'Deliver to camp before dark' : def.type === 'trail' ? 'Stop inside the finish circle' : 'Reach the summit flag'; }
     $('mh-sub').textContent = sub + (def.limit !== null && def.type !== 'race' ? ' · time left' : '');
     if (target) {
       camera.getWorldDirection(camDir);
@@ -510,7 +607,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   };
   const toggleMute = () => { settings.muted = !settings.muted; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); toast(settings.muted ? 'Sound off' : 'Sound on'); };
 
-  $('btn-play').onclick = () => { endMission(); leaveGarage(); if (settings.intro) startIntro(); else { resetCar(); camInit = false; setPhase('playing'); } };
+  $('btn-play').onclick = () => { prepControls(); endMission(); leaveGarage(); if (settings.intro) startIntro(); else { resetCar(); camInit = false; setPhase('playing'); } };
   $('btn-skip').onclick = (e) => { e.stopPropagation(); endIntro(); };
   $('btn-settings').onclick = () => openDrawer(true);
   $('btn-settings2').onclick = () => openDrawer(true);
@@ -525,7 +622,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   input.onPause = () => {
     if (drawer.classList.contains('open')) { openDrawer(false); return; }
     if (phase === 'garage') { leaveGarage(); setPhase(garageReturn); return; }
-    if (phase === 'modes') { setPhase('menu'); return; }
+    if (phase === 'modes' || phase === 'levels') { setPhase('menu'); return; }
     if (phase === 'intro') { endIntro(); return; }
     if (online.inRoom) { setPhase(phase === 'lobby' ? 'playing' : 'lobby'); return; }
     if (phase === 'lobby') { setPhase('menu'); return; }
@@ -555,6 +652,12 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   document.querySelectorAll<HTMLElement>('#seg-preset button').forEach((b) => b.onclick = () => {
     settings.preset = b.dataset.v as Preset; saveSettings(settings); applyPreset(settings.preset); refreshUI();
   });
+  document.querySelectorAll<HTMLElement>('#seg-ctrl button').forEach((b) => b.onclick = () => {
+    settings.controls = b.dataset.v as any; saveSettings(settings); tiltFallback = false;
+    if (settings.controls === 'tilt') input.requestTilt().then(() => refreshUI()); // inside the tap: required by iOS
+    refreshUI();
+  });
+  $<HTMLInputElement>('chk-auto').onchange = (e) => { settings.autoThrottle = (e.target as HTMLInputElement).checked; saveSettings(settings); refreshUI(); };
   document.querySelectorAll<HTMLElement>('#seg-touch button').forEach((b) => b.onclick = () => {
     settings.touch = b.dataset.v as TouchMode; saveSettings(settings); refreshUI();
   });
@@ -570,6 +673,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // drag-to-look (mouse or touch on empty game area); recentres when released
   let lookYaw = 0, lookPitch = 0, dragging: number | null = null, lastX = 0, lastY = 0;
   function attachLook(c: HTMLCanvasElement) {
+    // GPU reset / tab backgrounded too long on mobile: tell the player instead of freezing on a black screen
+    c.addEventListener('webglcontextlost', (e) => { e.preventDefault(); if (c !== canvas) return; const el = $('gl-lost'); el.classList.remove('hidden'); if (phase === 'playing') setPhase('paused'); });
+    c.addEventListener('webglcontextrestored', () => { $('gl-lost').classList.add('hidden'); });
     c.addEventListener('pointerdown', (e) => {
       if (phase === 'intro') { endIntro(); return; }
       dragging = e.pointerId; lastX = e.clientX; lastY = e.clientY; c.setPointerCapture(e.pointerId);
@@ -732,8 +838,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       lastInput = drive;
       acc += dt;
       let n = 0;
-      while (acc >= STEP && n < 5) { physStep(drive); acc -= STEP; n++; }
-      if (n === 5) acc = 0;
+      while (acc >= STEP && n < 8) { physStep(drive); acc -= STEP; n++; } // up to 8 fixed steps per frame keeps real-time speed down to ~7.5 fps
+      if (n === 8) acc = 0;
     }
     car.sync();
     online.afterSync(dt);
@@ -744,7 +850,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const p = car.group.position;
     car.forward(tmpF);
     const heading = Math.atan2(tmpF.x, tmpF.z);
-    if (phase === 'menu' || phase === 'modes' || (phase === 'lobby' && !online.inRoom)) {
+    if (phase === 'menu' || phase === 'modes' || phase === 'levels' || (phase === 'lobby' && !online.inRoom)) {
       menuT += dt * 0.15;
       const a = menuT + 2.2 + heading, r = 9.5;
       camera.position.set(p.x + Math.sin(a) * r, p.y + 2.6, p.z + Math.cos(a) * r);
@@ -778,7 +884,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       rim.position.set(p.x - tmpF.x * 4.5, p.y + 2.2, p.z - tmpF.z * 4.5);
       fill.intensity = fillEnabled ? w.fill : 0; rim.intensity = fillEnabled ? w.rim : 0;
       const studio = phase === 'garage';
-      car.setEnv(envTex, studio ? 1 : w.env);
+      car.setEnv(studio || !skyEnvRT ? envTex : skyEnvRT.texture, studio ? 1 : w.env * 1.5);
       if (studio) car.dirt = 0;
       keyL.intensity = studio ? 260 : 0; rimL.intensity = studio ? 200 : 0;
       if (studio) {
@@ -787,6 +893,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       }
     }
     rain.update(clock, camera.position);
+    groundUniforms.uTime.value = clock;
+    updateNature(camera.position);
     renderer.getDrawingBufferSize(bufSize);
     const scale = bufSize.y / (2 * Math.tan((camera.fov * Math.PI) / 360));
     for (const ps of allP) ps.uniforms.uScale.value = scale;
@@ -852,6 +960,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     migrate: (raw: unknown) => migrate(raw),
     medalFor: (t: number, id: string) => medalFor(t, missionById(id)!.targets),
     missions: MISSIONS.map((m) => ({ id: m.id, mode: m.mode, type: m.type, start: m.start, gates: m.gates, zone: m.zone ?? null, stuck: m.stuck ?? null, limit: m.limit, targets: m.targets, reward: m.reward, laps: m.laps ?? 1, noReset: !!m.noReset })),
+    levels: LEVELS.map((l) => ({ ...l })), levelMissions: LEVEL_MISSIONS.map((m) => ({ id: m.id, type: m.type, start: m.start, gates: m.gates, zone: m.zone ?? null, limit: m.limit, targets: m.targets, reward: m.reward, weather: m.weather ?? null, maxResets: m.maxResets ?? null, stuckFail: m.stuckFail ?? null })),
+    levelState: () => LEVELS.map((l) => ({ n: l.n, status: l.status, done: levelDone(save.best, l), unlocked: levelUnlocked(save.best, l, devMode()) })),
+    openLevels: () => openLevels(),
+    get forcedWeather() { return forcedWeather; },
     botTimes: BOT_TIMES, medalFactors: MEDAL_FACTORS, towRule: { margin: TOW_MARGIN, hold: TOW_HOLD },
     startMission: (id: string) => startMission(id),
     endMission: () => { endMission(); setPhase('menu'); },
@@ -910,6 +1022,12 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     },
     zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt, surfaceAt, trail: TRAIL.map((p) => ({ x: p.x, z: p.z, h: p.h, hw: p.hw })), hairpins: HAIRPINS.map((h) => ({ ...h })),
     get audioRock() { return audio.rockLevel; },
+    controls: () => ({ setting: settings.controls, scheme: input.scheme, auto: settings.autoThrottle, tiltState: input.tiltState, tiltEvents: input.tiltEvents, tilt: input.tiltValue, touchActive: input.touchActive, fallback: tiltFallback }),
+    setControls: (c: 'tilt' | 'halves' | 'buttons', auto = false) => { settings.controls = c; settings.autoThrottle = auto; tiltFallback = false; saveSettings(settings); refreshUI(); },
+    readInput: () => input.read(1 / 60),
+    nature: () => ({ ...natureStats(), counts: { ...NATURE_COUNTS } }),
+    groundDetail: () => groundMaterials.map((m) => 'OW_DETAIL' in (m.defines ?? {})),
+    skyEnv: () => !!skyEnvRT,
     /** tow camera check: distance from the towed vehicle's centre to the camera->player sight line (m) */
     towOcclusion: () => { if (!stuck) return null; const a = camera.position, t = car.body.translation(), b = new THREE.Vector3(t.x, t.y + 1, t.z), st = stuck.body.translation();
       const ab = b.clone().sub(a), u = Math.max(0, Math.min(1, new THREE.Vector3(st.x, st.y + 0.8, st.z).sub(a).dot(ab) / ab.lengthSq()));
@@ -973,7 +1091,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
           }
           vmax = Math.max(H ? 4.2 : 4.8, (H ? 19 : 26) - turn * (H ? 19 : 17));
           if (off > 6) vmax = Math.min(vmax, 8);
-          if (def.zone && (def.type === 'deliver' || o.slowZone) && Math.hypot(def.zone.x - c.x, def.zone.z - c.z) < 22 && prog > cum[cum.length - 1] - 30) vmax = 3;
+          if (def.zone && (def.type === 'deliver' || def.type === 'trail' || o.slowZone) && Math.hypot(def.zone.x - c.x, def.zone.z - c.z) < 22 && prog > cum[cum.length - 1] - 30) vmax = 3;
         }
         if (def.type === 'tow' && mission.attached) winching = ropeLen > 4;
         let err = Math.atan2(tg.x - c.x, tg.z - c.z) - c.yaw; err = Math.atan2(Math.sin(err), Math.cos(err));

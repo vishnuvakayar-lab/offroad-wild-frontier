@@ -2,6 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#14110d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Offroad" />
+  <link rel="apple-touch-icon" href="/icon-180.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#14110d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -32,15 +39,16 @@
 
     <section id="menu" class="panel menu hidden" aria-label="Main menu">
       <div class="logo small"><span>OFFROAD</span><small>WILD FRONTIER</small></div>
-      <p class="tag">Prototype build · Phase 7 online</p>
+      <p class="tag">Preview build · rework in progress</p>
       <div class="prog-chip" id="menu-prog"></div>
-      <button id="btn-modes" class="btn primary">Play — Select Mode</button>
+      <button id="btn-levels" class="btn primary">Career — 10 Levels</button>
+      <button id="btn-modes" class="btn">Select Mode</button>
       <button id="btn-play" class="btn">Free Roam</button>
       <button id="btn-settings" class="btn">Settings</button>
       <button id="btn-garage" class="btn">Garage <em id="menu-vehicle"></em></button>
       <button id="btn-online" class="btn">Online Multiplayer</button>
       <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset (to checkpoint in missions) · H tow hook · T weather · M mute · Esc pause · drag to look</p>
-      <p class="hint touch-only">Left thumb steers · right thumb gas / brake / handbrake · drag the view to look around</p>
+      <p class="hint touch-only">Tilt the phone to steer (or pick Touch halves in Settings) · right half = gas · left half = brake</p>
     </section>
 
     <div id="hud" class="hidden">
@@ -58,6 +66,15 @@
       </div>
     </div>
 
+    <div id="gl-lost" class="gl-lost hidden" role="alert"><p>The browser reset the graphics (low memory or the app was in the background).</p><button class="btn primary" onclick="location.reload()">Reload game</button></div>
+    <div id="tzones" class="hidden" aria-hidden="true">
+      <div class="tz l"><span id="tz-l">BRAKE</span></div><div class="tz r"><span id="tz-r">GAS</span></div>
+      <div class="tz-pills">
+        <button class="tpill" id="tp-cal" aria-label="Centre tilt steering">⟲ Centre</button>
+        <button class="tpill" id="tp-hb" data-k="hand" aria-label="Handbrake">HB</button>
+      </div>
+      <div id="tz-hint" class="tz-hint"></div>
+    </div>
     <div id="touch" class="hidden" aria-hidden="true">
       <div class="cluster left">
         <button class="tbtn steer" data-k="left" aria-label="Steer left">◀</button>
@@ -136,6 +153,12 @@
       <div class="g-actions"><button id="m-back" class="btn">Back</button><button id="m-garage" class="btn">Garage</button></div>
     </section>
 
+ <section id="levels" class="panel modes hidden" aria-label="Career levels">
+      <header class="m-head"><h2>Career</h2><span class="prog-chip" id="levels-prog"></span></header>
+      <div class="m-list" id="lv-list"></div>
+      <div class="g-actions"><button id="lv-back" class="btn">Back</button><button id="lv-garage" class="btn">Garage</button></div>
+    </section>
+
     <section id="results" class="panel results hidden" aria-label="Results">
       <small id="r-kicker"></small>
       <h2 id="r-title"></h2>
@@ -183,13 +206,19 @@
       </div>
       <label class="group-label">Sound</label>
       <div class="row vol"><input type="range" id="rng-volume" min="0" max="1" step="0.05" aria-label="Volume" /><label><input type="checkbox" id="chk-mute" /> Mute</label></div>
-      <label class="group-label">Touch controls</label>
+      <label class="group-label">Mobile controls</label>
+      <div class="seg" id="seg-ctrl">
+        <button data-v="tilt">📱 Tilt</button><button data-v="halves">✋ Touch halves</button><button data-v="buttons">Buttons</button>
+      </div>
+      <label class="row"><input type="checkbox" id="chk-auto" /> Auto-throttle (drive forward automatically)</label>
+      <p class="note" id="ctrl-note"></p>
+      <label class="group-label">Show touch controls</label>
       <div class="seg" id="seg-touch">
         <button data-v="auto">Auto</button><button data-v="on">On</button><button data-v="off">Off</button>
       </div>
       <label class="row"><input type="checkbox" id="chk-fps" /> Show FPS counter</label>
       <label class="row"><input type="checkbox" id="chk-intro" /> Play intro flyover</label>
-      <p class="note">Build 0.5.0 · Phases 1–7 prototype</p>
+      <p class="note">Build 0.6.0 · rework in progress</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>

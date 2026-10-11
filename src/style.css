@@ -241,3 +241,24 @@ body.touch .desktop-only, body:not(.touch) .touch-only { display: none; }
   #ohud { max-width: calc(100% - 300px); flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
   .lb-codebox b { font-size: 22px; }
 }
+
+/* ---- tilt / touch-halves layer (no on-screen wheel or pedals) ---- */
+#tzones { position: absolute; inset: 0; z-index: 8; display: flex; touch-action: none; }
+#tzones .tz { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding-bottom: calc(18px + var(--sab)); pointer-events: auto; touch-action: none; }
+#tzones .tz span { font-size: 12px; font-weight: 800; letter-spacing: .12em; color: rgba(255,255,255,.55); background: rgba(0,0,0,.28); border-radius: 999px; padding: 6px 12px; transition: background .1s; }
+#tzones .tz.on span { background: rgba(242,169,59,.6); color: #fff; }
+#tzones .tz.l { border-right: 1px dashed rgba(255,255,255,.08); }
+.tz-pills { position: absolute; right: calc(12px + var(--sar)); bottom: calc(58px + var(--sab)); display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.tpill { pointer-events: auto; touch-action: none; min-width: 48px; min-height: 44px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.4); color: #fff; font-weight: 800; font-size: 12px; padding: 0 12px; }
+.tpill.active { background: rgba(242,169,59,.6); }
+.tz-hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(52px + var(--sab)); font-size: 12px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.35); border-radius: 10px; padding: 4px 10px; pointer-events: none; white-space: nowrap; }
+.tz-hint:empty { display: none; }
+
+/* career level cards */
+.lv-card .lvn { display: inline-block; min-width: 28px; text-align: center; font-weight: 900; color: #1b1408; background: var(--amber); border-radius: 8px; padding: 1px 6px; margin-right: 6px; }
+.lv-card.locked { opacity: .55; } .lv-card.locked .lvn { background: rgba(255,255,255,.3); }
+.lv-card .st { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 2px 8px; margin-left: 6px; }
+.st.playable { background: rgba(80,190,90,.3); color: #b8f0bd; } .st.prototype { background: rgba(242,169,59,.25); color: #ffd79a; }
+.st.online { background: rgba(90,150,255,.25); color: #bcd4ff; } .st.planned { background: rgba(255,255,255,.12); color: #ddd; }
+
+.gl-lost { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10,8,6,.86); text-align: center; padding: 24px; }

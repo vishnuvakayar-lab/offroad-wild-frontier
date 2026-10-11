@@ -78,7 +78,7 @@ export async function runPhase6({ openPage, ok, area }) {
     const rd = runs['race-dash'], rl = runs['race-loop'];
     const resUI = await page.evaluate(() => ({ title: document.getElementById('r-title').textContent, medal: document.getElementById('r-medal').textContent, reward: document.getElementById('r-reward').textContent, btns: ['r-retry', 'r-next', 'r-menu'].every((id) => document.getElementById(id).getBoundingClientRect().width > 0) }));
     const resA = await area(page, '#results');
-    ok('p6 results: medal, reward and retry/next/menu shown', /complete/.test(resUI.title) && /gold|silver|bronze/.test(resUI.medal) && /credits/.test(resUI.reward) && resUI.btns && resA < 0.6,
+    ok('p6 results: medal, reward and retry/next/menu shown', /complete/.test(resUI.title) && /gold|silver|bronze/.test(resUI.medal) && /points|credits/.test(resUI.reward) && resUI.btns && resA < 0.6,
       `"${resUI.title}" ${resUI.medal.replace(/\s+/g, ' ')} · ${resUI.reward}; panel ${(resA * 100).toFixed(0)}%`);
     const expCredits = rd.results.credits + rl.results.credits;
     const RW = await page.evaluate(() => window.__game.missions.find((m) => m.id === 'race-dash').reward); // 6b: reward read from the mission (was hard-coded 300)

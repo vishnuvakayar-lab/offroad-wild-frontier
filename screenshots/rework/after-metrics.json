@@ -1,0 +1,59 @@
+{
+ "metrics": {
+  "mud-basin": {
+   "fps": 0,
+   "draws": 161,
+   "tris": 333312,
+   "surface": "mud"
+  },
+  "mud-puddles": {
+   "fps": 12.581051001645223,
+   "draws": 163,
+   "tris": 315654,
+   "surface": "mud"
+  },
+  "jungle-edge": {
+   "fps": 10.82038166437141,
+   "draws": 154,
+   "tris": 242018,
+   "surface": "ground"
+  },
+  "dunes": {
+   "fps": 10.82038166437141,
+   "draws": 112,
+   "tris": 127469,
+   "surface": "sand"
+  },
+  "dunes-sunset": {
+   "fps": 10.82038166437141,
+   "draws": 132,
+   "tris": 150849,
+   "surface": "sand"
+  },
+  "rain-mud": {
+   "fps": 11.999261583902513,
+   "draws": 156,
+   "tris": 321920,
+   "surface": "mud"
+  },
+  "night-jungle": {
+   "fps": 10.82038166437145,
+   "draws": 201,
+   "tris": 383370,
+   "surface": "ground"
+  },
+  "fog": {
+   "fps": 10.82038166437145,
+   "draws": 194,
+   "tris": 377258,
+   "surface": "ground"
+  },
+  "spawn": {
+   "fps": 11.42965996761587,
+   "draws": 152,
+   "tris": 181216,
+   "surface": "ground"
+  }
+ },
+ "errors": []
+}

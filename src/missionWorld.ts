@@ -13,7 +13,7 @@ export class MissionWorld {
     const per = def.laps ? def.gates.length / def.laps : def.gates.length;
     def.gates.forEach((g, i) => this.addGate(g, i === def.gates.length - 1 && (def.type === 'race' || def.type === 'mudrun') ? 'FINISH' : String((i % per) + 1)));
     if (def.zone) {
-      if (def.type === 'climb') this.addFlag(def.zone.x, def.zone.z);
+      if (def.type === 'climb' || def.type === 'trail') this.addFlag(def.zone.x, def.zone.z);
       if (def.type === 'deliver') this.addCamp(def.zone.x, def.zone.z);
       this.addZone(def.zone.x, def.zone.z, def.zone.r, def.type === 'tow' ? 0x37d67a : def.type === 'deliver' ? 0xffb03a : 0xff5a3a);
     }

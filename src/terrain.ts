@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
+import { enhanceGround, makeWaterMaterial } from './groundShader';
+import { buildNature } from './nature';
 
 export type Surface = 'ground' | 'mud' | 'sand' | 'rock';
 
@@ -95,6 +97,18 @@ export function nearTrail(x: number, z: number) {
 export const DASH_PTS: [number, number][] = [[30, -20], [48, -38], [58, -60], [70, -82], [92, -100], [116, -86], [130, -60], [126, -30], [110, -8], [88, 4], [64, -2], [46, 12], [26, 26]];
 export const DELIVER_PTS: [number, number][] = [[-30, -20], [-50, 15], [-64, 58], [-96, 82], [-70, 120], [-30, 104], [20, 100], [75, 94], [115, 55], [122, 5], [100, -35], [70, -75], [42, -104]];
 export const DELIVER_CAMP = { x: 18, z: -116 };
+/** Level 1 Desert Training trail (sand apron -> dune field loop -> oasis finish). Kept clear of outcrops/dead trees only. */
+export const L1_PTS: [number, number][] = [[14, -14], [27, -21], [39, -27], [51, -35], [62, -42], [72, -50], [82, -62], [94, -74], [108, -80], [120, -72], [126, -58], [121, -44], [109, -36]];
+export const L1_FINISH = { x: 96, z: -32, r: 9 };
+export function distToL1(x: number, z: number) {
+  let d = Infinity; const R = [[0, -8] as [number, number], ...L1_PTS, [L1_FINISH.x, L1_FINISH.z] as [number, number]];
+  for (let i = 0; i < R.length - 1; i++) {
+    const [ax, az] = R[i], [bx, bz] = R[i + 1], dx = bx - ax, dz = bz - az;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)));
+    d = Math.min(d, Math.hypot(x - (ax + dx * t), z - (az + dz * t)));
+  }
+  return d;
+}
 /** Bogged Down: the tow line from the stuck 4x4 to the safe zone must stay clear */
 export const TOW_LINE: [number, number][] = [[-64, 46], [-22, 48], [-10, 40]];
 const ROUTES: [number, number][][] = [DASH_PTS, [...DELIVER_PTS, [DELIVER_CAMP.x, DELIVER_CAMP.z]], TOW_LINE];
@@ -244,7 +258,25 @@ const C_STRIP = new THREE.Color(0x9a8a72);
 
 export const TREES: { x: number; z: number }[] = [];
 export const wetMaterials: THREE.MeshStandardMaterial[] = [];
-export const waterMat = new THREE.MeshStandardMaterial({ color: 0x6a604e, roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.8 });
+export const waterMat = makeWaterMaterial();
+/** materials that get the procedural ground detail (toggled by the graphics preset) */
+export const groundMaterials: THREE.MeshStandardMaterial[] = [];
+
+/** Soft biome weights for the ground shader: [mud, sand, rock, wet shoreline] (mirrors surfaceAt's borders). */
+export function surfaceWeights(x: number, z: number): [number, number, number, number] {
+  const wob = (fbm(x * 0.08, z * 0.08, 2) - 0.5) * 8;
+  const rock = 1 - sstep(-2, 2, dist(x, z, RC) - (RC.r - 6 + wob));
+  const mud = (1 - rock) * (1 - sstep(-2.5, 2.5, dist(x, z, ZONES.mud) - (ZONES.mud.r + wob)));
+  const sand = (1 - rock) * (1 - mud) * (1 - sstep(-3, 3, dist(x, z, ZONES.sand) - (ZONES.sand.r + wob)));
+  let wet = 0;
+  for (const p of PUDDLES) { const d = Math.hypot(x - p.x, z - p.z); if (d < p.r + 3) wet = Math.max(wet, 1 - sstep(p.r * 0.7, p.r + 2.6, d)); }
+  return [mud, sand, rock, wet];
+}
+function surfAttr(g: THREE.BufferGeometry) {
+  const pos = g.attributes.position as THREE.BufferAttribute, a = new Float32Array(pos.count * 4);
+  for (let i = 0; i < pos.count; i++) a.set(surfaceWeights(pos.getX(i), pos.getZ(i)), i * 4);
+  g.setAttribute('aSurf', new THREE.BufferAttribute(a, 4));
+}
 
 /** Hi-res terrain patch over the mountain (1 m grid; the main grid is 2 m) so cliffs, ledges and the trail bench read clearly. */
 export const PATCH = { x0: -160, x1: -30, z0: -160, z1: -30, step: 1 };
@@ -278,6 +310,7 @@ function gridGeo(w: number, d: number, sx: number, sz: number, cx: number, cz: n
   const g = new THREE.PlaneGeometry(w, d, sx, sz); g.rotateX(-Math.PI / 2); g.translate(cx, 0, cz); return g;
 }
 
+const WATER_GEO = new THREE.CircleGeometry(1, 40);
 export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER: typeof RAPIER_NS) {
   const geo = gridGeo(MAP_SIZE, MAP_SIZE, SEG, SEG, 0, 0);
   const pos = geo.attributes.position as THREE.BufferAttribute;
@@ -291,6 +324,7 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
     colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  surfAttr(geo);
   // cut the patch area out of the main grid
   {
     const ix = geo.index!.array as ArrayLike<number>, keep: number[] = [];
@@ -302,6 +336,7 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
     geo.setIndex(keep);
   }
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+  enhanceGround(mat, 'main'); groundMaterials.push(mat);
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   mesh.name = 'terrain';
@@ -324,8 +359,10 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
   const pn = pgeo.attributes.normal as THREE.BufferAttribute, pcol = new Float32Array(ppos.count * 3);
   for (let i = 0; i < ppos.count; i++) { colorAt(c, ppos.getX(i), ppos.getZ(i), pn.getY(i)); pcol[i * 3] = c.r; pcol[i * 3 + 1] = c.g; pcol[i * 3 + 2] = c.b; }
   pgeo.setAttribute('color', new THREE.BufferAttribute(pcol, 3));
+  surfAttr(pgeo);
   // faceted (flat-shaded) rock look for the mountain patch
   const pmat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0, flatShading: true });
+  enhanceGround(pmat, 'mountain'); groundMaterials.push(pmat);
   wetMaterials.push(pmat);
   const pmesh = new THREE.Mesh(pgeo, pmat);
   pmesh.receiveShadow = true; pmesh.name = 'terrain-mountain';
@@ -351,8 +388,8 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
   // water surfaces for the puddles
   const water = waterMat;
   for (const p of PUDDLES) {
-    const m = new THREE.Mesh(new THREE.CircleGeometry(p.r * 0.92, 28), water);
-    m.rotation.x = -Math.PI / 2; m.position.set(p.x, p.level, p.z); m.receiveShadow = true; m.name = 'water';
+    const m = new THREE.Mesh(WATER_GEO, water);
+    m.rotation.x = -Math.PI / 2; m.position.set(p.x, p.level, p.z); m.scale.set(p.r * 1.0, p.r * 1.0, 1); m.renderOrder = 2; m.receiveShadow = true; m.name = 'water';
     scene.add(m);
   }
   wetMaterials.push(mat);
@@ -366,6 +403,7 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
   for (const x of xs) for (const sz of [-1, 1]) { const z = STRIP.z + sz * (STRIP.half + 0.8); PM.makeTranslation(x, heightAt(x, z) + 0.55, z); posts.setMatrixAt(pi++, PM); }
   posts.castShadow = true; scene.add(posts);
   scatterProps(scene, world, RAPIER, ground);
+  buildNature(scene, world, RAPIER, ground);
   return mesh;
 }
 

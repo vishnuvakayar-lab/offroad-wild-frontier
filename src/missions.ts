@@ -2,7 +2,7 @@ import type { Medal } from './save';
 import { TRAIL, LEG_MID, RIDGE_TRAIL, DASH_PTS, DELIVER_PTS, DELIVER_CAMP } from './terrain';
 
 export type Mode = 'free' | 'challenge' | 'race' | 'rescue';
-export type MissionType = 'race' | 'mudrun' | 'climb' | 'tow' | 'deliver';
+export type MissionType = 'race' | 'mudrun' | 'climb' | 'tow' | 'deliver' | 'trail';
 export interface Gate { x: number; z: number; yaw: number; w: number }
 export interface Pose { x: number; z: number; yaw: number }
 export interface MissionDef {
@@ -13,6 +13,15 @@ export interface MissionDef {
   path?: { x: number; z: number }[];                 // driving line (bot + wrong-way detection on winding routes)
   laps?: number;
   targets: { gold: number; silver: number; bronze: number }; reward: number;
+  // ---- level-system extras (rework) ----
+  /** forced weather while the mission runs */
+  weather?: 'clear' | 'sunset' | 'fog' | 'rain' | 'night';
+  /** limited recoveries: resets beyond this fail the run */
+  maxResets?: number;
+  /** fail when the car makes no progress (moves < 2 m) for this many seconds */
+  stuckFail?: number;
+  /** coaching messages shown on passing gate i (index into gates) or at the start (key -1) */
+  tips?: Record<number, string>;
 }
 
 const yawOf = (dx: number, dz: number) => Math.atan2(dx, dz);
@@ -81,9 +90,10 @@ export class MissionRunner {
   countdown = 3; t = 0; next = 0; splits: number[] = []; rejected = 0; resets = 0;
   msg = ''; msgT = 0; wrongT = 0; flipT = 0; failReason = ''; zoneHold = 0;
   last: Pose; attached = false; reached = false;
+  anchor: { x: number; z: number } | null = null; stillT = 0;
   private prev: { x: number; z: number } | null = null;
   /** the car was teleported (reset/start): don't treat the jump as a gate crossing */
-  jumped() { this.prev = null; }
+  jumped() { this.prev = null; this.anchor = null; this.stillT = 0; }
   constructor(public def: MissionDef) { this.last = { ...def.start }; }
 
   get finished() { return this.state === 'success' || this.state === 'fail'; }
@@ -95,6 +105,7 @@ export class MissionRunner {
   requestReset(): boolean {
     if (this.state !== 'running') return false;
     if (this.def.noReset) { this.fail('Reset used — challenge failed'); return false; }
+    if (this.def.maxResets !== undefined && this.resets >= this.def.maxResets) { this.fail('No recoveries left'); return false; }
     this.resets++; this.prev = null; this.say('Reset to last checkpoint'); return true;
   }
   fail(reason: string) { if (this.finished) return; this.state = 'fail'; this.failReason = reason; }
@@ -104,7 +115,7 @@ export class MissionRunner {
     if (this.msgT > 0) this.msgT -= dt;
     if (this.state === 'countdown') {
       this.countdown -= dt; this.prev = { x: c.x, z: c.z };
-      if (this.countdown <= 0) { this.state = 'running'; this.say('GO!', 1); }
+      if (this.countdown <= 0) { this.state = 'running'; this.say(this.def.tips?.[-1] ?? 'GO!', this.def.tips?.[-1] ? 3.5 : 1); this.anchor = { x: c.x, z: c.z }; }
       return;
     }
     if (this.state !== 'running') return;
@@ -121,7 +132,8 @@ export class MissionRunner {
         if (j === this.next) {
           this.splits.push(this.t); this.next++;
           this.last = { x: g.x, z: g.z, yaw: g.yaw };
-          if (this.next >= d.gates.length) { if (d.type === 'race' || d.type === 'mudrun') this.succeed(); }
+          if (this.next >= d.gates.length) { if (d.type === 'race' || d.type === 'mudrun') this.succeed(); else if (d.tips?.[j]) this.say(d.tips[j], 3); }
+          else if (d.tips?.[j]) this.say(d.tips[j], 3);
           else this.say(`Checkpoint ${this.next}/${d.gates.length}`, 1.2);
         } else if (j > this.next) { this.rejected++; this.say(`Missed checkpoint ${this.next + 1}!`, 2); }
       }
@@ -148,7 +160,7 @@ export class MissionRunner {
       if (this.flipT > 2.5) this.fail('Rolled over');
       if (inZone(c) && this.next >= d.gates.length) this.succeed();
       else if (inZone(c)) this.say(`Missed checkpoint ${this.next + 1}!`, 0.5);
-    } else if (d.type === 'deliver') {
+    } else if (d.type === 'deliver' || d.type === 'trail') {
       const allGates = this.next >= d.gates.length;
       if (inZone(c) && allGates && Math.abs(c.speed) < 4) this.succeed();
       else if (inZone(c) && !allGates) this.say(`Missed checkpoint ${this.next + 1}!`, 0.5);
@@ -163,6 +175,11 @@ export class MissionRunner {
       if (this.attached && inZone(ext.stuck) && !deep) this.say('Pull it further into the safe zone', 0.3);
       else if (this.zoneHold > 0) this.say('Hold it there…', 0.3);
       if (this.zoneHold >= TOW_HOLD) this.succeed();
+    }
+    if (d.stuckFail && !this.finished) { // bogged down with no progress
+      if (!this.anchor || Math.hypot(c.x - this.anchor.x, c.z - this.anchor.z) > 2) { this.anchor = { x: c.x, z: c.z }; this.stillT = 0; }
+      else { this.stillT += dt; if (this.stillT > d.stuckFail * 0.5 && this.stillT - dt <= d.stuckFail * 0.5) this.say('Stuck? Reverse out or reset (R)', 3); }
+      if (this.stillT >= d.stuckFail) this.fail('Stuck in the mud');
     }
     if (d.limit !== null && this.t >= d.limit && !this.finished) {
       this.t = d.limit; this.fail(d.type === 'deliver' ? 'Night fell before the supplies arrived' : 'Out of time');
