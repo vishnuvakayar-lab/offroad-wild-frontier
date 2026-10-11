@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 1967 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 2406 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -22,7 +22,7 @@
   {
     "name": "desktop: settings drawer partial",
     "pass": true,
-    "detail": "covers 0%"
+    "detail": "covers 25%"
   },
   {
     "name": "desktop: graphics preset switch works",
@@ -32,22 +32,22 @@
   {
     "name": "intro: Play starts the intro and Skip ends it",
     "pass": true,
-    "detail": "phase after Play=intro, skip->playing in 109 ms"
+    "detail": "phase after Play=intro, skip->playing in 147 ms"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 156.1 Hz measured / 167.1 Hz set, 5012 rpm (gear 3)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 140.0 Hz measured / 146.0 Hz set, 4381 rpm (gear 3)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 14.71 m, speed 52.6 km/h (render-paced)"
+    "detail": "moved 11.00 m, speed 46.8 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 73.6 deg"
+    "detail": "heading change 57.8 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "82 track decals in 5 s"
+    "detail": "55 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.8 fps, Low preset 18.9 fps"
+    "detail": "High preset 12.5 fps, Low preset 16.9 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 1662 ms"
+    "detail": "load 2313 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -127,12 +127,12 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 19.70 m, heading change 65.0 deg, airborne samples 0/6"
+    "detail": "moved 16.49 m, heading change 52.2 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
     "pass": true,
-    "detail": "10.8 fps @ preset medium"
+    "detail": "11.2 fps @ preset medium"
   },
   {
     "name": "mobile-portrait-390x844: rotation -> canvas resizes to new viewport",
@@ -147,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 1493 ms"
+    "detail": "load 2032 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -157,7 +157,7 @@
   {
     "name": "mobile-landscape-844x390: settings drawer partial",
     "pass": true,
-    "detail": "covers 40%"
+    "detail": "covers 31%"
   },
   {
     "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
@@ -177,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 25.74 m, heading change 58.6 deg, airborne samples 0/6"
+    "detail": "moved 16.36 m, heading change 53.4 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "11.2 fps @ preset medium"
+    "detail": "12.3 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,27 +197,27 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 0 / mud 249 / sand 180; slip dirt 0.07 / mud 0.58 / sand 0.27"
+    "detail": "dirt 0 / mud 206 / sand 204; slip dirt 0.08 / mud 0.59 / sand 0.27"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "t=4.65 s, wheels in water=true, peak splash particles 209, chassis y in puddle 0.65 vs water level -0.10"
+    "detail": "t=5.55 s, wheels in water=true, peak splash particles 216, chassis y in puddle 0.62 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "80 ribbon segments"
+    "detail": "76 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
     "pass": true,
-    "detail": "62.9 deg at rest -> 69.0 deg at speed"
+    "detail": "62.7 deg at rest -> 69.2 deg at speed"
   },
   {
     "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
     "pass": true,
-    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.03 m above ground"
+    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.04 m above ground"
   },
   {
     "name": "weather: HUD quick toggle and T key cycle presets",
@@ -232,12 +232,12 @@
   {
     "name": "weather: sunset loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "11.6 fps (High)"
   },
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "10.0 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
@@ -247,22 +247,22 @@
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "11.6 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "16.5 fps, 34 draw calls, 68432 tris, particles {\"mud\":113,\"dust\":0,\"splash\":0,\"spawned\":4981}"
+    "detail": "16.3 fps, 36 draw calls, 109390 tris, particles {\"mud\":109,\"dust\":0,\"splash\":0,\"spawned\":4825}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "12.2 fps, 70 draw calls, 127116 tris, particles {\"mud\":203,\"dust\":0,\"splash\":0,\"spawned\":5421}"
+    "detail": "10.8 fps, 71 draw calls, 152274 tris, particles {\"mud\":198,\"dust\":0,\"splash\":0,\"spawned\":5319}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 70 draw calls, 127444 tris, particles {\"mud\":282,\"dust\":0,\"splash\":0,\"spawned\":6199}"
+    "detail": "10.0 fps, 71 draw calls, 152586 tris, particles {\"mud\":291,\"dust\":0,\"splash\":0,\"spawned\":6060}"
   },
   {
     "name": "AA toggled without page reload",
@@ -367,7 +367,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 102.0 vs 102.0 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 102.8 vs 102.8 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -462,7 +462,7 @@
   {
     "name": "Low preset swaps to simplified model live (no reload)",
     "pass": true,
-    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.27"
+    "detail": "lod=0 for all six after switching preset; scout at switch time y=0.91"
   },
   {
     "name": "mud builds up on the body in the mud basin (cosmetic)",
@@ -492,7 +492,7 @@
   {
     "name": "p6 race: 3 s countdown holds the car, then timer starts",
     "pass": true,
-    "detail": "state countdown(2.8s) -> after 1 s full throttle moved 0.39 m, still countdown; after 3.2 s running, t=0.35 s"
+    "detail": "state countdown(2.8s) -> after 1 s full throttle moved 0.00 m, still countdown; after 3.2 s running, t=0.37 s"
   },
   {
     "name": "p6 timer: advances with simulated time",
@@ -512,67 +512,67 @@
   {
     "name": "p6 race: in-order checkpoint accepted with split",
     "pass": true,
-    "detail": "next=1, split 3.22 s"
+    "detail": "next=1, split 3.33 s"
   },
   {
     "name": "p6 race: reset returns to last checkpoint facing the course",
     "pass": true,
-    "detail": "resets=1, 0.0 m from gate 1, yaw error 0°"
+    "detail": "resets=1, 0.2 m from gate 1, yaw error 1°"
   },
   {
     "name": "p6 races: teleporting through gates in order completes both routes",
     "pass": true,
-    "detail": "{\"race-loop\":{\"state\":\"success\",\"next\":8,\"n\":8,\"splits\":8,\"rejected\":0},\"race-dash\":{\"state\":\"success\",\"next\":7,\"n\":7,\"splits\":7,\"rejected\":0}}"
+    "detail": "{\"race-loop\":{\"state\":\"success\",\"next\":16,\"n\":16,\"splits\":16,\"rejected\":0},\"race-dash\":{\"state\":\"success\",\"next\":13,\"n\":13,\"splits\":13,\"rejected\":0}}"
   },
   {
     "name": "p6 races: bot completes both routes (gates in order, no rejections)",
     "pass": true,
-    "detail": "race-dash 15.55 s, 7 splits, gold; race-loop 17.10 s, 8 splits, gold"
+    "detail": "race-dash 26.35 s, 13 splits, gold; race-loop 31.07 s, 16 splits, gold"
   },
   {
     "name": "p6 results: medal, reward and retry/next/menu shown",
     "pass": true,
-    "detail": "\"Dune Loop — complete\" 🥇gold · +600 credits · +360 XP · LEVEL 3!; panel 18%"
+    "detail": "\"Dune Loop — complete\" 🥇gold · +640 credits · +384 XP · LEVEL 3!; panel 18%"
   },
   {
     "name": "p6 progression: credits/XP awarded by medal",
     "pass": true,
-    "detail": "race-dash gold +600 cr/+360 XP, race-loop gold +600 cr/+360 XP -> 1200 cr, 720 XP"
+    "detail": "race-dash gold +640 cr/+384 XP, race-loop gold +640 cr/+384 XP -> 1280 cr, 768 XP"
   },
   {
     "name": "p6 results: best time + medal stored",
     "pass": true,
-    "detail": "best race-dash 15.55 s gold, splits 7"
+    "detail": "best race-dash 26.35 s gold, splits 13"
   },
   {
     "name": "p6 results: retry restarts same mission, next goes to the following one",
     "pass": true,
-    "detail": "retry -> race-loop (countdown); next -> race-dash; repeat run 17.10 s newBest=false"
+    "detail": "retry -> race-loop (countdown); next -> race-dash; repeat run 31.07 s newBest=false"
   },
   {
     "name": "p6 medals: thresholds gold<=silver<=bronze inclusive",
     "pass": true,
-    "detail": "targets {\"gold\":16.5,\"silver\":19.5,\"bronze\":26} -> gold, gold, silver, silver, bronze, bronze, none"
+    "detail": "targets {\"gold\":31.5,\"silver\":39.5,\"bronze\":52.5} -> gold, gold, silver, silver, bronze, bronze, none"
   },
   {
     "name": "p6 challenge mud: bot crosses both gates in time without reset",
     "pass": true,
-    "detail": "success in 9.10 s (limit 18 s)"
+    "detail": "success in 9.10 s (limit 30 s)"
   },
   {
     "name": "p6 challenge mud: reset = fail, timeout = fail",
     "pass": true,
-    "detail": "reset -> fail (\"Reset used — challenge failed\"); idle 18.2 s -> fail (\"Out of time\")"
+    "detail": "reset -> fail (\"Reset used — challenge failed\"); idle 30.2 s -> fail (\"Out of time\")"
   },
   {
     "name": "p6 challenge climb: bot reaches summit flag",
     "pass": true,
-    "detail": "success in 5.18 s, summit y=18.0 m"
+    "detail": "success in 48.13 s, summit y=34.3 m"
   },
   {
     "name": "p6 challenge climb: timeout and rollover fail",
     "pass": true,
-    "detail": "idle 20.2 s -> \"Out of time\"; rolled over -> \"Rolled over\""
+    "detail": "idle 150.2 s -> \"Out of time\"; rolled over -> \"Rolled over\""
   },
   {
     "name": "p6 tow: stuck 4x4 stays put in the mud on its own",
@@ -582,22 +582,22 @@
   {
     "name": "p6 tow: H attaches the rope joint, towing drags the 4x4 into the safe zone",
     "pass": true,
-    "detail": "attached (rope 3.9 m); stuck vehicle moved 31.1 m, ends 7.0 m from safe-zone centre (r=7) in 18.0 s"
+    "detail": "attached (rope 3.9 m); stuck vehicle moved 36.2 m, ends 1.9 m from safe-zone centre (r=7) in 19.4 s"
   },
   {
     "name": "p6 deliver: bot reaches camp and stops before dark; idle -> night fail",
     "pass": true,
-    "detail": "delivered in 6.70 s (limit 25 s); idle -> \"Night fell before the supplies arrived\""
+    "detail": "delivered in 45.63 s (limit 120 s); idle -> \"Night fell before the supplies arrived\""
   },
   {
     "name": "p6 unlock: locked vehicle blocks Drive; unlocking spends earned credits",
     "pass": true,
-    "detail": "pickup locked (\"🔒 Requires level 2 · 1,200 cr\"), 1800 cr / Lv 4 -> unlocked, 600 cr left"
+    "detail": "pickup locked (\"🔒 Requires level 2 · 1,200 cr\"), 1920 cr / Lv 4 -> unlocked, 720 cr left"
   },
   {
     "name": "p6 persistence: credits, XP, unlocks and best times survive reload",
     "pass": true,
-    "detail": "after reload: 600 cr, 1080 XP, vehicles scout,pickup, best race-dash,race-loop, driving pickup"
+    "detail": "after reload: 720 cr, 1152 XP, vehicles scout,pickup, best race-dash,race-loop, driving pickup"
   },
   {
     "name": "p6: no console errors (fresh profile)",
@@ -657,7 +657,7 @@
   {
     "name": "p6 portrait: mode select fits, mission HUD inside viewport, small, clear of touch controls",
     "pass": true,
-    "detail": "modes 49%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true"
+    "detail": "modes 51%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true"
   },
   {
     "name": "p6 portrait: no console errors",
@@ -671,6 +671,121 @@
   },
   {
     "name": "p6 landscape: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "p6b race-loop: clean bot finishes within gold",
+    "pass": true,
+    "detail": "clean success 31.07 s (recorded 31.07 s) | gold 37.5 / silver 46.5 / bronze 62 s"
+  },
+  {
+    "name": "p6b race-loop: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
+    "pass": true,
+    "detail": "human 53.53, 54.57, 53.65 s (mean 53.9 > gold 37.5), resets 0/0/0"
+  },
+  {
+    "name": "p6b race-dash: clean bot finishes within gold",
+    "pass": true,
+    "detail": "clean success 26.35 s (recorded 26.35 s) | gold 31.5 / silver 39.5 / bronze 52.5 s"
+  },
+  {
+    "name": "p6b race-dash: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
+    "pass": true,
+    "detail": "human 43.18, 40.75, 41.92 s (mean 41.9 > gold 31.5), resets 0/0/0"
+  },
+  {
+    "name": "p6b ch-mud: clean bot finishes within gold",
+    "pass": true,
+    "detail": "clean success 9.10 s (recorded 9.1 s) | gold 11 / silver 13.5 / bronze 18 / limit 30 s"
+  },
+  {
+    "name": "p6b ch-mud: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
+    "pass": true,
+    "detail": "human 11.30, 12.28, 12.55 s (mean 12.0 > gold 11), resets 0/0/0"
+  },
+  {
+    "name": "p6b ch-climb: clean bot finishes within gold",
+    "pass": true,
+    "detail": "clean success 48.13 s (recorded 48.13 s) | gold 58 / silver 72 / bronze 96.5 / limit 150 s"
+  },
+  {
+    "name": "p6b ch-climb: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
+    "pass": true,
+    "detail": "human 62.53, 65.10, 68.73 s (mean 65.5 > gold 58), resets 1/0/0"
+  },
+  {
+    "name": "p6b rs-tow: clean bot finishes within gold",
+    "pass": true,
+    "detail": "clean success 25.70 s (recorded 25.7 s) | gold 31 / silver 38.5 / bronze 51.5 / limit 150 s"
+  },
+  {
+    "name": "p6b rs-tow: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
+    "pass": true,
+    "detail": "human 29.05, 29.83, 39.12 s (mean 32.7 > gold 31), resets 0/0/0"
+  },
+  {
+    "name": "p6b rs-deliver: clean bot finishes within gold",
+    "pass": true,
+    "detail": "clean success 45.63 s (recorded 45.63 s) | gold 55 / silver 68.5 / bronze 91.5 / limit 120 s"
+  },
+  {
+    "name": "p6b rs-deliver: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
+    "pass": true,
+    "detail": "human 66.03, 65.70, 66.05 s (mean 65.9 > gold 55), resets 0/0/0"
+  },
+  {
+    "name": "p6b targets: gold/silver/bronze = bot x1.2/1.5/2 (0.5 s), limits >= bronze",
+    "pass": true,
+    "detail": "factors {\"gold\":1.2,\"silver\":1.5,\"bronze\":2}"
+  },
+  {
+    "name": "p6b lengths: Ridge Climb 40-90 s and Supply Run 60-120 s for a human-like driver; races >= 40 s",
+    "pass": true,
+    "detail": "human mean: climb 65.5 s, supply 65.9 s, loop 53.9 s, dash 42.0 s"
+  },
+  {
+    "name": "p6b ridge trail: switchback climb with hairpins and steep rocky sections",
+    "pass": true,
+    "detail": "369 m, 4 hairpins, rise 33.4 m, 131 m steeper than 15%, max grade 27%"
+  },
+  {
+    "name": "p6b rock: mountain detected as Rock surface (wheels + HUD chip)",
+    "pass": true,
+    "detail": "surfaceAt hairpin=rock, spawn=ground; wheels [rock,rock,rock,rock], chip \"Rock\""
+  },
+  {
+    "name": "p6b rock: distinct grip (more wheelspin than dirt on the same full-throttle launch)",
+    "pass": true,
+    "detail": "1.2 s launch: rock slip 0.183 / 6.8 m vs dirt slip 0.103 / 7.0 m"
+  },
+  {
+    "name": "p6b rock: own dust + gravel sound while driving on rock",
+    "pass": true,
+    "detail": "real-time 1.5 s on rock: dust particles 43, gravel crunch level 0.064 (audio running)"
+  },
+  {
+    "name": "p6b tow: stuck 4x4 at the zone edge does not count; well inside + 1 s hold does",
+    "pass": true,
+    "detail": "zone r 7 m, rule <= 5 m for 1 s | inside but within 2 m of the edge for 3.0 s -> running (\"Pull it further into the safe zone\"), inside 1.9 m 0.5 s -> running, 1.3 s -> success"
+  },
+  {
+    "name": "p6b tow camera: sight line to the player clears the towed 4x4",
+    "pass": true,
+    "detail": "40 towing samples, 0 with the 4x4 within 1.6 m of the camera->player line (min 3.71 m), final running"
+  },
+  {
+    "name": "p6b supply run: nightfall tied to the time limit",
+    "pass": true,
+    "detail": "limit 120 s: t=12 s dusk 0.00 exp 1.05 | t=60 s dusk 0.26 exp 0.89 | t=108 s dusk 0.95 exp 0.45"
+  },
+  {
+    "name": "p6b presets: scree detail low < medium < high (low = 0)",
+    "pass": true,
+    "detail": "{\"low\":0,\"medium\":350,\"high\":700}"
+  },
+  {
+    "name": "p6b no console errors",
     "pass": true,
     "detail": ""
   }

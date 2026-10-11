@@ -1,0 +1,175 @@
+PASS  desktop: game loads to main menu  load 2406 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)
+PASS  audio: no AudioContext before any user gesture  state=none
+PASS  desktop: menu panel does not cover whole game  covers 21% of viewport
+PASS  audio: AudioContext created and running after first click  state=running
+PASS  desktop: settings drawer partial  covers 25%
+PASS  desktop: graphics preset switch works  preset=medium
+PASS  intro: Play starts the intro and Skip ends it  phase after Play=intro, skip->playing in 147 ms
+PASS  audio: engine pitch rises with throttle (FFT of engine bus)  idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 140.0 Hz measured / 146.0 Hz set, 4381 rpm (gear 3)
+PASS  desktop: W key drives vehicle forward (real-time)  moved 11.00 m, speed 46.8 km/h (render-paced)
+PASS  desktop: A key steers (heading changes)  heading change 57.8 deg
+PASS  desktop: Esc pauses; pause panel is partial  phase=paused, covers 11%
+   ground surfaces=[ground] dist3s=24.57m v3s=64.9km/h  0.5s:-0.7 1.0s:17.5 1.5s:32.7 2.0s:45.6 2.5s:56.2 3.0s:64.9
+   mud    surfaces=[mud] dist3s=13.92m v3s=33.2km/h  0.5s:0.4 1.0s:12.1 1.5s:20.3 2.0s:25.9 2.5s:30.2 3.0s:33.2
+   sand   surfaces=[sand] dist3s=20.41m v3s=50.5km/h  0.5s:0.5 1.0s:15.8 1.5s:28.1 2.0s:38.0 2.5s:45.2 3.0s:50.5
+PASS  traction: each lane stays on its intended surface  
+PASS  traction: ground > sand > mud (speed after 3 s full throttle)  ground 64.9 / sand 50.5 / mud 33.2 km/h
+PASS  brakes decelerate strongly (>= 7 m/s^2)  from 65.4 to 7.7 km/h in 1.5 s = 10.7 m/s^2 (1.09 g), 15.0 m
+PASS  holding brake at standstill reverses  -25.2 km/h
+PASS  vehicle stays upright through tests  up.y=1.000
+PASS  tyre tracks laid while driving in mud (real-time)  55 track decals in 5 s
+PASS  FPS measured (desktop, SwiftShader software GL)  High preset 12.5 fps, Low preset 16.9 fps
+PASS  desktop: no console errors  
+PASS  mobile-portrait-390x844: loads to menu  load 2313 ms
+PASS  mobile-portrait-390x844: menu panel partial  covers 57%
+PASS  mobile-portrait-390x844: settings drawer partial  covers 54%
+PASS  mobile-portrait-390x844: intro plays and tap on Skip ends it  intro -> playing
+PASS  mobile-portrait-390x844: audio running after tap  state=running
+PASS  mobile-portrait-390x844: touch controls visible, >=48px, on-screen  left:74x74 right:74x74 hand:56x56 brake:74x74 gas:78x107
+PASS  mobile-portrait-390x844: touch GAS + steer drives and turns  moved 16.49 m, heading change 52.2 deg, airborne samples 0/6
+PASS  mobile-portrait-390x844: FPS (SwiftShader)  11.2 fps @ preset medium
+PASS  mobile-portrait-390x844: rotation -> canvas resizes to new viewport  {"cw":844,"ch":390,"iw":844,"ih":390,"bw":1055,"bh":487}
+PASS  mobile-portrait-390x844: no console errors  
+PASS  mobile-landscape-844x390: loads to menu  load 2032 ms
+PASS  mobile-landscape-844x390: menu panel partial  covers 36%
+PASS  mobile-landscape-844x390: settings drawer partial  covers 31%
+PASS  mobile-landscape-844x390: intro plays and tap on Skip ends it  intro -> playing
+PASS  mobile-landscape-844x390: audio running after tap  state=running
+PASS  mobile-landscape-844x390: touch controls visible, >=48px, on-screen  left:66x66 right:66x66 hand:50x50 brake:66x66 gas:70x96
+PASS  mobile-landscape-844x390: touch GAS + steer drives and turns  moved 16.36 m, heading change 53.4 deg, airborne samples 0/6
+PASS  mobile-landscape-844x390: FPS (SwiftShader)  12.3 fps @ preset medium
+PASS  mobile-landscape-844x390: rotation -> canvas resizes to new viewport  {"cw":390,"ch":844,"iw":390,"ih":844,"bw":487,"bh":1055}
+PASS  mobile-landscape-844x390: no console errors  
+   ground: 0 spawned/2.5s, avg slip 0.08, 27 km/h on ground
+   mud:    206 spawned/2.5s, avg slip 0.59, 15 km/h on mud (mud droplets active 194)
+   sand:   204 spawned/2.5s, avg slip 0.27, 25 km/h on sand (dust active 143)
+PASS  particles: mud and sand emit more than dirt under full throttle  dirt 0 / mud 206 / sand 204; slip dirt 0.08 / mud 0.59 / sand 0.27
+PASS  puddles: vehicle drives through a deep puddle and it splashes  t=5.55 s, wheels in water=true, peak splash particles 216, chassis y in puddle 0.62 vs water level -0.10
+PASS  tracks: continuous ribbon segments laid  76 ribbon segments
+PASS  camera: FOV widens with speed  62.7 deg at rest -> 69.2 deg at speed
+PASS  camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)  camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.04 m above ground
+PASS  weather: HUD quick toggle and T key cycle presets  clear -> sunset -> fog
+PASS  weather: clear loads without console errors  10.4 fps (High)
+PASS  weather: sunset loads without console errors  11.6 fps (High)
+PASS  weather: fog loads without console errors  10.8 fps (High)
+PASS  weather: rain loads without console errors  10.4 fps (High)
+PASS  weather: night loads without console errors  10.8 fps (High)
+PASS  preset low: renders after switch, AA=false  16.3 fps, 36 draw calls, 109390 tris, particles {"mud":109,"dust":0,"splash":0,"spawned":4825}
+PASS  preset medium: renders after switch, AA=true  10.8 fps, 71 draw calls, 152274 tris, particles {"mud":198,"dust":0,"splash":0,"spawned":5319}
+PASS  preset high: renders after switch, AA=true  10.0 fps, 71 draw calls, 152586 tris, particles {"mud":291,"dust":0,"splash":0,"spawned":6060}
+PASS  AA toggled without page reload  navigations=1
+   boot timing: entry->game+rapier downloaded 235 ms, ready 1923 ms
+PASS  phase4: no console errors  
+PASS  vehicle scout: spawns upright  up 1.000, body 0.98 m above ground
+PASS  vehicle scout: stays upright through scripted drive (bumps + turn)  111 m, turned 111°, min up 0.93, final up 1.00, airborne 16% of samples, ended on sand
+   scout     0-60 2.2s | top in 7s 99.2 km/h | turn 48.8 deg/s @51 km/h | mud 3s 33.2 km/h
+PASS  vehicle voyager: spawns upright  up 1.000, body 1.07 m above ground
+PASS  vehicle voyager: stays upright through scripted drive (bumps + turn)  105 m, turned 107°, min up 0.92, final up 1.00, airborne 13% of samples, ended on sand
+   voyager   0-60 2.6s | top in 7s 98.3 km/h | turn 43.6 deg/s @50 km/h | mud 3s 34.8 km/h
+PASS  vehicle sahara: spawns upright  up 1.000, body 1.09 m above ground
+PASS  vehicle sahara: stays upright through scripted drive (bumps + turn)  118 m, turned 114°, min up 0.93, final up 1.00, airborne 19% of samples, ended on sand
+   sahara    0-60 2.1s | top in 7s 112.2 km/h | turn 43.8 deg/s @51 km/h | mud 3s 32.4 km/h
+PASS  vehicle pickup: spawns upright  up 1.000, body 1.05 m above ground
+PASS  vehicle pickup: stays upright through scripted drive (bumps + turn)  100 m, turned 105°, min up 0.93, final up 1.00, airborne 11% of samples, ended on sand
+   pickup    0-60 2.8s | top in 7s 93.5 km/h | turn 44.3 deg/s @50 km/h | mud 3s 32.0 km/h
+PASS  vehicle rally: spawns upright  up 1.000, body 0.75 m above ground
+PASS  vehicle rally: stays upright through scripted drive (bumps + turn)  93 m, turned 101°, min up 0.93, final up 1.00, airborne 21% of samples, ended on sand
+   rally     0-60 1.55s | top in 7s 128.3 km/h | turn 53.6 deg/s @51 km/h | mud 3s 22.4 km/h
+PASS  vehicle recovery: spawns upright  up 1.000, body 1.03 m above ground
+PASS  vehicle recovery: stays upright through scripted drive (bumps + turn)  90 m, turned 89°, min up 0.94, final up 1.00, airborne 8% of samples, ended on sand
+   recovery  0-60 3.8s | top in 7s 76.2 km/h | turn 36.6 deg/s @50 km/h | mud 3s 32.5 km/h
+PASS  vehicles: performance differs (0-60, top speed, turn rate, mud)  0-60 1.55-3.8s, top 76-128 km/h, turn 36.6-53.6 deg/s, mud 22.4-34.8 km/h; every pair differs
+PASS  vehicles: character matches class  rally quickest/fastest but worst in mud; recovery truck slowest
+PASS  steering lighter at speed without losing stability  Scout full-lock yaw @50/@80 km/h: before 38.5/29.7 -> after 44.7/41.0 deg/s; min up 1.00/1.00, min wheels 4/4
+PASS  garage desktop: panel leaves the showcase visible  panel covers 24% of 1280x720
+PASS  garage: cycles through all vehicles  scout, voyager, sahara, pickup, rally, recovery
+PASS  garage: selection + colour persist across reload and are used in Free Roam  chosen pickup/#b3261e, after reload pickup/#b3261e (menu shows "Workhorse Trail"), in play pickup
+PASS  night: car body visibility improved by fill/rim light  mean luma around car (0-255): night 39.3 -> 67.7; clear 102.8 vs 102.8 (fill disabled in daylight)
+PASS  phase5 desktop: no console errors  
+PASS  garage portrait: panel sized, controls reachable  panel covers 52% of 390x844; buttons on-screen true; tap next -> voyager
+PASS  garage portrait: no console errors  
+PASS  garage landscape: panel sized, controls reachable  panel covers 37% of 844x390; buttons on-screen true; tap next -> voyager
+PASS  garage landscape: no console errors  
+PASS  paint colour applies to body panels only  changed: static:paint/paint (1236 tris); 25 other meshes (tyres, rims, glass, trim, lamps, suspension) unchanged
+PASS  model scout: wheels spin/steer and suspension parts animate  hub travel 22.8 cm, front steer range 0.32 rad, damper length range 12.2 cm, axle/arm motion 16.8 cm, 10 instanced parts; High: 26 draws / 25796 tris
+PASS  model voyager: wheels spin/steer and suspension parts animate  hub travel 23.0 cm, front steer range 0.30 rad, damper length range 10.3 cm, axle/arm motion 15.8 cm, 10 instanced parts; High: 26 draws / 26030 tris
+PASS  model sahara: wheels spin/steer and suspension parts animate  hub travel 23.3 cm, front steer range 0.27 rad, damper length range 12.0 cm, axle/arm motion 12.3 cm, 12 instanced parts; High: 23 draws / 24456 tris
+PASS  model pickup: wheels spin/steer and suspension parts animate  hub travel 19.3 cm, front steer range 0.28 rad, damper length range 10.0 cm, axle/arm motion 13.0 cm, 10 instanced parts; High: 24 draws / 23856 tris
+PASS  model rally: wheels spin/steer and suspension parts animate  hub travel 19.7 cm, front steer range 0.35 rad, damper length range 15.0 cm, axle/arm motion 15.8 cm, 12 instanced parts; High: 23 draws / 20884 tris
+PASS  model recovery: wheels spin/steer and suspension parts animate  hub travel 12.0 cm, front steer range 0.28 rad, damper length range 7.9 cm, axle/arm motion 7.2 cm, 10 instanced parts; High: 25 draws / 28990 tris
+PASS  model scout: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)  High/Medium: 26 draws, 25796 tris; Low: 21 draws, 3484 tris
+PASS  model voyager: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)  High/Medium: 26 draws, 26030 tris; Low: 21 draws, 3598 tris
+PASS  model sahara: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)  High/Medium: 23 draws, 24456 tris; Low: 17 draws, 3484 tris
+PASS  model pickup: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)  High/Medium: 24 draws, 23856 tris; Low: 18 draws, 3512 tris
+PASS  model rally: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)  High/Medium: 23 draws, 20884 tris; Low: 18 draws, 3340 tris
+PASS  model recovery: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)  High/Medium: 25 draws, 28990 tris; Low: 20 draws, 3350 tris
+PASS  Low preset swaps to simplified model live (no reload)  lod=0 for all six after switching preset; scout at switch time y=0.91
+   mud screenshot: surface mud, 13 km/h
+PASS  mud builds up on the body in the mud basin (cosmetic)  dirt level 0.45 after ~6 s in mud
+PASS  phase5b desktop: no console errors  
+PASS  phase5b portrait: garage renders detailed model (Medium preset on touch)  scout: 26 draws, 25796 tris; errors 0
+PASS  p6 save: empty storage -> v2 defaults (Scout only, 0 cr)  v2, 0 cr, vehicles scout, 3 paints, dev=false
+PASS  p6 mode select: 4 modes, >=2 missions each, panel leaves game visible  tabs [Free Roam | Off-Road Challenges | Desert Checkpoint Races | Rescue & Recovery], cards {"free":1,"challenge":2,"race":2,"rescue":2}, panel 21% of 1280x720
+PASS  p6 race: 3 s countdown holds the car, then timer starts  state countdown(2.8s) -> after 1 s full throttle moved 0.00 m, still countdown; after 3.2 s running, t=0.37 s
+PASS  p6 timer: advances with simulated time  2.00 s simulated -> timer +2.000 s
+PASS  p6 race: out-of-order checkpoint rejected  after crossing gate 3 first: next=0, rejected=1, messages [GO! | Missed checkpoint 1! | Wrong way!]
+PASS  p6 race: wrong-way crossing flagged, not counted  fresh run, backwards through gate 1: next=0, messages [GO! | Wrong way!]
+PASS  p6 race: in-order checkpoint accepted with split  next=1, split 3.33 s
+PASS  p6 race: reset returns to last checkpoint facing the course  resets=1, 0.2 m from gate 1, yaw error 1°
+PASS  p6 races: teleporting through gates in order completes both routes  {"race-loop":{"state":"success","next":16,"n":16,"splits":16,"rejected":0},"race-dash":{"state":"success","next":13,"n":13,"splits":13,"rejected":0}}
+PASS  p6 races: bot completes both routes (gates in order, no rejections)  race-dash 26.35 s, 13 splits, gold; race-loop 31.07 s, 16 splits, gold
+PASS  p6 results: medal, reward and retry/next/menu shown  "Dune Loop — complete" 🥇gold · +640 credits · +384 XP · LEVEL 3!; panel 18%
+PASS  p6 progression: credits/XP awarded by medal  race-dash gold +640 cr/+384 XP, race-loop gold +640 cr/+384 XP -> 1280 cr, 768 XP
+PASS  p6 results: best time + medal stored  best race-dash 26.35 s gold, splits 13
+PASS  p6 results: retry restarts same mission, next goes to the following one  retry -> race-loop (countdown); next -> race-dash; repeat run 31.07 s newBest=false
+PASS  p6 medals: thresholds gold<=silver<=bronze inclusive  targets {"gold":31.5,"silver":39.5,"bronze":52.5} -> gold, gold, silver, silver, bronze, bronze, none
+PASS  p6 challenge mud: bot crosses both gates in time without reset  success in 9.10 s (limit 30 s)
+PASS  p6 challenge mud: reset = fail, timeout = fail  reset -> fail ("Reset used — challenge failed"); idle 30.2 s -> fail ("Out of time")
+PASS  p6 challenge climb: bot reaches summit flag  success in 48.13 s, summit y=34.3 m
+PASS  p6 challenge climb: timeout and rollover fail  idle 150.2 s -> "Out of time"; rolled over -> "Rolled over"
+PASS  p6 tow: stuck 4x4 stays put in the mud on its own  drift 0.01 m in 5 s on mud; hook from start refused
+PASS  p6 tow: H attaches the rope joint, towing drags the 4x4 into the safe zone  attached (rope 3.9 m); stuck vehicle moved 36.2 m, ends 1.9 m from safe-zone centre (r=7) in 19.4 s
+PASS  p6 deliver: bot reaches camp and stops before dark; idle -> night fail  delivered in 45.63 s (limit 120 s); idle -> "Night fell before the supplies arrived"
+PASS  p6 unlock: locked vehicle blocks Drive; unlocking spends earned credits  pickup locked ("🔒 Requires level 2 · 1,200 cr"), 1920 cr / Lv 4 -> unlocked, 720 cr left
+PASS  p6 persistence: credits, XP, unlocks and best times survive reload  after reload: 720 cr, 1152 XP, vehicles scout,pickup, best race-dash,race-loop, driving pickup
+PASS  p6: no console errors (fresh profile)  
+PASS  p6 upgrades: engine x3 -> quicker 0-60  0-60 2.2 s -> 1.7 s (drive force 4600 -> 5842)
+PASS  p6 upgrades: tyres x3 -> more traction on loose surfaces  sand grip 1.00 -> 1.21; 3 s sand launch 61.0 -> 61.8 km/h; mud 36.0 -> 39.2 km/h
+PASS  p6 upgrades: suspension x3 -> more travel, stiffer, measurably higher ride  travel 0.320 -> 0.416 m, stiffness 28.0 -> 34.7, settled ride height 0.970 -> 1.076 m
+PASS  p6 upgrades: capped at level 3, cost credits, saved  {"engine":3,"tyres":3,"susp":3}, 800 cr left (3 x 2400 spent), 4th engine upgrade refused
+PASS  p6 upgrades: persist across reload into the physics spec  engine 5842, travel 0.416 after reload
+PASS  p6 migration: empty/corrupt -> clean defaults  null, "%%%", [1,2] -> v2 defaults
+PASS  p6 migration: v1 save converted (cash, unlocks, best times; invalid entries dropped)  v1 {cash 2500, unlocked [rally,tank,7]} -> {"credits":2500,"vehicles":["scout","rally"],"best":{"race-dash":{"time":21.5,"medal":"none"}}}
+PASS  p6 migration: bad fields sanitised; future version keeps known fields  bad -> {"c":0,"xp":0,"v":["scout"],"up":{"scout":{"engine":3,"tyres":0,"susp":0}}}; future v9 -> 10 cr, scout,sahara
+PASS  p6 migration: v1 save in storage loads and is rewritten as v2  loaded 1300 cr, scout,pickup; stored v2
+PASS  p6: no console errors (upgrades/migration)  
+PASS  p6 portrait: mode select fits, mission HUD inside viewport, small, clear of touch controls  modes 51%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true
+PASS  p6 portrait: no console errors  
+PASS  p6 landscape: mode select fits, mission HUD inside viewport, small, clear of touch controls  modes 38%, HUD opaque panels 7.2% (bounding box incl. message 422x114 px = 14.6%) at y 10, touch overlap false, winch on-screen true, hook tap attached true
+PASS  p6 landscape: no console errors  
+PASS  p6b race-loop: clean bot finishes within gold  clean success 31.07 s (recorded 31.07 s) | gold 37.5 / silver 46.5 / bronze 62 s
+PASS  p6b race-loop: human-like bot (3 seeds) finishes within bronze; gold needs better driving  human 53.53, 54.57, 53.65 s (mean 53.9 > gold 37.5), resets 0/0/0
+PASS  p6b race-dash: clean bot finishes within gold  clean success 26.35 s (recorded 26.35 s) | gold 31.5 / silver 39.5 / bronze 52.5 s
+PASS  p6b race-dash: human-like bot (3 seeds) finishes within bronze; gold needs better driving  human 43.18, 40.75, 41.92 s (mean 41.9 > gold 31.5), resets 0/0/0
+PASS  p6b ch-mud: clean bot finishes within gold  clean success 9.10 s (recorded 9.1 s) | gold 11 / silver 13.5 / bronze 18 / limit 30 s
+PASS  p6b ch-mud: human-like bot (3 seeds) finishes within bronze; gold needs better driving  human 11.30, 12.28, 12.55 s (mean 12.0 > gold 11), resets 0/0/0
+PASS  p6b ch-climb: clean bot finishes within gold  clean success 48.13 s (recorded 48.13 s) | gold 58 / silver 72 / bronze 96.5 / limit 150 s
+PASS  p6b ch-climb: human-like bot (3 seeds) finishes within bronze; gold needs better driving  human 62.53, 65.10, 68.73 s (mean 65.5 > gold 58), resets 1/0/0
+PASS  p6b rs-tow: clean bot finishes within gold  clean success 25.70 s (recorded 25.7 s) | gold 31 / silver 38.5 / bronze 51.5 / limit 150 s
+PASS  p6b rs-tow: human-like bot (3 seeds) finishes within bronze; gold needs better driving  human 29.05, 29.83, 39.12 s (mean 32.7 > gold 31), resets 0/0/0
+PASS  p6b rs-deliver: clean bot finishes within gold  clean success 45.63 s (recorded 45.63 s) | gold 55 / silver 68.5 / bronze 91.5 / limit 120 s
+PASS  p6b rs-deliver: human-like bot (3 seeds) finishes within bronze; gold needs better driving  human 66.03, 65.70, 66.05 s (mean 65.9 > gold 55), resets 0/0/0
+PASS  p6b targets: gold/silver/bronze = bot x1.2/1.5/2 (0.5 s), limits >= bronze  factors {"gold":1.2,"silver":1.5,"bronze":2}
+PASS  p6b lengths: Ridge Climb 40-90 s and Supply Run 60-120 s for a human-like driver; races >= 40 s  human mean: climb 65.5 s, supply 65.9 s, loop 53.9 s, dash 42.0 s
+PASS  p6b ridge trail: switchback climb with hairpins and steep rocky sections  369 m, 4 hairpins, rise 33.4 m, 131 m steeper than 15%, max grade 27%
+PASS  p6b rock: mountain detected as Rock surface (wheels + HUD chip)  surfaceAt hairpin=rock, spawn=ground; wheels [rock,rock,rock,rock], chip "Rock"
+PASS  p6b rock: distinct grip (more wheelspin than dirt on the same full-throttle launch)  1.2 s launch: rock slip 0.183 / 6.8 m vs dirt slip 0.103 / 7.0 m
+PASS  p6b rock: own dust + gravel sound while driving on rock  real-time 1.5 s on rock: dust particles 43, gravel crunch level 0.064 (audio running)
+PASS  p6b tow: stuck 4x4 at the zone edge does not count; well inside + 1 s hold does  zone r 7 m, rule <= 5 m for 1 s | inside but within 2 m of the edge for 3.0 s -> running ("Pull it further into the safe zone"), inside 1.9 m 0.5 s -> running, 1.3 s -> success
+PASS  p6b tow camera: sight line to the player clears the towed 4x4  40 towing samples, 0 with the 4x4 within 1.6 m of the camera->player line (min 3.71 m), final running
+PASS  p6b supply run: nightfall tied to the time limit  limit 120 s: t=12 s dusk 0.00 exp 1.05 | t=60 s dusk 0.26 exp 0.89 | t=108 s dusk 0.95 exp 0.45
+PASS  p6b presets: scree detail low < medium < high (low = 0)  {"low":0,"medium":350,"high":700}
+PASS  p6b no console errors  
+
+158/158 checks passed
+EXIT 0

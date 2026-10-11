@@ -1,4 +1,4 @@
-# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–6)
+# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–6b)
 
 Original 3D off-road game. One shared TypeScript codebase targets Web (desktop + mobile browsers) first;
 Android/iOS shells come later by wrapping the same build.
@@ -93,15 +93,23 @@ Performance: static parts are merged per material and suspension parts are insta
 | Mode | Missions | Rules |
 |---|---|---|
 | Free Roam | open map | no timer (the old *Free Roam* button still goes straight in) |
-| Off-Road Challenges | **Mud Crossing** (2 gates through the mud basin, 18 s, *no resets*), **Ridge Climb** (new rocky ridge NW of spawn, summit flag, 20 s, fail if rolled over > 2.5 s) | time limit |
-| Desert Checkpoint Races | **Dune Loop** (8-gate lap), **Canyon Dash** (7-gate point-to-point) | 3-2-1 countdown, timer, split per gate (+/- vs best splits), wrong-way + missed-checkpoint warnings (out-of-order gates are rejected), reset to last checkpoint |
-| Rescue & Recovery | **Bogged Down** (reach a 4x4 stuck in the mud, hook a real Rapier rope joint with H / Hook, optional winch, drag it into the safe zone, 150 s), **Supply Run** (reach the stranded camp and stop before dark, 25 s; the sky darkens as the clock runs) | time limit |
+| Off-Road Challenges | **Mud Crossing** (2 gates through the mud basin, 30 s, *no resets*), **Ridge Climb** (switchback trail up the rocky mountain NW of spawn, 4 checkpoints + summit flag, 150 s, fail if rolled over > 2.5 s) | time limit |
+| Desert Checkpoint Races | **Dune Loop** (2 laps of 8 gates), **Canyon Dash** (13-gate point-to-point) | 3-2-1 countdown, timer, split per gate (+/- vs best splits), wrong-way + missed-checkpoint warnings (out-of-order gates are rejected), reset to last checkpoint |
+| Rescue & Recovery | **Bogged Down** (reach a 4x4 stuck in the mud, hook a real Rapier rope joint with H / Hook, optional winch, drag it at least 2 m inside the 7 m safe zone and hold 1 s, 150 s), **Supply Run** (12-gate cross-country route to the stranded camp, stop before dark, 120 s; dusk follows the clock) | time limit |
 
 Results screen: medal (gold/silver/bronze by time target), time, best time (localStorage), splits, credits/XP, **Retry**, **Next**, **Modes**.
-Medal targets were set from deterministic bot runs on the Scout (bot ≈ gold) and are tunable in `src/missions.ts`.
+Medal targets are derived from deterministic clean-bot runs on the Scout: gold = bot × 1.2, silver × 1.5, bronze × 2 (`BOT_TIMES` / `MEDAL_FACTORS` in `src/missions.ts`).
 
 Progression (`src/save.ts`, key `owf.save`, schema **v2**, migration-safe from empty/corrupt/v1/future data):
 - credits = reward × medal multiplier (gold 2, silver 1.5, bronze 1.2); XP = 60 % of that; 300 XP per level; failure gives 10 XP.
 - Scout free; Pickup L2/1200 cr, Voyager L2/1600, Recovery L3/2000, Rally L3/2400, Sahara L4/3000. First 3 paints free, others unlock with level.
 - Upgrades per vehicle (engine / tyres / suspension, 3 levels, 400/800/1200 cr) change the real physics spec: engine +9 % drive force & +3 % top speed per level, tyres +7 % grip on every surface & +4 % side stiffness, suspension +10 % travel, +8 % spring rate, +3 cm ride height.
 - Dev/test override: `?dev=1` or `localStorage.owf.dev = "1"` unlocks every vehicle/paint without touching the save.
+
+## Phase 6b — difficulty, longer missions, rocky mountain
+- **Fair medal targets.** `botRun()` has a clean path-following bot and a *human-like* mode (0.25 s steering reaction delay, seeded steering/throttle noise, throttle lifts, slower corner speeds, ~1.5 s to hook a rope). Targets = clean bot × 1.2 / 1.5 / 2. Tests check the clean bot is within gold, three human-like seeds are within bronze, and on average they miss gold.
+- **Longer missions.** Ridge Climb is now a ~370 m switchback trail (4 hairpins, 33 m rise, grades up to ~27 %), Supply Run a 12-gate cross-country route with nightfall following the 120 s limit, Canyon Dash 13 gates, and Dune Loop 2 laps.
+- **Rocky mountain.** The ridge is a mountain with spurs, crags and cliff bands, built on a 1 m flat-shaded hi-res terrain patch. Rock colouring depends on slope (scree, rock and dark cliff faces with strata). It has 110 boulders (with colliders) and up to 700 scree stones (none on Low, 50 % on Medium, all on High).
+- **Rock surface type.** The trail and mountain are a `rock` surface with lower grip than dirt (slip 1.12 vs 1.5, side 0.82). It has its own grey dust and stone chips, a gravel-crunch sound layer, a HUD chip, and leaves no tyre tracks.
+- **Tow.** The stuck 4x4 must be ≤ 5 m from the centre of the 7 m zone for 1 s. While towing, the camera rises and pulls back, and the towed vehicle no longer pulls the camera in.
+- Tests: `node tests/phase6b.mjs` (also part of `tests/acceptance.mjs`). Screenshots: `screenshots/phase6b/` (`before-*` = Phase 6 ridge).

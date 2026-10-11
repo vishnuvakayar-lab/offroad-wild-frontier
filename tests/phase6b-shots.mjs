@@ -18,18 +18,23 @@ if (want('far')) {
   await p.evaluate(() => window.__game.camWorld(null));
 }
 if (want('trail')) {
-  for (const [secs, n] of [[0.1, 'climb-trail-start'], [process.env.T1 || 6, 'climb-trail-mid'], [process.env.T2 || 14, 'climb-trail-high']]) {
+  for (const [secs, n] of [[0.1, 'climb-trail-start'], [process.env.T1 || 20, 'climb-trail-mid'], [process.env.T2 || 40, 'climb-trail-high']]) {
     await p.evaluate((s) => { const g = window.__game; g.startMission('ch-climb'); g.botRun(s); g.setInput({ throttle: 0, brake: 1, steer: 0, handbrake: true }); }, +secs);
     await p.waitForTimeout(1500); await shot(n);
   }
   await p.evaluate(() => window.__game.setInput(null));
 }
 if (want('deliver')) {
-  for (const [secs, n] of [[process.env.D1 || 10, 'supply-run-route'], [process.env.D2 || 30, 'supply-run-dusk']]) {
-    await p.evaluate((s) => { const g = window.__game; g.startMission('rs-deliver'); g.botRun(s, { slowZone: true }); g.setInput({ throttle: 0, brake: 1, steer: 0, handbrake: true }); }, +secs);
-    await p.waitForTimeout(1500); await shot(n);
+  for (const [secs, n] of [[process.env.D1 || 15, 'supply-run-route'], [process.env.D2 || 100, 'supply-run-dusk']]) {
+    await p.evaluate((s) => { const g = window.__game; g.startMission('rs-deliver'); g.botRun(Math.min(s, 22), { slowZone: true }); if (s > 22) g.simulate({ throttle: 0, brake: 1, steer: 0, handbrake: true }, s - g.mission.t); g.setInput({ throttle: 0, brake: 1, steer: 0, handbrake: true }); }, +secs);
+    if (n === 'supply-run-dusk') await p.evaluate(() => { const g = window.__game, c = g.state(); g.camWorld([[c.x - Math.sin(c.yaw) * 11, c.y + 6, c.z - Math.cos(c.yaw) * 11], [c.x + Math.sin(c.yaw) * 6, c.y + 1, c.z + Math.cos(c.yaw) * 6]]); });
+    await p.waitForTimeout(1500); await shot(n); await p.evaluate(() => window.__game.camWorld(null));
   }
   await p.evaluate(() => window.__game.setInput(null));
+}
+if (want('tow')) {
+  await p.evaluate(() => { const g = window.__game; g.startMission('rs-tow'); g.botRun(60, { untilAttached: true }); g.botRun(4); });
+  await p.waitForTimeout(1500); await shot('tow-camera');
 }
 if (want('results')) {
   await p.evaluate(() => { const g = window.__game; g.startMission('ch-climb'); g.botRun(200); });
