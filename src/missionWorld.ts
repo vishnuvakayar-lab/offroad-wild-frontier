@@ -25,22 +25,23 @@ export class MissionWorld {
   private mat(o: THREE.MeshStandardMaterialParameters) { const m = new THREE.MeshStandardMaterial(o); this.disposables.push(m); return m; }
   private geo<T extends THREE.BufferGeometry>(g: T) { this.disposables.push(g); return g; }
   private label(text: string) {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-    const x = c.getContext('2d')!; x.fillStyle = '#1b1408'; x.fillRect(0, 0, 256, 64);
-    x.fillStyle = '#fff'; x.font = 'bold 44px system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 128, 34);
+    const c = document.createElement('canvas'); c.width = 480; c.height = 64;
+    const x = c.getContext('2d')!; x.fillStyle = '#1b1408'; x.fillRect(0, 0, 480, 64);
+    x.fillStyle = '#fff'; x.font = 'bold 44px system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 240, 34);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this.disposables.push(t); return t;
   }
   addGate(g: Gate, text: string) {
     const grp = new THREE.Group(), fx = Math.sin(g.yaw), fz = Math.cos(g.yaw), rx = fz, rz = -fx;
     const posts = this.mat({ color: 0xf2f2f2, emissive: 0x000000, roughness: 0.5 });
-    const banner = this.mat({ color: 0xffffff, map: this.label(text), emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0.15, side: THREE.DoubleSide });
+    const tex = this.label(text);
+    const banner = this.mat({ color: 0xffffff, map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.15, side: THREE.DoubleSide });
     const postGeo = this.geo(new THREE.CylinderGeometry(0.16, 0.2, 4.6, 8));
     let top = -Infinity;
     for (const s of [-1, 1]) {
       const x = g.x + rx * s * g.w / 2, z = g.z + rz * s * g.w / 2, y = heightAt(x, z);
       const p = new THREE.Mesh(postGeo, posts); p.position.set(x, y + 2.3, z); grp.add(p); top = Math.max(top, y + 4.4);
     }
-    const b = new THREE.Mesh(this.geo(new THREE.PlaneGeometry(g.w, 1.1)), banner);
+    const b = new THREE.Mesh(this.geo(new THREE.PlaneGeometry(g.w, 1.6)), banner);
     b.position.set(g.x, top, g.z); b.rotation.y = g.yaw; grp.add(b);
     this.group.add(grp); this.gates.push({ g: grp, banner, posts });
   }
@@ -50,7 +51,7 @@ export class MissionWorld {
       x.g.visible = i >= next;
       const on = i === next;
       x.posts.color.set(on ? 0xffb03a : 0xf2f2f2); x.posts.emissive.set(on ? 0x7a4a00 : 0x000000);
-      x.banner.emissiveIntensity = on ? 0.6 : 0.12;
+      x.banner.emissiveIntensity = on ? 0.7 : 0.12; x.banner.color.set(on ? 0xffc060 : 0xb0b0b0);
     });
   }
   addFlag(x: number, z: number) {

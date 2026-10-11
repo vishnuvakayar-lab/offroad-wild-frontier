@@ -424,7 +424,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (def.gates.length && m.next < def.gates.length) {
       target = def.gates[m.next];
       const last = m.splits.length ? m.splits[m.splits.length - 1] : null, best = save.best[def.id]?.splits?.[m.splits.length - 1];
-      sub = `CP ${m.next}/${def.gates.length}` + (last !== null ? ` · split ${fmt(last)}` + (best !== undefined ? ` (${last - best >= 0 ? '+' : '−'}${Math.abs(last - best).toFixed(1)})` : '') : '');
+      sub = `Next CP ${m.next + 1}/${def.gates.length}` + (last !== null ? ` · split ${fmt(last)}` + (best !== undefined ? ` (${last - best >= 0 ? '+' : '−'}${Math.abs(last - best).toFixed(1)})` : '') : '');
       if (def.noReset) sub += ' · no resets';
     } else if (def.type === 'tow' && stuck) {
       const st = stuck.body.translation();
@@ -435,7 +435,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (target) {
       camera.getWorldDirection(camDir);
       const ang = Math.atan2(target.x - c.x, target.z - c.z) - Math.atan2(camDir.x, camDir.z);
-      $('mh-arrow').style.transform = `rotate(${-ang}rad)`;
+      const na = Math.atan2(Math.sin(ang), Math.cos(ang));
+      $('mh-arrow').style.transform = `rotate(${(-na).toFixed(3)}rad)`;
       $('mh-dist').textContent = `${Math.hypot(target.x - c.x, target.z - c.z).toFixed(0)} m`;
     }
     const msgEl = $('mh-msg'); msgEl.textContent = m.msgT > 0 ? m.msg : ''; msgEl.classList.toggle('warn', /Wrong|Missed|failed|Too far/.test(m.msg));
