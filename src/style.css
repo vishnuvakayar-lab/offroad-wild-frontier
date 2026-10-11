@@ -138,7 +138,7 @@ body.touch .desktop-only, body:not(.touch) .touch-only { display: none; }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .swatches button { width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); padding: 0; }
 .swatches button.on { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(242,169,59,.35); }
-.g-actions { display: flex; gap: 10px; margin-top: 4px; } .g-actions .btn { flex: 1; text-align: center; }
+.g-actions { display: flex; gap: 10px; margin-top: 4px; position: sticky; bottom: 0; z-index: 1; padding: 6px 0 2px; background: linear-gradient(rgba(22,18,14,0), rgb(22,18,14) 22%); } /* always reachable when the panel scrolls */ .g-actions .btn { flex: 1; text-align: center; }
 @media (orientation: portrait) and (max-width: 700px) {
   .garage { left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); top: auto; bottom: calc(10px + var(--sab)); transform: none; width: auto; max-height: 56%; padding: 14px; }
   .g-desc { display: none; }

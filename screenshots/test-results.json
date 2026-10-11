@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 2418 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 1250 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -12,7 +12,7 @@
   {
     "name": "desktop: menu panel does not cover whole game",
     "pass": true,
-    "detail": "covers 18% of viewport"
+    "detail": "covers 21% of viewport"
   },
   {
     "name": "audio: AudioContext created and running after first click",
@@ -32,22 +32,22 @@
   {
     "name": "intro: Play starts the intro and Skip ends it",
     "pass": true,
-    "detail": "phase after Play=intro, skip->playing in 439 ms"
+    "detail": "phase after Play=intro, skip->playing in 255 ms"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 145.3 Hz measured / 155.9 Hz set, 4677 rpm (gear 3)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 145.3 Hz measured / 144.8 Hz set, 4343 rpm (gear 3)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 12.80 m, speed 49.8 km/h (render-paced)"
+    "detail": "moved 10.78 m, speed 46.5 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 48.5 deg"
+    "detail": "heading change 54.3 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -72,7 +72,7 @@
   {
     "name": "holding brake at standstill reverses",
     "pass": true,
-    "detail": "-25.2 km/h"
+    "detail": "-25.3 km/h"
   },
   {
     "name": "vehicle stays upright through tests",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "42 track decals in 5 s"
+    "detail": "74 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.9 fps, Low preset 16.6 fps"
+    "detail": "High preset 10.5 fps, Low preset 18.5 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,17 +97,17 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 1873 ms"
+    "detail": "load 1876 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
     "pass": true,
-    "detail": "covers 47%"
+    "detail": "covers 57%"
   },
   {
     "name": "mobile-portrait-390x844: settings drawer partial",
     "pass": true,
-    "detail": "covers 54%"
+    "detail": "covers 57%"
   },
   {
     "name": "mobile-portrait-390x844: intro plays and tap on Skip ends it",
@@ -127,12 +127,12 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 19.87 m, heading change 50.5 deg, airborne samples 0/6"
+    "detail": "moved 21.12 m, heading change 75.1 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
     "pass": true,
-    "detail": "10.4 fps @ preset medium"
+    "detail": "11.1 fps @ preset medium"
   },
   {
     "name": "mobile-portrait-390x844: rotation -> canvas resizes to new viewport",
@@ -147,17 +147,17 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 1931 ms"
+    "detail": "load 1766 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
     "pass": true,
-    "detail": "covers 30%"
+    "detail": "covers 36%"
   },
   {
     "name": "mobile-landscape-844x390: settings drawer partial",
     "pass": true,
-    "detail": "covers 0%"
+    "detail": "covers 40%"
   },
   {
     "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
@@ -177,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 21.38 m, heading change 64.2 deg, airborne samples 0/6"
+    "detail": "moved 19.66 m, heading change 54.6 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "10.5 fps @ preset medium"
+    "detail": "11.1 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,17 +197,17 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 0 / mud 238 / sand 219; slip dirt 0.08 / mud 0.58 / sand 0.27"
+    "detail": "dirt 0 / mud 184 / sand 213; slip dirt 0.08 / mud 0.60 / sand 0.27"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "t=4.50 s, wheels in water=true, peak splash particles 210, chassis y in puddle 0.65 vs water level -0.10"
+    "detail": "t=5.10 s, wheels in water=true, peak splash particles 219, chassis y in puddle 0.62 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "80 ribbon segments"
+    "detail": "72 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
@@ -232,12 +232,12 @@
   {
     "name": "weather: sunset loads without console errors",
     "pass": true,
-    "detail": "10.0 fps (High)"
+    "detail": "10.4 fps (High)"
   },
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "10.4 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
@@ -247,22 +247,22 @@
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "10.0 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "17.2 fps, 34 draw calls, 68224 tris, particles {\"mud\":106,\"dust\":0,\"splash\":0,\"spawned\":4960}"
+    "detail": "17.4 fps, 34 draw calls, 68360 tris, particles {\"mud\":109,\"dust\":0,\"splash\":0,\"spawned\":5045}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "11.0 fps, 70 draw calls, 126948 tris, particles {\"mud\":189,\"dust\":0,\"splash\":0,\"spawned\":5449}"
+    "detail": "10.0 fps, 70 draw calls, 127084 tris, particles {\"mud\":199,\"dust\":0,\"splash\":0,\"spawned\":5543}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "11.2 fps, 70 draw calls, 127204 tris, particles {\"mud\":280,\"dust\":0,\"splash\":0,\"spawned\":6060}"
+    "detail": "10.8 fps, 70 draw calls, 127380 tris, particles {\"mud\":271,\"dust\":0,\"splash\":0,\"spawned\":6261}"
   },
   {
     "name": "AA toggled without page reload",
@@ -352,7 +352,7 @@
   {
     "name": "garage desktop: panel leaves the showcase visible",
     "pass": true,
-    "detail": "panel covers 18% of 1280x720"
+    "detail": "panel covers 24% of 1280x720"
   },
   {
     "name": "garage: cycles through all vehicles",
@@ -367,7 +367,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 102.9 vs 102.9 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 102.0 vs 102.0 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -377,7 +377,7 @@
   {
     "name": "garage portrait: panel sized, controls reachable",
     "pass": true,
-    "detail": "panel covers 36% of 390x844; buttons on-screen true; tap next -> voyager"
+    "detail": "panel covers 52% of 390x844; buttons on-screen true; tap next -> voyager"
   },
   {
     "name": "garage portrait: no console errors",
@@ -386,8 +386,8 @@
   },
   {
     "name": "garage landscape: panel sized, controls reachable",
-    "pass": true,
-    "detail": "panel covers 31% of 844x390; buttons on-screen true; tap next -> voyager"
+    "pass": false,
+    "detail": "panel covers 37% of 844x390; buttons on-screen false; tap next -> voyager"
   },
   {
     "name": "garage landscape: no console errors",
@@ -462,7 +462,7 @@
   {
     "name": "Low preset swaps to simplified model live (no reload)",
     "pass": true,
-    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.24"
+    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.27"
   },
   {
     "name": "mud builds up on the body in the mud basin (cosmetic)",
@@ -478,5 +478,200 @@
     "name": "phase5b portrait: garage renders detailed model (Medium preset on touch)",
     "pass": true,
     "detail": "scout: 26 draws, 25796 tris; errors 0"
+  },
+  {
+    "name": "p6 save: empty storage -> v2 defaults (Scout only, 0 cr)",
+    "pass": true,
+    "detail": "v2, 0 cr, vehicles scout, 3 paints, dev=false"
+  },
+  {
+    "name": "p6 mode select: 4 modes, >=2 missions each, panel leaves game visible",
+    "pass": true,
+    "detail": "tabs [Free Roam | Off-Road Challenges | Desert Checkpoint Races | Rescue & Recovery], cards {\"free\":1,\"challenge\":2,\"race\":2,\"rescue\":2}, panel 20% of 1280x720"
+  },
+  {
+    "name": "p6 race: 3 s countdown holds the car, then timer starts",
+    "pass": true,
+    "detail": "state countdown(2.8s) -> after 1 s full throttle moved 0.39 m, still countdown; after 3.2 s running, t=0.35 s"
+  },
+  {
+    "name": "p6 timer: advances with simulated time",
+    "pass": true,
+    "detail": "2.00 s simulated -> timer +2.000 s"
+  },
+  {
+    "name": "p6 race: out-of-order checkpoint rejected",
+    "pass": true,
+    "detail": "after crossing gate 3 first: next=0, rejected=1, messages [GO! | Missed checkpoint 1! | Wrong way!]"
+  },
+  {
+    "name": "p6 race: wrong-way crossing flagged, not counted",
+    "pass": true,
+    "detail": "fresh run, backwards through gate 1: next=0, messages [GO! | Wrong way!]"
+  },
+  {
+    "name": "p6 race: in-order checkpoint accepted with split",
+    "pass": true,
+    "detail": "next=1, split 3.22 s"
+  },
+  {
+    "name": "p6 race: reset returns to last checkpoint facing the course",
+    "pass": true,
+    "detail": "resets=1, 0.0 m from gate 1, yaw error 0°"
+  },
+  {
+    "name": "p6 races: teleporting through gates in order completes both routes",
+    "pass": true,
+    "detail": "{\"race-loop\":{\"state\":\"success\",\"next\":8,\"n\":8,\"splits\":8,\"rejected\":0},\"race-dash\":{\"state\":\"success\",\"next\":7,\"n\":7,\"splits\":7,\"rejected\":0}}"
+  },
+  {
+    "name": "p6 races: bot completes both routes (gates in order, no rejections)",
+    "pass": true,
+    "detail": "race-dash 15.55 s, 7 splits, gold; race-loop 17.10 s, 8 splits, gold"
+  },
+  {
+    "name": "p6 results: medal, reward and retry/next/menu shown",
+    "pass": true,
+    "detail": "\"Dune Loop — complete\" 🥇gold · +600 credits · +360 XP · LEVEL 3!; panel 17%"
+  },
+  {
+    "name": "p6 progression: credits/XP awarded by medal",
+    "pass": true,
+    "detail": "race-dash gold +600 cr/+360 XP, race-loop gold +600 cr/+360 XP -> 1200 cr, 720 XP"
+  },
+  {
+    "name": "p6 results: best time + medal stored",
+    "pass": true,
+    "detail": "best race-dash 15.55 s gold, splits 7"
+  },
+  {
+    "name": "p6 results: retry restarts same mission, next goes to the following one",
+    "pass": true,
+    "detail": "retry -> race-loop (countdown); next -> race-dash; repeat run 17.10 s newBest=false"
+  },
+  {
+    "name": "p6 medals: thresholds gold<=silver<=bronze inclusive",
+    "pass": true,
+    "detail": "targets {\"gold\":16.5,\"silver\":19.5,\"bronze\":26} -> gold, gold, silver, silver, bronze, bronze, none"
+  },
+  {
+    "name": "p6 challenge mud: bot crosses both gates in time without reset",
+    "pass": true,
+    "detail": "success in 9.10 s (limit 18 s)"
+  },
+  {
+    "name": "p6 challenge mud: reset = fail, timeout = fail",
+    "pass": true,
+    "detail": "reset -> fail (\"Reset used — challenge failed\"); idle 18.2 s -> fail (\"Out of time\")"
+  },
+  {
+    "name": "p6 challenge climb: bot reaches summit flag",
+    "pass": true,
+    "detail": "success in 5.18 s, summit y=18.0 m"
+  },
+  {
+    "name": "p6 challenge climb: timeout and rollover fail",
+    "pass": true,
+    "detail": "idle 20.2 s -> \"Out of time\"; rolled over -> \"Rolled over\""
+  },
+  {
+    "name": "p6 tow: stuck 4x4 stays put in the mud on its own",
+    "pass": true,
+    "detail": "drift 0.01 m in 5 s on mud; hook from start refused"
+  },
+  {
+    "name": "p6 tow: H attaches the rope joint, towing drags the 4x4 into the safe zone",
+    "pass": true,
+    "detail": "attached (rope 3.9 m); stuck vehicle moved 31.1 m, ends 7.0 m from safe-zone centre (r=7) in 18.2 s"
+  },
+  {
+    "name": "p6 deliver: bot reaches camp and stops before dark; idle -> night fail",
+    "pass": true,
+    "detail": "delivered in 6.70 s (limit 25 s); idle -> \"Night fell before the supplies arrived\""
+  },
+  {
+    "name": "p6 unlock: locked vehicle blocks Drive; unlocking spends earned credits",
+    "pass": true,
+    "detail": "pickup locked (\"🔒 Requires level 2 · 1,200 cr\"), 1800 cr / Lv 4 -> unlocked, 600 cr left"
+  },
+  {
+    "name": "p6 persistence: credits, XP, unlocks and best times survive reload",
+    "pass": true,
+    "detail": "after reload: 600 cr, 1080 XP, vehicles scout,pickup, best race-dash,race-loop, driving pickup"
+  },
+  {
+    "name": "p6: no console errors (fresh profile)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "p6 upgrades: engine x3 -> quicker 0-60",
+    "pass": true,
+    "detail": "0-60 2.2 s -> 1.7 s (drive force 4600 -> 5842)"
+  },
+  {
+    "name": "p6 upgrades: tyres x3 -> more traction on loose surfaces",
+    "pass": true,
+    "detail": "sand grip 1.00 -> 1.21; 3 s sand launch 61.0 -> 61.8 km/h; mud 36.0 -> 39.2 km/h"
+  },
+  {
+    "name": "p6 upgrades: suspension x3 -> more travel, stiffer, measurably higher ride",
+    "pass": true,
+    "detail": "travel 0.320 -> 0.416 m, stiffness 28.0 -> 34.7, settled ride height 0.970 -> 1.076 m"
+  },
+  {
+    "name": "p6 upgrades: capped at level 3, cost credits, saved",
+    "pass": true,
+    "detail": "{\"engine\":3,\"tyres\":3,\"susp\":3}, 800 cr left (3 x 2400 spent), 4th engine upgrade refused"
+  },
+  {
+    "name": "p6 upgrades: persist across reload into the physics spec",
+    "pass": true,
+    "detail": "engine 5842, travel 0.416 after reload"
+  },
+  {
+    "name": "p6 migration: empty/corrupt -> clean defaults",
+    "pass": true,
+    "detail": "null, \"%%%\", [1,2] -> v2 defaults"
+  },
+  {
+    "name": "p6 migration: v1 save converted (cash, unlocks, best times; invalid entries dropped)",
+    "pass": true,
+    "detail": "v1 {cash 2500, unlocked [rally,tank,7]} -> {\"credits\":2500,\"vehicles\":[\"scout\",\"rally\"],\"best\":{\"race-dash\":{\"time\":21.5,\"medal\":\"none\"}}}"
+  },
+  {
+    "name": "p6 migration: bad fields sanitised; future version keeps known fields",
+    "pass": true,
+    "detail": "bad -> {\"c\":0,\"xp\":0,\"v\":[\"scout\"],\"up\":{\"scout\":{\"engine\":3,\"tyres\":0,\"susp\":0}}}; future v9 -> 10 cr, scout,sahara"
+  },
+  {
+    "name": "p6 migration: v1 save in storage loads and is rewritten as v2",
+    "pass": true,
+    "detail": "loaded 1300 cr, scout,pickup; stored v2"
+  },
+  {
+    "name": "p6: no console errors (upgrades/migration)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "p6 portrait: mode select fits, mission HUD inside viewport, small, clear of touch controls",
+    "pass": true,
+    "detail": "modes 48%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 62, touch overlap false, winch on-screen true, hook tap attached true"
+  },
+  {
+    "name": "p6 portrait: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "p6 landscape: mode select fits, mission HUD inside viewport, small, clear of touch controls",
+    "pass": true,
+    "detail": "modes 37%, HUD opaque panels 7.2% (bounding box incl. message 422x114 px = 14.6%) at y 10, touch overlap false, winch on-screen true, hook tap attached true"
+  },
+  {
+    "name": "p6 landscape: no console errors",
+    "pass": true,
+    "detail": ""
   }
 ]

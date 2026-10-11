@@ -1,6 +1,6 @@
 {
   "name": "offroad-wild-frontier",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "OFFROAD: WILD FRONTIER - cross-platform 3D off-road game (web-first prototype)",

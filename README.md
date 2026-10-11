@@ -1,4 +1,4 @@
-# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–5b)
+# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–6)
 
 Original 3D off-road game. One shared TypeScript codebase targets Web (desktop + mobile browsers) first;
 Android/iOS shells come later by wrapping the same build.
@@ -10,10 +10,12 @@ npm run dev          # dev server
 npm run build        # type-check + production build -> dist/
 npm run preview      # serve dist on http://127.0.0.1:4173
 npm run test:accept  # Playwright acceptance tests against the preview server (writes screenshots/)
+node tests/phase6.mjs        # Phase 6 checks only
+node tests/phase6-shots.mjs  # Phase 6 screenshots -> screenshots/phase6/
 ```
 
 ## Controls
-Desktop: W/↑ throttle · S/↓ brake (hold at standstill = reverse) · A/D or ←/→ steer · Space handbrake · R reset/upright · T cycle weather · M mute · Esc/P pause (skips the intro) · drag mouse to look.
+Desktop: W/↑ throttle · S/↓ brake (hold at standstill = reverse) · A/D or ←/→ steer · Space handbrake · R reset/upright (in a mission: back to last checkpoint) · H tow hook on/off (Bogged Down) · T cycle weather · M mute · Esc/P pause (skips the intro) · drag mouse to look.
 Mobile: ◀ ▶ steer (left thumb) · GAS / BRAKE / HB (right thumb) · ❚❚ pause · drag the view to look. Multi-touch supported.
 
 ## Phase 1 — engine choice
@@ -84,3 +86,22 @@ All six bodies were rebuilt procedurally (`src/kit.ts` helpers, `src/models.ts` 
 Common: bevelled extruded side-profile panels with real wheel-arch cut-outs, tinted clear-coat glass, shut lines/handles/hinges, lamp housings with emissive lenses, mirrors, tow hooks, underbody (rails, tank, exhaust, skid plate); tread-block tyres, style-specific rims (steel / 6-spoke / twin-spoke / rally / truck) with brake discs and lug nuts, calipers that steer but don't spin; animated dampers + coil springs and solid axles (or wishbones on the Sahara/rally) driven by the suspension; clear-coat metallic paint (Medium/High), studio reflection map on car materials only, and a cosmetic mud layer that builds up on the lower body in the mud basin.
 
 Performance: static parts are merged per material and suspension parts are instanced, so the car went from 64–70 meshes to 23–26 (High/Medium) / 17–21 (Low). Low preset swaps live to a simplified model (~3.5k triangles instead of ~21–29k). Numbers: `screenshots/phase5b/model-stats.json`, `perf-before-after.json`; comparison script `tests/phase5b-compare.mjs`.
+
+## Phase 6 — Missions & progression
+**Play → Select Mode** opens a side panel (bottom sheet on portrait phones) with four modes:
+
+| Mode | Missions | Rules |
+|---|---|---|
+| Free Roam | open map | no timer (the old *Free Roam* button still goes straight in) |
+| Off-Road Challenges | **Mud Crossing** (2 gates through the mud basin, 18 s, *no resets*), **Ridge Climb** (new rocky ridge NW of spawn, summit flag, 20 s, fail if rolled over > 2.5 s) | time limit |
+| Desert Checkpoint Races | **Dune Loop** (8-gate lap), **Canyon Dash** (7-gate point-to-point) | 3-2-1 countdown, timer, split per gate (+/- vs best splits), wrong-way + missed-checkpoint warnings (out-of-order gates are rejected), reset to last checkpoint |
+| Rescue & Recovery | **Bogged Down** (reach a 4x4 stuck in the mud, hook a real Rapier rope joint with H / Hook, optional winch, drag it into the safe zone, 150 s), **Supply Run** (reach the stranded camp and stop before dark, 25 s; the sky darkens as the clock runs) | time limit |
+
+Results screen: medal (gold/silver/bronze by time target), time, best time (localStorage), splits, credits/XP, **Retry**, **Next**, **Modes**.
+Medal targets were set from deterministic bot runs on the Scout (bot ≈ gold) and are tunable in `src/missions.ts`.
+
+Progression (`src/save.ts`, key `owf.save`, schema **v2**, migration-safe from empty/corrupt/v1/future data):
+- credits = reward × medal multiplier (gold 2, silver 1.5, bronze 1.2); XP = 60 % of that; 300 XP per level; failure gives 10 XP.
+- Scout free; Pickup L2/1200 cr, Voyager L2/1600, Recovery L3/2000, Rally L3/2400, Sahara L4/3000. First 3 paints free, others unlock with level.
+- Upgrades per vehicle (engine / tyres / suspension, 3 levels, 400/800/1200 cr) change the real physics spec: engine +9 % drive force & +3 % top speed per level, tyres +7 % grip on every surface & +4 % side stiffness, suspension +10 % travel, +8 % spring rate, +3 cm ride height.
+- Dev/test override: `?dev=1` or `localStorage.owf.dev = "1"` unlocks every vehicle/paint without touching the save.

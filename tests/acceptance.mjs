@@ -1,6 +1,7 @@
 // Acceptance tests for Phases 1-6 (+5b detailed models, 6 missions/progression). Run against `npm run preview` (http://127.0.0.1:4173).
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import { runPhase6 } from './phase6-block.mjs';
 
 const APP_URL = process.env.URL || 'http://127.0.0.1:4173/';
 const SHOTS = new URL('../screenshots/', import.meta.url).pathname;
@@ -549,6 +550,8 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   ok('phase5b portrait: garage renders detailed model (Medium preset on touch)', pv.v.lod === 1 && o.errors.length === 0, `${pv.v.id}: ${pv.s.draws} draws, ${pv.s.tris} tris; errors ${o.errors.length}`);
   await o.ctx.close();
 }
+// ---------------- Phase 6: missions, results, progression, upgrades, save migration ----------------
+await runPhase6({ openPage, ok, area });
 await browser.close();
 const failed = results.filter((r) => !r.pass);
 fs.writeFileSync(new URL('../screenshots/test-results.json', import.meta.url), JSON.stringify(results, null, 2));
