@@ -5,6 +5,7 @@ import { runPhase6 } from './phase6-block.mjs';
 import { runPhase6b } from './phase6b-block.mjs';
 import { runRework } from './rework-block.mjs';
 import { runDrive } from './drive-block.mjs';
+import { runLayout } from './layout-block.mjs';
 
 const APP_URL = process.env.URL || 'http://127.0.0.1:4173/';
 const SHOTS = new URL('../screenshots/', import.meta.url).pathname;
@@ -36,6 +37,8 @@ async function openPage(ctxOpts, label, query = '', o = {}) {
 }
 const st = (page) => page.evaluate(() => window.__game.state());
 const area = async (page, sel) => {
+  // measure the settled layout: wait for finite CSS transitions (e.g. the drawer slide-in) on the element to finish
+  await page.evaluate((sel) => { const e = document.querySelector(sel); return e && Promise.all(e.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))); }, sel);
   const b = await page.locator(sel).boundingBox(); const v = page.viewportSize();
   if (!b) return 0;
   const w = Math.max(0, Math.min(b.x + b.width, v.width) - Math.max(0, b.x));
@@ -63,7 +66,7 @@ async function fpsSample(page, ms) {
   const a1 = (await st(page)).audio.state;
   ok('audio: AudioContext created and running after first click', a1 === 'running', `state=${a1}`);
   const drA = await area(page, '#drawer');
-  ok('desktop: settings drawer partial', drA < 0.6, `covers ${(drA * 100).toFixed(0)}%`);
+  ok('desktop: settings drawer partial', drA > 0.05 && drA < 0.6, `covers ${(drA * 100).toFixed(0)}%`);
   await page.click('#seg-preset button[data-v="medium"]');
   const preset = (await st(page)).preset;
   ok('desktop: graphics preset switch works', preset === 'medium', `preset=${preset}`);
@@ -154,7 +157,7 @@ async function fpsSample(page, ms) {
   await page.evaluate(() => window.__game.setInput(null));
   // low preset FPS
   await page.keyboard.press('Escape'); await page.click('#btn-settings2'); await page.click('#seg-preset button[data-v="low"]');
-  await page.click('#btn-close-drawer'); await page.click('#btn-resume');
+  await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
   await page.evaluate(() => { window.__game.teleport(-32, 0, Math.PI / 2); window.__game.setInput({ throttle: 0.6, brake: 0, steer: 0.2, handbrake: false }); });
   const fpsLow = await fpsSample(page, 5000);
   ok('FPS measured (desktop, SwiftShader software GL)', fpsHigh > 0, `High preset ${fpsHigh.toFixed(1)} fps, Low preset ${fpsLow.toFixed(1)} fps`);
@@ -172,7 +175,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   await page.screenshot({ path: `${SHOTS}${label}-menu.png` });
   await page.tap('#btn-settings'); await page.waitForTimeout(500);
   const drA = await area(page, '#drawer');
-  ok(`${label}: settings drawer partial`, drA < 0.8, `covers ${(drA * 100).toFixed(0)}%`);
+  ok(`${label}: settings drawer partial`, drA > 0.05 && drA < 0.8, `covers ${(drA * 100).toFixed(0)}%`);
   await page.screenshot({ path: `${SHOTS}${label}-settings.png` });
   await page.tap('#btn-close-drawer'); await page.waitForTimeout(400);
   await page.tap('#btn-play'); await page.waitForTimeout(900);
@@ -248,11 +251,13 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   const pud = await page.evaluate(() => window.__game.puddles.find((p) => p.x > -30));
   await page.evaluate((p) => { window.__game.teleport(p.x + 18, p.z, -Math.PI / 2); window.__game.setInput({ throttle: 1, brake: 0, steer: 0, handbrake: false }); }, pud);
   let wet = false, splashMax = 0, minY = 99, k_ = 0;
-  for (let k = 0; k < 60; k++) { // 9 s wall-clock budget: physics is render-paced (max 5 substeps/frame) under software GL
+  // physics is render-paced under software GL, so the budget is distance-based (car 30 m past the start = beyond the puddle), capped at 30 s wall-clock
+  for (let k = 0; k < 200; k++) {
     await page.waitForTimeout(150);
     const s = await st(page); wet ||= s.puddle.some(Boolean); splashMax = Math.max(splashMax, s.particles.splash);
     if (s.puddle.some(Boolean)) minY = Math.min(minY, s.y);
     k_ = k; if (splashMax > 40) { await page.screenshot({ path: SHOTS4 + 'desktop-puddle-splash.png' }); break; }
+    const ps = await page.evaluate(() => window.__game.pose()); if (Math.hypot(ps.x - pud.x - 18, ps.z - pud.z) > 30) break;
   }
   ok('puddles: vehicle drives through a deep puddle and it splashes', wet && splashMax > 0, `t=${(k_ * 0.15).toFixed(2)} s, wheels in water=${wet}, peak splash particles ${splashMax}, chassis y in puddle ${minY.toFixed(2)} vs water level ${pud.level.toFixed(2)}`);
   await drive(null);
@@ -291,7 +296,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   for (const w of ['clear', 'sunset', 'fog', 'rain', 'night']) {
     const e0 = errors.length;
     await page.keyboard.press('Escape'); await page.click('#btn-settings2');
-    await page.click(`#seg-weather button[data-v="${w}"]`); await page.click('#btn-close-drawer'); await page.click('#btn-resume');
+    await page.click(`#seg-weather button[data-v="${w}"]`); await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
     const [x, z, yaw] = spots[w];
     await page.evaluate(([x, z, yaw]) => { window.__game.teleport(x, z, yaw); window.__game.setInput({ throttle: 1, brake: 0, steer: 0.2, handbrake: false }); }, [x, z, yaw]);
     await page.waitForTimeout(2500);
@@ -308,7 +313,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   for (const p of ['low', 'medium', 'high']) {
     const e0 = errors.length;
     await page.keyboard.press('Escape'); await page.click('#btn-settings2');
-    await page.click(`#seg-preset button[data-v="${p}"]`); await page.click('#btn-close-drawer'); await page.click('#btn-resume');
+    await page.click(`#seg-preset button[data-v="${p}"]`); await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
     await page.evaluate(() => { window.__game.teleport(-100, 30, 1.2); window.__game.setInput({ throttle: 1, brake: 0, steer: 0.2, handbrake: false }); });
     await page.waitForTimeout(1500);
     const f0 = (await st(page)).renderer.frame;
@@ -520,7 +525,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   // Low preset LOD: switch via settings UI (live), physics untouched
   await page.click('#btn-play'); await page.waitForTimeout(400); await page.click('#btn-skip'); await page.waitForFunction(() => window.__game.phase === 'playing');
   const p0 = await st(page);
-  await page.click('#btn-pause'); await page.click('#btn-settings2'); await page.click('#seg-preset button[data-v="low"]'); await page.click('#btn-close-drawer'); await page.click('#btn-resume');
+  await page.click('#btn-pause'); await page.click('#btn-settings2'); await page.click('#seg-preset button[data-v="low"]'); await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
   await page.waitForTimeout(600);
   const low = {}; let lodOk = true;
   for (const id of ids) {
@@ -531,7 +536,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
     hi[id].lod === 1 && low[id].lod === 0 && hi[id].draws <= BUDGET.high.draws && hi[id].tris <= BUDGET.high.tris && low[id].draws <= BUDGET.low.draws && low[id].tris <= BUDGET.low.tris,
     `High/Medium: ${hi[id].draws} draws, ${hi[id].tris} tris; Low: ${low[id].draws} draws, ${low[id].tris} tris`);
   ok('Low preset swaps to simplified model live (no reload)', lodOk && (await page.evaluate(() => performance.getEntriesByType('navigation').length)) === 1, `lod=0 for all six after switching preset; scout at switch time y=${p0.y.toFixed(2)}`);
-  await page.click('#btn-pause'); await page.click('#btn-settings2'); await page.click('#seg-preset button[data-v="high"]'); await page.click('#btn-close-drawer'); await page.click('#btn-resume');
+  await page.click('#btn-pause'); await page.click('#btn-settings2'); await page.click('#seg-preset button[data-v="high"]'); await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
   await page.evaluate(() => window.__game.setVehicle('scout'));
   // mud build-up + gameplay shots
   await page.evaluate(() => { window.__game.setDirt(0); window.__game.teleport(-100, 30, 1.2); window.__game.setInput({ throttle: 1, brake: 0, steer: 0.25, handbrake: false }); });
@@ -565,6 +570,7 @@ await runPhase6b({ openPage, ok, area });
 await runRework({ openPage, ok, area });
 console.log('\n== Drive controls: cockpit wheel + pedals, transmission, transfer case, opening ==');
 await runDrive({ openPage, ok });
+await runLayout({ openPage, ok });
 await browser.close();
 const failed = results.filter((r) => !r.pass);
 fs.writeFileSync(new URL('../screenshots/test-results.json', import.meta.url), JSON.stringify(results, null, 2));

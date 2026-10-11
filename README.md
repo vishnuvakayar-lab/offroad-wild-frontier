@@ -1,4 +1,4 @@
-# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–6b)
+# OFFROAD: WILD FRONTIER — web-first prototype (Phases 1–7 + rework, build 0.7.0)
 
 Original 3D off-road game. One shared TypeScript codebase targets Web (desktop + mobile browsers) first;
 Android/iOS shells come later by wrapping the same build.
@@ -15,8 +15,9 @@ node tests/phase6-shots.mjs  # Phase 6 screenshots -> screenshots/phase6/
 ```
 
 ## Controls
-Desktop: W/↑ throttle · S/↓ brake (hold at standstill = reverse) · A/D or ←/→ steer · Space handbrake · R reset/upright (in a mission: back to last checkpoint) · H tow hook on/off (Bogged Down) · T cycle weather · M mute · Esc/P pause (skips the intro) · drag mouse to look.
-Mobile: ◀ ▶ steer (left thumb) · GAS / BRAKE / HB (right thumb) · ❚❚ pause · drag the view to look. Multi-touch supported.
+Desktop: W/↑ throttle · S/↓ brake (in AUTO: hold at standstill = reverse) · A/D or ←/→ steer · Space handbrake · Q cycle gear selector (AUTO/D/N/R/P) · 1/2/3/4 transfer case 2H/4H/4L/AWD · R reset/upright (in a mission: back to last checkpoint) · H tow hook · T cycle weather · M mute · Esc/P pause (skips the opening cinematic) · drag mouse to look.
+Mobile (default "Wheel + pedals" cockpit): virtual steering wheel bottom-left (drag to turn, self-centres, sensitivity in Settings) · accelerator + brake pedals bottom-right (progressive; brake wins; release = 0) · HB / recover pills · drive-mode chip (P R N D AUTO, 2H/4H/4L or AWD) · ❚❚ pause. Alternatives in Settings → Mobile controls: Buttons, Tilt (iOS motion permission asked only when chosen), Touch halves (auto-forward). Multi-touch supported.
+4L can only be engaged/disengaged when stopped in N (or P); 2H↔4H below 60 km/h; the rally car is AWD only. See REWORK-AUDIT.md for the measured drivetrain table.
 
 ## Phase 1 — engine choice
 | Layer | Choice | Why |

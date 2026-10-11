@@ -283,7 +283,7 @@ body.touch .desktop-only, body:not(.touch) .touch-only { display: none; }
 @keyframes menuIn { from { opacity: 0; translate: -24px 0; } to { opacity: 1; translate: 0 0; } }
 @media (orientation: portrait) { @keyframes menuIn { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } } }
 
-.g-cats { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-bottom: 4px; }
+.g-cats { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; } /* wraps instead of hiding categories behind a scrollbar-less strip */
 .g-cats button { flex: 1 0 auto; min-height: 34px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.25); color: inherit; font: inherit; font-size: 12px; font-weight: 700; padding: 4px 10px; }
 .g-cats button b { opacity: .6; font-weight: 600; margin-left: 2px; }
 .g-cats button.on { background: var(--amber); color: #1a1206; border-color: transparent; }
@@ -325,3 +325,6 @@ body.touch .desktop-only, body:not(.touch) .touch-only { display: none; }
   .ck-pills { bottom: calc(124px + var(--sab)); }
 }
 @media (max-height: 430px) and (orientation: landscape) { .wheel { width: 118px; height: 118px; } .pedal.gas { height: 92px; } .pedal.brake { height: 66px; } .ck-pills { bottom: calc(112px + var(--sab)); } }
+
+/* ---- on-screen keyboard open (body.kb, --kb set from visualViewport): panels move to the top and end above the keyboard ---- */
+body.kb .panel { top: calc(8px + var(--sat)); bottom: auto; transform: none; max-height: calc(100% - var(--kb, 0px) - 16px - var(--sat)); }

@@ -1,0 +1,210 @@
+{
+ "iphone-se-landscape": {
+  "menu": {
+   "visible": true,
+   "cover": 0.4024379060469765,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 293,
+   "h": 343
+  },
+  "garage": {
+   "visible": true,
+   "cover": 0.42564292853573216,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 307,
+   "h": 347
+  },
+  "career": {
+   "visible": true,
+   "cover": 0.46266666666666667,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 334,
+   "h": 347
+  },
+  "modes": {
+   "visible": true,
+   "cover": 0.456,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 334,
+   "h": 342
+  },
+  "lobby": {
+   "visible": true,
+   "cover": 0.4811568590704648,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 347,
+   "h": 347
+  },
+  "settings": {
+   "visible": true,
+   "cover": 0.5097451274362819,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 375
+  },
+  "controls": {
+   "setting": "halves",
+   "scheme": "halves",
+   "zones": true,
+   "wheel": false,
+   "pedals": false,
+   "brake": true,
+   "rec": true,
+   "drv": true,
+   "cover": 0.05342903548225887,
+   "off": [],
+   "overlaps": [],
+   "drive": {
+    "steer": 1,
+    "throttle": 1,
+    "moved": 6.1
+   }
+  },
+  "pause": {
+   "visible": true,
+   "cover": 0.4029985007496252,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 320,
+   "h": 315
+  },
+  "pause-settings": {
+   "visible": true,
+   "cover": 0.5097451274362819,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 375
+  },
+  "close": {
+   "resume": {
+    "phase": "playing",
+    "pause": false
+   },
+   "settingsClose": {
+    "phase": "playing",
+    "drawer": false,
+    "pause": false
+   },
+   "stacked": false
+  }
+ },
+ "ipad-portrait": {
+  "menu": {
+   "visible": true,
+   "cover": 0.2217397265140554,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 344,
+   "h": 623
+  },
+  "garage": {
+   "visible": true,
+   "cover": 0.245614406779661,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 328,
+   "h": 725
+  },
+  "career": {
+   "visible": true,
+   "cover": 0.42955560148821825,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 361,
+   "h": 1152
+  },
+  "modes": {
+   "visible": true,
+   "cover": 0.178212439484614,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 361,
+   "h": 478
+  },
+  "lobby": {
+   "visible": true,
+   "cover": 0.18979496628255477,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 361,
+   "h": 509
+  },
+  "settings": {
+   "visible": true,
+   "cover": 0.4146341463414634,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 1180
+  },
+  "controls": {
+   "setting": "halves",
+   "scheme": "halves",
+   "zones": true,
+   "wheel": false,
+   "pedals": false,
+   "brake": true,
+   "rec": true,
+   "drv": true,
+   "cover": 0.013811427759404712,
+   "off": [],
+   "overlaps": [],
+   "drive": {
+    "steer": 1,
+    "throttle": 1,
+    "moved": 2.7
+   }
+  },
+  "pause": {
+   "visible": true,
+   "cover": 0.10417527904092601,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 320,
+   "h": 315
+  },
+  "pause-settings": {
+   "visible": true,
+   "cover": 0.4146341463414634,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 1180
+  },
+  "close": {
+   "resume": {
+    "phase": "playing",
+    "pause": false
+   },
+   "settingsClose": {
+    "phase": "playing",
+    "drawer": false,
+    "pause": false
+   },
+   "stacked": false
+  }
+ }
+}

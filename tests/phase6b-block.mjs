@@ -89,7 +89,7 @@ export async function runPhase6b({ openPage, ok }) {
 
   // ---------- F: nightfall follows the Supply Run clock ----------
   const dk = await page.evaluate(async () => {
-    const g = window.__game, H = { throttle: 0, brake: 0, steer: 0, handbrake: true }, frame = () => new Promise((r) => setTimeout(r, 120)), lim = g.missions.find((m) => m.id === 'rs-deliver').limit, out = [];
+    const g = window.__game, H = { throttle: 0, brake: 0, steer: 0, handbrake: true }, frame = async () => { await new Promise((r) => setTimeout(r, 120)); for (let i = 0; i < 3; i++) await new Promise((r) => requestAnimationFrame(r)); }, lim = g.missions.find((m) => m.id === 'rs-deliver').limit, out = [];
     g.startMission('rs-deliver'); g.skipCountdown?.(); for (const f of [0.1, 0.5, 0.9]) { g.simulate(H, f * lim - g.mission.t); await frame(); out.push({ t: g.mission.t, ...g.dusk }); }
     return { lim, out };
   });

@@ -35,7 +35,7 @@ export async function runRework({ openPage, ok, area }) {
   {
     const { ctx, page, errors } = await openPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, userAgent: IPHONE_UA }, 'rework-portrait');
     const c0 = await ctl(page);
-    ok('rework controls: mobile default = cockpit wheel + pedals (auto-throttle preset on for the optional tilt mode)', c0.setting === 'wheel' && c0.auto === true, JSON.stringify(c0));
+    ok('rework controls: mobile default = touch halves with auto-forward (no wheel / pedals by default)', c0.setting === 'halves' && c0.auto === true, JSON.stringify(c0));
     await page.tap('#btn-levels'); await page.waitForTimeout(500);
     const cards = await page.$$eval('#lv-list .lv-card', (cs) => cs.map((c) => ({ n: +c.dataset.n, st: c.querySelector('.st').className.split(' ')[1], locked: c.classList.contains('locked'), start: !!c.querySelector('[data-level]') })));
     const cnt = (s) => cards.filter((c) => c.st === s).length;
@@ -51,7 +51,8 @@ export async function runRework({ openPage, ok, area }) {
     const perm = await page.evaluate(() => window.__perm.asked);
     await page.evaluate(() => window.__game.skipCountdown());
     await orient(page, 20, 0); await page.waitForTimeout(400); // neutral pose -> auto-calibrated as "straight"
-    const vis = await page.evaluate(() => { const v = (id) => { const e = document.getElementById(id); return !!e && e.offsetParent !== null; }; return { pedals: v('pedals'), wheel: v('wheel'), cal: v('ck-cal'), zones: v('tzones') }; });
+    // getClientRects, not offsetParent: #ck-cal is position:fixed
+    const vis = await page.evaluate(() => { const v = (id) => { const e = document.getElementById(id); return !!e && e.getClientRects().length > 0; }; return { pedals: v('pedals'), wheel: v('wheel'), cal: v('ck-cal'), zones: v('tzones') }; });
     const c1 = await ctl(page);
     ok('rework tilt: iOS requestPermission called once from the Start tap and granted; tilt mode = pedals + Centre, no wheel', perm === 1 && c1.tiltState === 'granted' && vis.pedals && !vis.wheel && vis.cal && !vis.zones, `asked ${perm}, state ${c1.tiltState}, ${JSON.stringify(vis)}`);
     const i0 = await inp(page);
@@ -107,7 +108,7 @@ export async function runRework({ openPage, ok, area }) {
     await page.evaluate(() => window.__game.setControls('tilt', true));
     await startL1ByTap(page); await orient(page, 0, 30); await page.evaluate(() => window.__game.skipCountdown());
     const ang = await page.evaluate(() => screen.orientation?.angle ?? window.orientation ?? 0);
-    await orient(page, 0, 30); await page.waitForTimeout(400);
+    await orient(page, 0, 30); await page.waitForTimeout(2000); // past the 1.8 s start-up centring window (slow SwiftShader frames can delay the first sample)
     // steering-wheel roll to the left in landscape: angle 90 -> beta decreases, angle 270 -> beta increases, 0 (emulator) -> gamma
     const roll = ang === 90 ? [-15, 30] : ang === 270 ? [15, 30] : [0, 15];
     await orient(page, roll[0], roll[1]); await page.waitForTimeout(400);

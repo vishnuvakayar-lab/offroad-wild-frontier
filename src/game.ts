@@ -213,10 +213,17 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camera.aspect = w / h;
     baseFov = w / h < 1 ? 72 : 62; // wider vertical FOV in portrait so the vehicle stays in view
     camera.updateProjectionMatrix();
+    // on-screen keyboard (iOS shrinks only the visual viewport): expose its height so panels with inputs stay above it
+    const ae = document.activeElement, typing = !!ae && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && /^(text|search|email|number|tel|url|password|)$/.test((ae as HTMLInputElement).type)));
+    const vv = window.visualViewport, kb = vv && typing ? Math.max(0, h - vv.height - vv.offsetTop) : 0; // only a focused text field means a keyboard (not pinch-zoom / toolbars)
+    document.documentElement.style.setProperty('--kb', `${Math.round(kb)}px`);
+    document.body.classList.toggle('kb', kb > 80);
+    if (kb > 80) (document.activeElement as HTMLElement | null)?.scrollIntoView?.({ block: 'nearest' });
   }
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', () => setTimeout(resize, 150));
   window.visualViewport?.addEventListener('resize', resize);
+  document.addEventListener('focusout', () => setTimeout(resize, 50));
 
   // ---------- input & UI ----------
   const input = new Input();
@@ -307,7 +314,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     $('ctrl-note').textContent = settings.controls === 'wheel' ? 'Drag the wheel (bottom-left) to steer - it centres itself when released. Pedals (bottom-right): GAS and BRAKE are progressive; brake at a standstill reverses in AUTO.'
       : settings.controls === 'buttons' ? '◀ ▶ buttons steer (bottom-left); GAS / BRAKE pedals bottom-right.'
       : settings.controls === 'tilt' ? `Tilt the phone like a steering wheel; pedals bottom-right${settings.autoThrottle ? ' (auto-throttle on: GAS is automatic, BRAKE overrides)' : ''}. Motion access: ${input.tiltState}${tiltFallback ? ' (using touch halves)' : ''}.`
-      : settings.controls === 'halves' ? 'Hold the left or right half of the screen to steer. The car drives forward by itself; hold both halves to brake or reverse.'
+      : settings.controls === 'halves' ? 'Default: hold the left or right half of the screen to steer. The car drives forward by itself; hold both halves or ■ Brake/Rev to brake, keep holding at a standstill to reverse.'
       : '';
     $('hud-fps').classList.toggle('hidden', !settings.showFps);
     document.querySelectorAll('#seg-preset button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.preset));
@@ -720,8 +727,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $('btn-play').onclick = () => { prepControls(); endMission(); leaveGarage(); if (settings.intro) startIntro(); else { resetCar(); camInit = false; setPhase('playing'); } };
   $('btn-skip').onclick = (e) => { e.stopPropagation(); endIntro(); };
   $('btn-settings').onclick = () => openDrawer(true);
-  $('btn-settings2').onclick = () => openDrawer(true);
-  $('btn-close-drawer').onclick = () => openDrawer(false);
+  // Settings from the pause card: the drawer replaces the card (no stacked overlays); closing it goes straight back to driving
+  let drawerFromPause = false;
+  $('btn-settings2').onclick = () => { drawerFromPause = true; $('pause').classList.add('hidden'); openDrawer(true); };
+  $('btn-close-drawer').onclick = () => { openDrawer(false); if (drawerFromPause && phase === 'paused') setPhase('playing'); drawerFromPause = false; };
   $('btn-pause').onclick = () => setPhase(online.inRoom ? 'lobby' : 'paused');
   $('btn-weather').onclick = cycleWeather;
   $('btn-mute').onclick = toggleMute;

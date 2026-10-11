@@ -10,25 +10,25 @@
  },
  "presets": {
   "low": {
-   "fps": 12.1,
-   "draws": 87,
-   "tris": 165176,
+   "fps": 10.8,
+   "draws": 89,
+   "tris": 166180,
    "inst": 945,
-   "vis": 705,
+   "vis": 696,
    "detail": false
   },
   "medium": {
-   "fps": 10.8,
-   "draws": 161,
-   "tris": 299292,
+   "fps": 10.3,
+   "draws": 164,
+   "tris": 300716,
    "inst": 5845,
    "vis": 3266,
    "detail": true
   },
   "high": {
-   "fps": 10,
-   "draws": 169,
-   "tris": 344294,
+   "fps": 10.8,
+   "draws": 172,
+   "tris": 345718,
    "inst": 11540,
    "vis": 7622,
    "detail": true
