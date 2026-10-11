@@ -6,7 +6,7 @@ export const SAVE_VERSION = 2;
 export type UpgradeKind = 'engine' | 'tyres' | 'susp';
 export const UPGRADE_KINDS: UpgradeKind[] = ['engine', 'tyres', 'susp'];
 export const MAX_UPGRADE = 3;
-export interface Best { time: number; medal: Medal }
+export interface Best { time: number; medal: Medal; splits?: number[] }
 export type Medal = 'gold' | 'silver' | 'bronze' | 'none';
 export interface SaveData {
   v: number; credits: number; xp: number;
@@ -55,7 +55,7 @@ export function migrate(raw: unknown): SaveData {
     d.upgrades[id] = { engine: Math.min(MAX_UPGRADE, Math.floor(num(u.engine))), tyres: Math.min(MAX_UPGRADE, Math.floor(num(u.tyres))), susp: Math.min(MAX_UPGRADE, Math.floor(num(u.susp))) };
   }
   if (r.best && typeof r.best === 'object') for (const [k, b] of Object.entries(r.best as Record<string, any>)) {
-    if (b && num(b.time, -1) > 0) d.best[k] = { time: b.time, medal: ['gold', 'silver', 'bronze'].includes(b.medal) ? b.medal : 'none' };
+    if (b && num(b.time, -1) > 0) d.best[k] = { time: b.time, medal: ['gold', 'silver', 'bronze'].includes(b.medal) ? b.medal : 'none', ...(Array.isArray(b.splits) && b.splits.every((x: unknown) => num(x, -1) >= 0) ? { splits: b.splits } : {}) };
   }
   return d;
 }

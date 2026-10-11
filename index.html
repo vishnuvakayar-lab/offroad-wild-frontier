@@ -32,12 +32,14 @@
 
     <section id="menu" class="panel menu hidden" aria-label="Main menu">
       <div class="logo small"><span>OFFROAD</span><small>WILD FRONTIER</small></div>
-      <p class="tag">Prototype build · Phase 5 garage</p>
-      <button id="btn-play" class="btn primary">Play — Test Track</button>
+      <p class="tag">Prototype build · Phase 6 missions</p>
+      <div class="prog-chip" id="menu-prog"></div>
+      <button id="btn-modes" class="btn primary">Play — Select Mode</button>
+      <button id="btn-play" class="btn">Free Roam</button>
       <button id="btn-settings" class="btn">Settings</button>
       <button id="btn-garage" class="btn">Garage <em id="menu-vehicle"></em></button>
       <button class="btn" disabled title="Coming in Phase 7">Multiplayer <em>soon</em></button>
-      <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset · T weather · M mute · Esc pause · drag to look</p>
+      <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset (to checkpoint in missions) · H tow hook · T weather · M mute · Esc pause · drag to look</p>
       <p class="hint touch-only">Left thumb steers · right thumb gas / brake / handbrake · drag the view to look around</p>
     </section>
 
@@ -75,6 +77,41 @@
     </div>
     <div id="toast" class="toast hidden"></div>
 
+    <div id="mhud" class="hidden" aria-live="polite">
+      <div class="mh-box">
+        <small id="mh-title"></small>
+        <b id="mh-time">0:00.0</b>
+        <span id="mh-sub"></span>
+      </div>
+      <div class="mh-nav"><i id="mh-arrow">▲</i><span id="mh-dist"></span></div>
+      <div id="mh-msg" class="mh-msg"></div>
+      <div class="mh-actions">
+        <button id="btn-hook" class="btn small hidden">Hook (H)</button>
+        <button id="btn-winch" class="btn small hidden">Winch in</button>
+        <button id="btn-mreset" class="btn small" title="Reset to last checkpoint (R)">↺ Checkpoint</button>
+      </div>
+    </div>
+    <div id="countdown" class="countdown hidden"></div>
+
+    <section id="modes" class="panel modes hidden" aria-label="Select mode">
+      <header class="m-head"><h2>Select mode</h2><span class="prog-chip" id="modes-prog"></span></header>
+      <div class="m-tabs" id="m-tabs">
+        <button data-mode="free">Free Roam</button><button data-mode="challenge">Off-Road Challenges</button>
+        <button data-mode="race">Desert Checkpoint Races</button><button data-mode="rescue">Rescue &amp; Recovery</button>
+      </div>
+      <div class="m-list" id="m-list"></div>
+      <div class="g-actions"><button id="m-back" class="btn">Back</button><button id="m-garage" class="btn">Garage</button></div>
+    </section>
+
+    <section id="results" class="panel results hidden" aria-label="Results">
+      <small id="r-kicker"></small>
+      <h2 id="r-title"></h2>
+      <div class="r-medal" id="r-medal"></div>
+      <div class="r-grid" id="r-grid"></div>
+      <div class="r-reward" id="r-reward"></div>
+      <div class="g-actions"><button id="r-menu" class="btn">Modes</button><button id="r-retry" class="btn">Retry</button><button id="r-next" class="btn primary">Next</button></div>
+    </section>
+
     <section id="garage" class="panel garage hidden" aria-label="Garage">
       <header class="g-head">
         <button id="g-prev" class="round" aria-label="Previous vehicle">‹</button>
@@ -85,6 +122,9 @@
       <div id="g-stats" class="g-stats"></div>
       <label class="group-label">Paint · <span id="g-paint-name"></span></label>
       <div id="g-colors" class="swatches"></div>
+      <div id="g-lock" class="g-lock hidden"><span id="g-lock-text"></span><button id="g-unlock" class="btn primary small">Unlock</button></div>
+      <div id="g-upgrades" class="g-upgrades"></div>
+      <div class="g-credits" id="g-credits"></div>
       <div class="g-actions"><button id="g-back" class="btn">Back</button><button id="g-drive" class="btn primary">Drive</button></div>
     </section>
 
@@ -92,6 +132,7 @@
       <h2>Paused</h2>
       <button id="btn-resume" class="btn primary">Resume</button>
       <button id="btn-reset" class="btn">Reset vehicle</button>
+      <button id="btn-quit" class="btn hidden">Quit mission</button>
       <button id="btn-settings2" class="btn">Settings</button>
       <button id="btn-menu" class="btn">Main menu</button>
     </section>
@@ -115,7 +156,7 @@
       </div>
       <label class="row"><input type="checkbox" id="chk-fps" /> Show FPS counter</label>
       <label class="row"><input type="checkbox" id="chk-intro" /> Play intro flyover</label>
-      <p class="note">Build 0.3.0 · Phases 1–5 prototype</p>
+      <p class="note">Build 0.4.0 · Phases 1–6 prototype</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>

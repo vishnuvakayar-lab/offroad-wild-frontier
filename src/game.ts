@@ -10,8 +10,13 @@ import { GameAudio } from './audio';
 import { Particles, Rain } from './particles';
 import { WEATHER, WEATHER_ORDER, makeStars, type WeatherId } from './weather';
 import { loadSettings, saveSettings, PRESETS, isCoarse, type Preset, type TouchMode } from './settings';
+import { MISSIONS, missionById, medalFor, MissionRunner, type Mode, type Pose } from './missions';
+import { MissionWorld } from './missionWorld';
+import { loadSave, storeSave, migrate, award, applyUpgrades, upgradesOf, vehicleUnlocked, paintUnlocked, devMode, levelOf, upgradeCost,
+  VEHICLE_UNLOCK, PAINT_LEVEL, UPGRADE_KINDS, MAX_UPGRADE, XP_PER_LEVEL, SAVE_KEY, type UpgradeKind, type Medal } from './save';
+import type { TrackMarks as TM } from './tracks';
 
-type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused';
+type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results';
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
 const IDLE: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: true };
@@ -19,6 +24,9 @@ const sstep = (a: number, b: number, x: number) => { const t = Math.min(1, Math.
 
 export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text: string) => void) {
   const settings = loadSettings();
+  const save = loadSave();
+  if (!vehicleUnlocked(save, settings.vehicle)) settings.vehicle = 'scout';
+  const specFor = (id: string) => applyUpgrades(vehicleById(id), upgradesOf(save, id));
   const audio = new GameAudio();
   audio.setVolume(settings.volume, settings.muted);
   setLoad(45, 'Sculpting terrain…');
@@ -69,7 +77,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   const tracks = new TrackMarks(scene);
   const paintFor = (id: string) => settings.paints[id] ?? vehicleById(id).defaultPaint;
   const lodFor = (p: Preset) => (p === 'low' ? 0 : 1) as 0 | 1;
-  let car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(settings.vehicle), paintFor(settings.vehicle), lodFor(settings.preset));
+  let car = new Vehicle(world, RAPIER, scene, tracks, specFor(settings.vehicle), paintFor(settings.vehicle), lodFor(settings.preset));
   let envTex: THREE.Texture | null = null;
   // spawn facing open ground towards the dunes (no trees on this line)
   const spawn = { x: 0, z: -8, yaw: Math.atan2(ZONES.sand.x - 0, ZONES.sand.z + 8) };
@@ -181,6 +189,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     document.body.classList.toggle('touch', touchOn());
     show('menu', phase === 'menu');
     show('garage', phase === 'garage');
+    show('modes', phase === 'modes');
+    show('results', phase === 'results');
+    show('mhud', !!mission && (phase === 'playing' || phase === 'paused'));
+    show('btn-quit', !!mission);
+    $('btn-reset').textContent = mission ? 'Reset to checkpoint' : 'Reset vehicle';
+    const lvl = levelOf(save.xp), prog = `Lv ${lvl} · ${save.credits.toLocaleString()} cr · ${save.xp % XP_PER_LEVEL}/${XP_PER_LEVEL} XP${devMode() ? ' · DEV' : ''}`;
+    $('menu-prog').textContent = prog; $('modes-prog').textContent = prog;
     show('pause', phase === 'paused');
     show('hud', phase === 'playing' || phase === 'paused');
     show('touch', phase === 'playing' && touchOn());
@@ -197,10 +212,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
 
   // ---- garage ----
   let gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle));
-  function setVehicle(id: string) {
-    if (car.spec.id === id) return;
+  function setVehicle(id: string, force = false) {
+    if (car.spec.id === id && !force) return;
     car.dispose();
-    car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(id), paintFor(id), lodFor(settings.preset));
+    car = new Vehicle(world, RAPIER, scene, tracks, specFor(id), paintFor(id), lodFor(settings.preset));
     resetCar();
     applyWeather(weather);
   }
@@ -211,26 +226,231 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const st = stats(spec);
     $('g-stats').innerHTML = Object.entries(st).map(([k, v]) => `<span>${k}</span><div class="bar"><i style="width:${Math.round(v * 100)}%"></i></div>`).join('');
     const cur = paintFor(spec.id);
-    $('g-colors').innerHTML = PAINTS.map((p) => `<button data-hex="${p.hex}" title="${p.name}" aria-label="${p.name}" class="${p.hex === cur ? 'on' : ''}" style="background:#${p.hex.toString(16).padStart(6, '0')}"></button>`).join('');
+    $('g-colors').innerHTML = PAINTS.map((p) => `<button data-hex="${p.hex}" title="${p.name}${paintUnlocked(save, p.hex) ? '' : ' (level ' + PAINT_LEVEL(p.hex) + ')'}" aria-label="${p.name}" class="${p.hex === cur ? 'on' : ''} ${paintUnlocked(save, p.hex) ? '' : 'locked'}" style="background:#${p.hex.toString(16).padStart(6, '0')}"></button>`).join('');
     $('g-paint-name').textContent = PAINTS.find((p) => p.hex === cur)?.name ?? 'Custom';
     $('g-colors').querySelectorAll<HTMLElement>('button').forEach((b) => b.onclick = () => {
-      const hex = Number(b.dataset.hex); settings.paints[spec.id] = hex; saveSettings(settings); car.setPaint(hex); renderGarage();
+      const hex = Number(b.dataset.hex);
+      if (!paintUnlocked(save, hex)) { toast(`🔒 Unlocks at level ${PAINT_LEVEL(hex)}`); return; }
+      settings.paints[spec.id] = hex; saveSettings(settings); car.setPaint(hex); renderGarage();
     });
+    // progression: lock / unlock / upgrades
+    const unlocked = vehicleUnlocked(save, spec.id), req = VEHICLE_UNLOCK[spec.id], lvl = levelOf(save.xp);
+    show('g-lock', !unlocked);
+    $<HTMLButtonElement>('g-drive').disabled = !unlocked;
+    if (!unlocked) {
+      $('g-lock-text').textContent = `🔒 Requires level ${req.level} · ${req.price.toLocaleString()} cr`;
+      const btn = $<HTMLButtonElement>('g-unlock'); btn.disabled = lvl < req.level || save.credits < req.price;
+      btn.textContent = lvl < req.level ? `Level ${req.level}` : `Unlock ${req.price.toLocaleString()} cr`;
+      btn.onclick = () => { if (unlockVehicle(spec.id)) toast(`${spec.name} unlocked!`); };
+    }
+    const up = upgradesOf(save, spec.id), NAMES: Record<UpgradeKind, string> = { engine: 'Engine', tyres: 'Tyres', susp: 'Suspension' };
+    $('g-upgrades').innerHTML = unlocked ? UPGRADE_KINDS.map((k) => `<span>${NAMES[k]}</span><span class="pips">${Array.from({ length: MAX_UPGRADE }, (_, i) => `<i class="${i < up[k] ? 'on' : ''}"></i>`).join('')}</span>` +
+      `<button class="btn small" data-up="${k}" ${up[k] >= MAX_UPGRADE || save.credits < upgradeCost(up[k]) ? 'disabled' : ''}>${up[k] >= MAX_UPGRADE ? 'Max' : '+ ' + upgradeCost(up[k]) + ' cr'}</button>`).join('') : '';
+    $('g-upgrades').querySelectorAll<HTMLElement>('button').forEach((b) => b.onclick = () => { if (buyUpgrade(spec.id, b.dataset.up as UpgradeKind)) toast(`${NAMES[b.dataset.up as UpgradeKind]} upgraded`); });
+    $('g-credits').textContent = `${save.credits.toLocaleString()} credits · level ${lvl}`;
     $('menu-vehicle').textContent = vehicleById(settings.vehicle).name;
   }
   const garageStep = (d: number) => {
     gIndex = (gIndex + d + VEHICLES.length) % VEHICLES.length;
-    settings.vehicle = VEHICLES[gIndex].id; saveSettings(settings);
-    setVehicle(settings.vehicle); renderGarage(); garageT = 0;
+    const id = VEHICLES[gIndex].id;
+    if (vehicleUnlocked(save, id)) { settings.vehicle = id; saveSettings(settings); }
+    setVehicle(id); renderGarage(); garageT = 0;
   };
+  function unlockVehicle(id: string) {
+    const req = VEHICLE_UNLOCK[id];
+    if (save.vehicles.includes(id) || levelOf(save.xp) < req.level || save.credits < req.price) return false;
+    save.credits -= req.price; save.vehicles.push(id); storeSave(save);
+    settings.vehicle = id; saveSettings(settings); renderGarage(); refreshUI(); return true;
+  }
+  function buyUpgrade(id: string, k: UpgradeKind) {
+    if (!vehicleUnlocked(save, id)) return false;
+    const up = { ...upgradesOf(save, id) }, cost = upgradeCost(up[k]);
+    if (up[k] >= MAX_UPGRADE || save.credits < cost) return false;
+    save.credits -= cost; up[k]++; save.upgrades[id] = up; storeSave(save);
+    if (car.spec.id === id) setVehicle(id, true);
+    if (phase === 'garage') renderGarage(); refreshUI(); return true;
+  }
+  /** leaving the garage while previewing a locked vehicle returns to the selected (unlocked) one */
+  const leaveGarage = () => { if (car.spec.id !== settings.vehicle) setVehicle(settings.vehicle); };
   let camOverride: [[number, number, number], [number, number, number]] | null = null;
   let garageT = 0; let garageHold: number | null = null;
-  const openGarage = () => { gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle)); renderGarage(); resetCar(); garageT = 0; setPhase('garage'); };
-  $('btn-garage').onclick = openGarage;
+  const openGarage = (ret: Phase = 'menu') => { garageReturn = ret; gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle)); renderGarage(); resetCar(); garageT = 0; setPhase('garage'); };
+  $('btn-garage').onclick = () => openGarage('menu');
   $('g-prev').onclick = () => garageStep(-1);
   $('g-next').onclick = () => garageStep(1);
-  $('g-back').onclick = () => setPhase('menu');
-  $('g-drive').onclick = () => $('btn-play').click();
+  $('g-back').onclick = () => { leaveGarage(); setPhase(garageReturn); };
+  $('g-drive').onclick = () => { if (!vehicleUnlocked(save, car.spec.id)) return; garageReturn === 'modes' ? (setPhase('modes'), renderModes()) : $('btn-play').click(); };
+  let garageReturn: Phase = 'menu';
+
+  // ---------- Phase 6: missions ----------
+  let mission: MissionRunner | null = null;
+  let mworld: MissionWorld | null = null;
+  let stuck: Vehicle | null = null;
+  let rope: RAPIER_NS.ImpulseJoint | null = null, ropeLen = 0, winching = false, winchAcc = 0;
+  let resultT = 0, lastResult: any = null, modeTab: Mode = 'challenge';
+  const NO_TRACKS = { add() {}, lift() {}, reset() {} } as unknown as TM;
+  const STUCK_IN: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: false };
+  const placeAt = (v: Vehicle, p: Pose) => v.reset(p.x, heightAt(p.x, p.z) + v.spawnLift, p.z, p.yaw);
+  const anchorRear = () => new THREE.Vector3(0, car.spec.chassis.y, -car.spec.chassis.hz - 0.1);
+  const anchorFront = () => new THREE.Vector3(0, stuck!.spec.chassis.y, stuck!.spec.chassis.hz + 0.1);
+  const toWorld = (v: Vehicle, l: THREE.Vector3) => { const t = v.body.translation(), r = v.body.rotation(); return l.clone().applyQuaternion(new THREE.Quaternion(r.x, r.y, r.z, r.w)).add(new THREE.Vector3(t.x, t.y, t.z)); };
+  function makeRope(len: number) {
+    if (rope) world.removeImpulseJoint(rope, true);
+    const a = anchorRear(), b = anchorFront();
+    rope = world.createImpulseJoint(RAPIER.JointData.rope(len, { x: a.x, y: a.y, z: a.z }, { x: b.x, y: b.y, z: b.z }), car.body, stuck!.body, true);
+    ropeLen = len;
+  }
+  function toggleHook() {
+    if (!mission || !stuck || mission.state !== 'running') return false;
+    if (rope) { world.removeImpulseJoint(rope, true); rope = null; mission.attached = false; mission.say('Rope released'); return true; }
+    const d = toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront()));
+    if (d > 10) { mission.say(`Too far to hook up (${d.toFixed(0)} m) — back up closer`); return false; }
+    makeRope(Math.max(3, d + 0.3)); mission.attached = true; mission.reached = true; mission.say('Tow rope attached — drag it to the safe zone!', 2.5);
+    return true;
+  }
+  function sampleCar() {
+    const t = car.body.translation(), f = car.forward();
+    return { x: t.x, z: t.z, yaw: Math.atan2(f.x, f.z), speed: car.forwardSpeed(), up: car.group.up.clone().applyQuaternion(car.group.quaternion).y };
+  }
+  /** one fixed physics step (player, tow target, world, mission logic) — shared by the render loop and the test simulate hook */
+  function physStep(drive: DriveInput) {
+    const d = mission && (mission.state === 'countdown' || mission.finished) ? IDLE : drive;
+    car.step(STEP, d);
+    if (stuck) {
+      stuck.body.setLinearDamping(stuck.surface() === 'mud' ? 0.7 : 0.05); // bogged down in the mud
+      stuck.step(STEP, STUCK_IN);
+    }
+    if (rope && winching) { winchAcc += STEP; if (winchAcc > 0.2 && ropeLen > 3) { winchAcc = 0; makeRope(Math.max(3, ropeLen - 0.35)); } }
+    world.step();
+    if (mission) { car.body.translation(); const st = stuck?.body.translation(); mission.update(STEP, sampleCar(), { stuck: st ? { x: st.x, z: st.z } : undefined }); }
+  }
+  function startMission(id: string) {
+    const def = missionById(id); if (!def) return;
+    endMission();
+    if (!vehicleUnlocked(save, settings.vehicle)) settings.vehicle = 'scout';
+    setVehicle(settings.vehicle);
+    mission = new MissionRunner(def);
+    mworld = new MissionWorld(scene, def); mworld.setGateState(0);
+    if (def.stuck) {
+      stuck = new Vehicle(world, RAPIER, scene, NO_TRACKS, vehicleById('voyager'), 0x7b8087, 0);
+      for (const l of [...stuck.headlights, stuck.beam]) l.visible = false;
+      placeAt(stuck, def.stuck);
+      for (let k = 0; k < 90; k++) { stuck.step(STEP, { ...STUCK_IN, handbrake: true }); world.step(); } // settle into the mud
+      stuck.sync();
+    }
+    if (def.type === 'deliver') applyWeather('sunset');
+    resetCar(def.start.x, def.start.z, def.start.yaw); car.dirt = 0;
+    resultT = 0; camInit = false; settings.intro && $('intro').classList.add('hidden');
+    show('btn-mreset', !def.noReset);
+    setPhase('playing');
+  }
+  function endMission() {
+    if (!mission) return;
+    if (rope) { world.removeImpulseJoint(rope, true); rope = null; }
+    if (stuck) { stuck.dispose(); stuck = null; }
+    mworld?.dispose(); mworld = null;
+    const wasDeliver = mission.def.type === 'deliver';
+    mission = null; winching = false;
+    if (wasDeliver) applyWeather(settings.weather);
+    $('countdown').classList.add('hidden');
+    refreshUI();
+  }
+  function missionReset() {
+    if (!mission) return;
+    if (mission.requestReset()) {
+      if (rope) { world.removeImpulseJoint(rope, true); rope = null; mission.attached = false; }
+      resetCar(mission.last.x, mission.last.z, mission.last.yaw); camInit = false;
+    }
+  }
+  const fmt = (t: number) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+  const MEDAL_ICON: Record<Medal, string> = { gold: '🥇', silver: '🥈', bronze: '🥉', none: '🏁' };
+  function finishMission() {
+    if (!mission) return;
+    const m = mission, def = m.def, ok = m.state === 'success';
+    const time = ok ? m.t : null, medal: Medal = ok ? medalFor(m.t, def.targets) : 'none';
+    const prevBest = save.best[def.id]?.time ?? null;
+    const r = award(save, def.id, time, medal, def.reward);
+    if (r.newBest) save.best[def.id].splits = m.splits.slice();
+    storeSave(save);
+    lastResult = { id: def.id, success: ok, time, medal, ...r, prevBest, splits: m.splits.slice(), rejected: m.rejected, resets: m.resets, failReason: m.failReason };
+    $('r-kicker').textContent = ({ race: 'Desert checkpoint race', challenge: 'Off-road challenge', rescue: 'Rescue & recovery' } as const)[def.mode];
+    $('r-title').textContent = ok ? def.title + ' — complete' : def.title + ' — failed';
+    $('r-medal').innerHTML = ok ? `${MEDAL_ICON[medal]}<em>${medal === 'none' ? 'finished' : medal}</em>` : `✖<em>${m.failReason}</em>`;
+    const rows: [string, string][] = [];
+    if (ok) rows.push(['Time', fmt(m.t)]);
+    rows.push(['Best', save.best[def.id] ? fmt(save.best[def.id].time) + (r.newBest ? '  NEW!' : '') : '—']);
+    rows.push(['Targets', `🥇 ${fmt(def.targets.gold)} · 🥈 ${fmt(def.targets.silver)} · 🥉 ${fmt(def.targets.bronze)}`]);
+    m.splits.forEach((t, i) => rows.push([`Split ${i + 1}`, fmt(t)]));
+    if (m.rejected) rows.push(['Missed-gate warnings', String(m.rejected)]);
+    $('r-grid').innerHTML = rows.slice(0, 7).map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('') + (rows.length > 7 ? `<span>…</span><b>${rows.length - 7} more splits</b>` : '');
+    $('r-reward').textContent = `+${r.credits} credits · +${r.xp} XP` + (r.levelUp ? ` · LEVEL ${r.levelUp}!` : '');
+    setPhase('results');
+  }
+  const nextMissionId = (id: string) => MISSIONS[(MISSIONS.findIndex((m) => m.id === id) + 1) % MISSIONS.length].id;
+  $('r-retry').onclick = () => { const id = mission?.def.id; if (id) startMission(id); };
+  $('r-next').onclick = () => { const id = mission?.def.id; if (id) startMission(nextMissionId(id)); };
+  $('r-menu').onclick = () => { endMission(); setPhase('modes'); renderModes(); };
+  function renderModes() {
+    document.querySelectorAll<HTMLElement>('#m-tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.mode === modeTab); b.onclick = () => { modeTab = b.dataset.mode as Mode; renderModes(); }; });
+    const list = $('m-list');
+    if (modeTab === 'free') {
+      list.innerHTML = `<div class="m-card"><h3>Free Roam</h3><div class="meta">Open map · no timer</div><button class="btn primary small" data-free>Drive</button><p>Explore the mud basin, dunes, rocky ridge and proving-ground strip at your own pace.</p></div>`;
+    } else {
+      list.innerHTML = MISSIONS.filter((m) => m.mode === modeTab).map((m) => {
+        const b = save.best[m.id];
+        return `<div class="m-card"><h3>${m.title}</h3><div class="meta">${b ? MEDAL_ICON[b.medal] + ' best ' + fmt(b.time) : 'not completed'} · ${m.limit ? 'limit ' + fmt(m.limit) : 'no limit'} · ${m.reward} cr</div>` +
+          `<button class="btn primary small" data-start="${m.id}">Start</button><p>${m.desc}</p></div>`;
+      }).join('');
+    }
+    list.querySelectorAll<HTMLElement>('[data-start]').forEach((b) => b.onclick = () => startMission(b.dataset.start!));
+    list.querySelector<HTMLElement>('[data-free]')?.addEventListener('click', () => $('btn-play').click());
+    refreshUI();
+  }
+  $('btn-modes').onclick = () => { renderModes(); setPhase('modes'); };
+  $('m-back').onclick = () => setPhase('menu');
+  $('m-garage').onclick = () => openGarage('modes');
+  $('btn-hook').onclick = () => toggleHook();
+  $('btn-mreset').onclick = () => missionReset();
+  const winchBtn = $('btn-winch');
+  winchBtn.addEventListener('pointerdown', () => { winching = true; });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) winchBtn.addEventListener(ev, () => { winching = false; });
+  const camDir = new THREE.Vector3();
+  function updateMissionHud(dt: number) {
+    if (!mission) return;
+    const m = mission, def = m.def, c = sampleCar();
+    $('mh-title').textContent = def.title;
+    $('mh-time').textContent = m.state === 'countdown' ? fmt(0) : fmt(def.limit !== null && def.type !== 'race' ? Math.max(0, def.limit - m.t) : m.t);
+    let target: { x: number; z: number } | null = null, sub = '';
+    if (def.gates.length && m.next < def.gates.length) {
+      target = def.gates[m.next];
+      const last = m.splits.length ? m.splits[m.splits.length - 1] : null, best = save.best[def.id]?.splits?.[m.splits.length - 1];
+      sub = `CP ${m.next}/${def.gates.length}` + (last !== null ? ` · split ${fmt(last)}` + (best !== undefined ? ` (${last - best >= 0 ? '+' : '−'}${Math.abs(last - best).toFixed(1)})` : '') : '');
+      if (def.noReset) sub += ' · no resets';
+    } else if (def.type === 'tow' && stuck) {
+      const st = stuck.body.translation();
+      target = m.attached ? def.zone! : { x: st.x, z: st.z };
+      sub = m.attached ? `Tow to safe zone · ${Math.hypot(st.x - def.zone!.x, st.z - def.zone!.z).toFixed(0)} m` : 'Reach the stuck 4x4 and hook up';
+    } else if (def.zone) { target = def.zone; sub = def.type === 'deliver' ? 'Deliver to camp before dark' : 'Reach the summit flag'; }
+    $('mh-sub').textContent = sub + (def.limit !== null && def.type !== 'race' ? ' · time left' : '');
+    if (target) {
+      camera.getWorldDirection(camDir);
+      const ang = Math.atan2(target.x - c.x, target.z - c.z) - Math.atan2(camDir.x, camDir.z);
+      $('mh-arrow').style.transform = `rotate(${-ang}rad)`;
+      $('mh-dist').textContent = `${Math.hypot(target.x - c.x, target.z - c.z).toFixed(0)} m`;
+    }
+    const msgEl = $('mh-msg'); msgEl.textContent = m.msgT > 0 ? m.msg : ''; msgEl.classList.toggle('warn', /Wrong|Missed|failed|Too far/.test(m.msg));
+    const cd = $('countdown');
+    if (m.state === 'countdown') { cd.classList.remove('hidden'); cd.textContent = String(Math.ceil(m.countdown)); }
+    else if (m.state === 'running' && m.t < 0.7) { cd.classList.remove('hidden'); cd.textContent = 'GO!'; }
+    else cd.classList.add('hidden');
+    show('btn-hook', def.type === 'tow' && m.state === 'running' && (m.reached || !!rope));
+    $('btn-hook').textContent = rope ? 'Release (H)' : 'Hook (H)';
+    show('btn-winch', !!rope);
+    mworld?.setGateState(m.next);
+    if (stuck) { stuck.sync(); mworld?.setRope(rope ? toWorld(car, anchorRear()) : null, rope ? toWorld(stuck, anchorFront()) : undefined); }
+    if (def.type === 'deliver' && !m.finished) renderer.toneMappingExposure = WEATHER.sunset.exposure * (1 - 0.6 * sstep(0.25, 1, m.t / def.limit!));
+    if (m.finished && phase === 'playing') { resultT += dt; if (resultT > 1.2) finishMission(); }
+  }
 
   // ---- cinematic intro ----
   const INTRO_LEN = 7.6;
@@ -254,7 +474,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   };
   const toggleMute = () => { settings.muted = !settings.muted; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); toast(settings.muted ? 'Sound off' : 'Sound on'); };
 
-  $('btn-play').onclick = () => { if (settings.intro) startIntro(); else { resetCar(); camInit = false; setPhase('playing'); } };
+  $('btn-play').onclick = () => { endMission(); leaveGarage(); if (settings.intro) startIntro(); else { resetCar(); camInit = false; setPhase('playing'); } };
   $('btn-skip').onclick = (e) => { e.stopPropagation(); endIntro(); };
   $('btn-settings').onclick = () => openDrawer(true);
   $('btn-settings2').onclick = () => openDrawer(true);
@@ -263,11 +483,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $('btn-weather').onclick = cycleWeather;
   $('btn-mute').onclick = toggleMute;
   $('btn-resume').onclick = () => setPhase('playing');
-  $('btn-reset').onclick = () => { resetCar(); camInit = false; setPhase('playing'); };
-  $('btn-menu').onclick = () => setPhase('menu');
+  $('btn-reset').onclick = () => { if (mission) { setPhase('playing'); missionReset(); return; } resetCar(); camInit = false; setPhase('playing'); };
+  $('btn-menu').onclick = () => { endMission(); setPhase('menu'); };
+  $('btn-quit').onclick = () => { endMission(); setPhase('modes'); renderModes(); };
   input.onPause = () => {
     if (drawer.classList.contains('open')) { openDrawer(false); return; }
-    if (phase === 'garage') { setPhase('menu'); return; }
+    if (phase === 'garage') { leaveGarage(); setPhase(garageReturn); return; }
+    if (phase === 'modes') { setPhase('menu'); return; }
     if (phase === 'intro') { endIntro(); return; }
     if (phase === 'playing') setPhase('paused'); else if (phase === 'paused') setPhase('playing');
   };
@@ -280,11 +502,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     }
     if (phase !== 'playing' && phase !== 'paused') return false;
     if (code === 'KeyT') { cycleWeather(); return true; }
+    if (code === 'KeyH' && mission) { toggleHook(); return true; }
     if (code === 'KeyM') { toggleMute(); return true; }
     return false;
   };
   input.onReset = () => {
     if (phase !== 'playing') return;
+    if (mission) { missionReset(); return; }
     const t = car.body.translation(); const f = car.forward();
     resetCar(t.x, t.z, Math.atan2(f.x, f.z)); // flip upright in place
   };
@@ -456,7 +680,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       lastInput = drive;
       acc += dt;
       let n = 0;
-      while (acc >= STEP && n < 5) { car.step(STEP, drive); world.step(); acc -= STEP; n++; }
+      while (acc >= STEP && n < 5) { physStep(drive); acc -= STEP; n++; }
       if (n === 5) acc = 0;
     }
     car.sync();
@@ -467,7 +691,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const p = car.group.position;
     car.forward(tmpF);
     const heading = Math.atan2(tmpF.x, tmpF.z);
-    if (phase === 'menu') {
+    if (phase === 'menu' || phase === 'modes') {
       menuT += dt * 0.15;
       const a = menuT + 2.2 + heading, r = 9.5;
       camera.position.set(p.x + Math.sin(a) * r, p.y + 2.6, p.z + Math.cos(a) * r);
@@ -528,6 +752,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const s = car.surface(); const chip = $('hud-surface');
       chip.textContent = SURFACE_PARAMS[s].label + (car.inPuddle.some(Boolean) ? ' · water' : ''); chip.className = 'chip ' + s;
     }
+    updateMissionHud(dt);
     if (camOverride) { // test/screenshot hook: camera fixed in vehicle space
       camera.position.copy(car.group.localToWorld(new THREE.Vector3(...camOverride[0])));
       camera.lookAt(car.group.localToWorld(new THREE.Vector3(...camOverride[1])));
@@ -555,6 +780,25 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     measureEngineHz: () => audio.measureEngineHz(),
     get vehicle() { return { id: car.spec.id, name: car.spec.name, paint: car.paint.color.getHex(), spawnLift: car.spawnLift, lod: car.lod, dirt: car.dirt }; },
     carStats: () => car.modelStats(),
+    // ---- Phase 6 hooks ----
+    get save() { return JSON.parse(JSON.stringify(save)); },
+    saveKey: SAVE_KEY,
+    migrate: (raw: unknown) => migrate(raw),
+    medalFor: (t: number, id: string) => medalFor(t, missionById(id)!.targets),
+    missions: MISSIONS.map((m) => ({ id: m.id, mode: m.mode, type: m.type, start: m.start, gates: m.gates, zone: m.zone ?? null, stuck: m.stuck ?? null, limit: m.limit, targets: m.targets })),
+    startMission: (id: string) => startMission(id),
+    endMission: () => { endMission(); setPhase('menu'); },
+    skipCountdown: () => { if (mission && mission.state === 'countdown') mission.countdown = 0.0001; },
+    get mission() { if (!mission) return null; const m = mission; return { id: m.def.id, state: m.state, t: m.t, next: m.next, splits: m.splits.slice(), rejected: m.rejected, resets: m.resets, msg: m.msg, attached: m.attached, reached: m.reached, failReason: m.failReason, countdown: m.countdown, ropeLen: rope ? ropeLen : 0 }; },
+    missionReset: () => missionReset(),
+    hook: () => toggleHook(),
+    winch: (on: boolean) => { winching = on; },
+    stuckPos: () => { if (!stuck) return null; const t = stuck.body.translation(); return { x: t.x, y: t.y, z: t.z, surface: stuck.surface() }; },
+    get results() { return lastResult; },
+    addCredits: (n: number, xp = 0) => { save.credits += n; save.xp += xp; storeSave(save); refreshUI(); },
+    unlockVehicle: (id: string) => unlockVehicle(id),
+    buyUpgrade: (id: string, k: UpgradeKind) => buyUpgrade(id, k),
+    get dev() { return devMode(); },
     setPaint: (hex: number) => car.setPaint(hex),
     setDirt: (d: number) => { car.dirt = d; },
     /** world-space hub/suspension sample for animation tests */
@@ -587,7 +831,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const steps = Math.round(seconds / STEP); const trace: { t: number; speed: number; surface: string }[] = [];
       const t0 = car.body.translation(); const start = { x: t0.x, z: t0.z };
       for (let k = 1; k <= steps; k++) {
-        car.step(STEP, i); world.step();
+        physStep(i);
         if (k % 30 === 0) trace.push({ t: k * STEP, speed: car.forwardSpeed(), surface: car.surface() });
       }
       car.sync();
