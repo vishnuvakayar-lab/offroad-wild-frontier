@@ -464,12 +464,13 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
     await page.screenshot({ path: `${SH}garage-desktop-${i + 1}-${ids[i]}.png` });
     await page.click('#g-next');
   }
-  // wheel close-up (Scout, front-left wheel)
+  // wheel close-ups (Scout, Sahara front-left wheel); garage panel hidden so the label can't mismatch the hook-selected car
+  await page.evaluate(() => { document.getElementById('garage').style.visibility = 'hidden'; });
   await page.evaluate(() => { window.__game.setVehicle('scout'); window.__game.camOverride([[2.3, -0.25, 2.5], [0.95, -0.55, 1.42]]); });
   await page.waitForTimeout(1500); await page.screenshot({ path: SH + 'wheel-closeup-scout.png' });
   await page.evaluate(() => { window.__game.setVehicle('sahara'); window.__game.camOverride([[2.4, -0.25, 2.6], [1.0, -0.6, 1.55]]); });
   await page.waitForTimeout(1500); await page.screenshot({ path: SH + 'wheel-closeup-sahara.png' });
-  await page.evaluate(() => { window.__game.camOverride(null); window.__game.garageHold(null); window.__game.setVehicle('scout'); });
+  await page.evaluate(() => { window.__game.camOverride(null); window.__game.garageHold(null); window.__game.setVehicle('scout'); document.getElementById('garage').style.visibility = ''; });
   // paint applies to body panels only
   const paintChk = await page.evaluate(() => {
     const g = window.__game, before = g.carStats().parts; g.setPaint(0x00ff00); const after = g.carStats().parts; g.setPaint(0xb8823a);
@@ -525,9 +526,12 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   await page.evaluate(() => { window.__game.setDirt(0); window.__game.teleport(-100, 30, 1.2); window.__game.setInput({ throttle: 1, brake: 0, steer: 0.25, handbrake: false }); });
   await page.waitForTimeout(500);
   await page.evaluate(() => window.__game.simulate({ throttle: 1, brake: 0, steer: 0.25, handbrake: false }, 6));
-  await page.waitForTimeout(2500);
   const dirt = await page.evaluate(() => window.__game.vehicle.dirt);
+  await page.evaluate(() => { window.__game.teleport(-98, 36, 1.45); window.__game.setInput({ throttle: 0.7, brake: 0, steer: 0.1, handbrake: false }); });
+  await page.waitForTimeout(2600);
+  const mudShot = await st(page);
   await page.screenshot({ path: SH + 'gameplay-mud.png' });
+  console.log(`   mud screenshot: surface ${mudShot.surface}, ${(mudShot.speed * 3.6).toFixed(0)} km/h`);
   ok('mud builds up on the body in the mud basin (cosmetic)', dirt > 0.2, `dirt level ${dirt.toFixed(2)} after ~6 s in mud`);
   await page.evaluate(() => { window.__game.setInput(null); window.__game.setDirt(0); window.__game.setWeather('night'); window.__game.teleport(-60, 20, 0.6); window.__game.setInput({ throttle: 0.8, brake: 0, steer: 0.15, handbrake: false }); });
   await page.waitForTimeout(3000);

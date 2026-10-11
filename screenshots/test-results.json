@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 780 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 2487 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -22,7 +22,7 @@
   {
     "name": "desktop: settings drawer partial",
     "pass": true,
-    "detail": "covers 26%"
+    "detail": "covers 0%"
   },
   {
     "name": "desktop: graphics preset switch works",
@@ -32,22 +32,22 @@
   {
     "name": "intro: Play starts the intro and Skip ends it",
     "pass": true,
-    "detail": "phase after Play=intro, skip->playing in 85 ms"
+    "detail": "phase after Play=intro, skip->playing in 280 ms"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 900 rpm -> throttle: 140.0 Hz measured / 160.3 Hz set, 4809 rpm (gear 4)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 161.5 Hz measured / 170.0 Hz set, 5099 rpm (gear 3)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 34.64 m, speed 65.2 km/h (render-paced)"
+    "detail": "moved 15.20 m, speed 53.3 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 14.0 deg"
+    "detail": "heading change 67.1 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -72,7 +72,7 @@
   {
     "name": "holding brake at standstill reverses",
     "pass": true,
-    "detail": "-25.2 km/h"
+    "detail": "-25.3 km/h"
   },
   {
     "name": "vehicle stays upright through tests",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "126 track decals in 5 s"
+    "detail": "66 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.4 fps, Low preset 21.3 fps"
+    "detail": "High preset 10.4 fps, Low preset 16.4 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 430 ms"
+    "detail": "load 2327 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -107,7 +107,7 @@
   {
     "name": "mobile-portrait-390x844: settings drawer partial",
     "pass": true,
-    "detail": "covers 59%"
+    "detail": "covers 54%"
   },
   {
     "name": "mobile-portrait-390x844: intro plays and tap on Skip ends it",
@@ -127,12 +127,12 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 30.75 m, heading change 79.4 deg, airborne samples 0/6"
+    "detail": "moved 16.97 m, heading change 66.2 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
     "pass": true,
-    "detail": "14.8 fps @ preset medium"
+    "detail": "10.4 fps @ preset medium"
   },
   {
     "name": "mobile-portrait-390x844: rotation -> canvas resizes to new viewport",
@@ -147,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 413 ms"
+    "detail": "load 2270 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -157,7 +157,7 @@
   {
     "name": "mobile-landscape-844x390: settings drawer partial",
     "pass": true,
-    "detail": "covers 40%"
+    "detail": "covers 31%"
   },
   {
     "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
@@ -177,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 30.87 m, heading change 68.9 deg, airborne samples 0/6"
+    "detail": "moved 12.89 m, heading change 51.6 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "14.3 fps @ preset medium"
+    "detail": "11.1 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,27 +197,27 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 2 / mud 351 / sand 362; slip dirt 0.00 / mud 0.60 / sand 0.23"
+    "detail": "dirt 0 / mud 205 / sand 215; slip dirt 0.05 / mud 0.59 / sand 0.27"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "wheels in water=true, peak splash particles 52, chassis y in puddle 0.67 vs water level -0.10"
+    "detail": "t=4.65 s, wheels in water=true, peak splash particles 52, chassis y in puddle 0.67 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "116 ribbon segments"
+    "detail": "76 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
     "pass": true,
-    "detail": "62.1 deg at rest -> 68.8 deg at speed"
+    "detail": "62.7 deg at rest -> 68.7 deg at speed"
   },
   {
     "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
     "pass": true,
-    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.04 m above ground"
+    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.03 m above ground"
   },
   {
     "name": "weather: HUD quick toggle and T key cycle presets",
@@ -227,42 +227,42 @@
   {
     "name": "weather: clear loads without console errors",
     "pass": true,
-    "detail": "10.5 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: sunset loads without console errors",
     "pass": true,
-    "detail": "11.2 fps (High)"
+    "detail": "11.6 fps (High)"
   },
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "10.0 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
     "pass": true,
-    "detail": "12.0 fps (High)"
+    "detail": "11.6 fps (High)"
   },
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "10.4 fps (High)"
+    "detail": "11.3 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "18.8 fps, 78 draw calls, 67352 tris, particles {\"mud\":113,\"dust\":0,\"splash\":0,\"spawned\":6813}"
+    "detail": "16.4 fps, 34 draw calls, 68340 tris, particles {\"mud\":114,\"dust\":0,\"splash\":0,\"spawned\":4649}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 115 draw calls, 79004 tris, particles {\"mud\":203,\"dust\":0,\"splash\":0,\"spawned\":7649}"
+    "detail": "11.6 fps, 70 draw calls, 127032 tris, particles {\"mud\":192,\"dust\":0,\"splash\":0,\"spawned\":5096}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.5 fps, 115 draw calls, 79460 tris, particles {\"mud\":288,\"dust\":0,\"splash\":0,\"spawned\":8733}"
+    "detail": "10.8 fps, 70 draw calls, 127312 tris, particles {\"mud\":276,\"dust\":0,\"splash\":0,\"spawned\":5775}"
   },
   {
     "name": "AA toggled without page reload",
@@ -367,7 +367,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 2.7 -> 45.5; clear 81.2 vs 81.2 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 103.0 vs 103.0 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -393,5 +393,90 @@
     "name": "garage landscape: no console errors",
     "pass": true,
     "detail": ""
+  },
+  {
+    "name": "paint colour applies to body panels only",
+    "pass": true,
+    "detail": "changed: static:paint/paint (1236 tris); 25 other meshes (tyres, rims, glass, trim, lamps, suspension) unchanged"
+  },
+  {
+    "name": "model scout: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 22.8 cm, front steer range 0.32 rad, damper length range 12.2 cm, axle/arm motion 16.8 cm, 10 instanced parts; High: 26 draws / 25796 tris"
+  },
+  {
+    "name": "model voyager: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 23.0 cm, front steer range 0.30 rad, damper length range 10.3 cm, axle/arm motion 15.8 cm, 10 instanced parts; High: 26 draws / 26030 tris"
+  },
+  {
+    "name": "model sahara: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 23.3 cm, front steer range 0.27 rad, damper length range 12.0 cm, axle/arm motion 12.3 cm, 12 instanced parts; High: 23 draws / 24456 tris"
+  },
+  {
+    "name": "model pickup: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 19.3 cm, front steer range 0.28 rad, damper length range 10.0 cm, axle/arm motion 13.0 cm, 10 instanced parts; High: 24 draws / 23856 tris"
+  },
+  {
+    "name": "model rally: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 19.7 cm, front steer range 0.35 rad, damper length range 15.0 cm, axle/arm motion 15.8 cm, 12 instanced parts; High: 23 draws / 20884 tris"
+  },
+  {
+    "name": "model recovery: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 12.0 cm, front steer range 0.28 rad, damper length range 7.9 cm, axle/arm motion 7.2 cm, 10 instanced parts; High: 25 draws / 28990 tris"
+  },
+  {
+    "name": "model scout: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 26 draws, 25796 tris; Low: 21 draws, 3484 tris"
+  },
+  {
+    "name": "model voyager: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 26 draws, 26030 tris; Low: 21 draws, 3598 tris"
+  },
+  {
+    "name": "model sahara: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 23 draws, 24456 tris; Low: 17 draws, 3484 tris"
+  },
+  {
+    "name": "model pickup: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 24 draws, 23856 tris; Low: 18 draws, 3512 tris"
+  },
+  {
+    "name": "model rally: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 23 draws, 20884 tris; Low: 18 draws, 3340 tris"
+  },
+  {
+    "name": "model recovery: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 25 draws, 28990 tris; Low: 20 draws, 3350 tris"
+  },
+  {
+    "name": "Low preset swaps to simplified model live (no reload)",
+    "pass": true,
+    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.27"
+  },
+  {
+    "name": "mud builds up on the body in the mud basin (cosmetic)",
+    "pass": true,
+    "detail": "dirt level 0.52 after ~6 s in mud"
+  },
+  {
+    "name": "phase5b desktop: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "phase5b portrait: garage renders detailed model (Medium preset on touch)",
+    "pass": true,
+    "detail": "scout: 26 draws, 25796 tris; errors 0"
   }
 ]
