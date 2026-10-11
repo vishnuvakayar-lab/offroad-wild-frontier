@@ -126,6 +126,21 @@ export class GameAudio {
     s.connect(f).connect(g).connect(this.master); s.start(t, Math.random()); s.stop(t + 1.2);
   }
 
+  /** collision / hard landing: low body thump + metallic-noise crunch, scaled by impact speed change */
+  impacts = 0;
+  impact(strength: number) {
+    const ctx = this.ctx; if (!ctx || ctx.state !== 'running') return;
+    const t = ctx.currentTime, k = Math.min(1, strength); this.impacts++;
+    const o = ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(95 + k * 40, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.25);
+    const go = this.gain(0); go.gain.setValueAtTime(0.0001, t); go.gain.linearRampToValueAtTime(0.55 * k, t + 0.008); go.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    o.connect(go).connect(this.master); o.start(t); o.stop(t + 0.4);
+    const s = ctx.createBufferSource(); s.buffer = this.noise;
+    const f = this.bp('bandpass', 1400 + k * 1600, 1.4); const gn = this.gain(0);
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(0.28 * k, t + 0.005); gn.gain.exponentialRampToValueAtTime(0.001, t + 0.18 + k * 0.12);
+    s.connect(f).connect(gn).connect(this.master); s.start(t, Math.random()); s.stop(t + 0.5);
+  }
+
   private chirp(night: boolean) {
     const ctx = this.ctx!; const t = ctx.currentTime;
     const o = ctx.createOscillator(); const g = this.gain(0);

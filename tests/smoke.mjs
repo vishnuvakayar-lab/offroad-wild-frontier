@@ -4,7 +4,7 @@ const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
 p.on('console', m => { if (m.type() !== 'log') console.log('CONSOLE', m.type(), m.text().slice(0, 300)); });
 p.on('pageerror', e => console.log('PAGEERR', e.message));
 await p.goto('http://127.0.0.1:4173/');
-await p.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 60000 });
+await p.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 60000 }); await p.evaluate(() => window.__game.skipOpening());
 console.log('boot', JSON.stringify(await p.evaluate(() => window.__boot)));
 await p.waitForTimeout(800);
 await p.click('#btn-play');

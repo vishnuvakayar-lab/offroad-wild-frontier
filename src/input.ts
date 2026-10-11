@@ -1,11 +1,13 @@
 import type { DriveInput } from './vehicle';
 
-/** Mobile control schemes (no on-screen wheel or pedals):
- *  - tilt:    steer by tilting the phone (DeviceOrientation); hold the right half of the screen = gas, left half = brake/reverse
+/** Mobile control schemes:
+ *  - wheel:   cockpit HUD (default) - virtual steering wheel bottom-left (drag to turn, self-centres) + accelerator / brake pedals bottom-right
+ *  - buttons: ◀ ▶ steering buttons + the same pedals
+ *  - tilt:    steer by tilting the phone (DeviceOrientation, iOS permission asked only when chosen) + pedals (optional auto-throttle)
  *  - halves:  hold the left / right half of the screen to steer; the car drives forward by itself; hold both = brake/reverse
- *  - buttons: classic compact on-screen buttons (◀ ▶ GAS BRAKE HB)
- *  Auto-throttle (tilt / buttons): the car accelerates on its own; braking overrides it. Keyboard always works too. */
-export type ControlScheme = 'tilt' | 'halves' | 'buttons';
+ *  Pedals are progressive (ramp while held, release = 0). Brake always wins: any brake input cuts the throttle. Keyboard always works too. */
+export type ControlScheme = 'wheel' | 'buttons' | 'tilt' | 'halves';
+export const PEDAL = { gas0: 0.3, gasRamp: 0.5, brake0: 0.4, brakeRamp: 0.25 }; // initial value on press, seconds to reach 1
 export type TiltState = 'off' | 'pending' | 'granted' | 'denied' | 'unsupported' | 'no-data';
 
 export class Input {
@@ -13,12 +15,20 @@ export class Input {
   private touch = { left: false, right: false, gas: false, brake: false, hand: false };
   private zones = new Map<number, 'L' | 'R'>();
   private steerSmooth = 0;
+  /** progressive pedal values (0..1) */
+  gasV = 0; brakeV = 0;
+  // ---- virtual steering wheel ----
+  wheelDeg = 0;             // current wheel rotation (deg, + = clockwise = steer right)
+  wheelLock = 120;          // wheel degrees for full lock at sensitivity 1
+  wheelSens = 1;            // Settings: 0.6 .. 1.6
+  wheelHeld = false;
+  onWheel: (deg: number) => void = () => {};
   override: DriveInput | null = null; // used by automated tests
   onPause: () => void = () => {};
   onReset: () => void = () => {};
   onKey: (code: string) => boolean = () => false; // return true to swallow the key
   /** touch-scheme settings (set by the game from Settings) */
-  scheme: ControlScheme = 'buttons';
+  scheme: ControlScheme = 'halves';
   autoThrottle = false;
   /** true while the touch UI is shown (playing on a touch device) */
   touchActive = false;
@@ -81,6 +91,27 @@ export class Input {
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
+  /** Virtual steering wheel: drag around the centre to turn (continuous, multi-touch safe); releases self-centre in read(). */
+  bindWheel(el: HTMLElement) {
+    let id: number | null = null, lastA = 0;
+    const ang = (e: PointerEvent) => { const r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation(); if (id !== null) return;
+      id = e.pointerId; lastA = ang(e); this.wheelHeld = true; el.classList.add('active');
+      try { el.setPointerCapture(e.pointerId); } catch { /* */ }
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== id) return;
+      const a = ang(e); let d = a - lastA; d = ((d + 540) % 360) - 180; lastA = a;
+      const lim = this.wheelLock / this.wheelSens;
+      this.wheelDeg = Math.max(-lim, Math.min(lim, this.wheelDeg + d)); this.onWheel(this.wheelDeg);
+    });
+    const up = (e: PointerEvent) => { if (e.pointerId !== id) return; id = null; this.wheelHeld = false; el.classList.remove('active'); };
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) el.addEventListener(ev, up);
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+  get wheelValue() { return Math.max(-1, Math.min(1, -this.wheelDeg / (this.wheelLock / this.wheelSens))); } // + = steer left
+
   /** Must be called from inside a user gesture (tap/click): iOS Safari 13+ only grants motion access that way. */
   requestTilt(): Promise<TiltState> {
     const DOE = (window as any).DeviceOrientationEvent;
@@ -112,24 +143,37 @@ export class Input {
     const zv = [...this.zones.values()], zl = zv.includes('L'), zr = zv.includes('R');
     const kUp = k.has('KeyW') || k.has('ArrowUp'), kDown = k.has('KeyS') || k.has('ArrowDown');
     const kLeft = k.has('KeyA') || k.has('ArrowLeft'), kRight = k.has('KeyD') || k.has('ArrowRight');
-    let up = kUp, down = kDown, left = kLeft, right = kRight, analog: number | null = null;
+    let thr = kUp ? 1 : 0, brk = kDown ? 1 : 0, left = kLeft, right = kRight, analog: number | null = null;
+    // self-centring wheel when released (also when the wheel UI is hidden)
+    if (!this.wheelHeld && this.wheelDeg !== 0) {
+      const back = 420 * dt; this.wheelDeg = Math.abs(this.wheelDeg) <= back ? 0 : this.wheelDeg - Math.sign(this.wheelDeg) * back; this.onWheel(this.wheelDeg);
+    }
     if (this.touchActive) {
-      if (this.scheme === 'buttons') {
-        up ||= t.gas; down ||= t.brake; left ||= t.left; right ||= t.right;
-        if (this.autoThrottle && !down) up = true;
-      } else if (this.scheme === 'halves') {
+      const pedals = this.scheme !== 'halves';
+      if (pedals) { // progressive pedals: start value on press, ramp to 1 while held, instant release
+        this.gasV = t.gas ? Math.min(1, Math.max(PEDAL.gas0, this.gasV + dt / PEDAL.gasRamp)) : 0;
+        this.brakeV = t.brake ? Math.min(1, Math.max(PEDAL.brake0, this.brakeV + dt / PEDAL.brakeRamp)) : 0;
+        thr = Math.max(thr, this.gasV); brk = Math.max(brk, this.brakeV);
+      }
+      if (this.scheme === 'halves') {
         const both = zl && zr;
-        left ||= zl && !zr; right ||= zr && !zl; down ||= both || t.brake;
-        if (!down) up = true; // drives forward by itself
+        left ||= zl && !zr; right ||= zr && !zl;
+        if (both || t.brake) brk = 1;
+        if (brk === 0) thr = 1; // drives forward by itself
+      } else if (this.scheme === 'wheel') {
+        if (!kLeft && !kRight) analog = this.wheelValue;
+      } else if (this.scheme === 'buttons') {
+        left ||= t.left; right ||= t.right;
       } else { // tilt
         if (!kLeft && !kRight) analog = this.tiltValue;
-        up ||= zr; down ||= zl || t.brake;
-        if (this.autoThrottle && !down) up = true;
+        if (zr) thr = Math.max(thr, 1); if (zl) brk = Math.max(brk, 1);
+        if (this.autoThrottle && brk === 0) thr = Math.max(thr, 1);
       }
     }
+    if (brk > 0.05) thr = 0; // brake wins: never full throttle and brake together
     const target = analog ?? ((left ? 1 : 0) - (right ? 1 : 0)); // +1 = steer left
-    const rate = analog !== null ? 8 : target === 0 ? 6 : 3.5;
+    const rate = analog !== null ? 10 : target === 0 ? 6 : 3.5;
     this.steerSmooth += Math.max(-rate * dt, Math.min(rate * dt, target - this.steerSmooth));
-    return { throttle: up ? 1 : 0, brake: down ? 1 : 0, steer: this.steerSmooth, handbrake: k.has('Space') || t.hand };
+    return { throttle: thr, brake: brk, steer: this.steerSmooth, handbrake: k.has('Space') || t.hand };
   }
 }

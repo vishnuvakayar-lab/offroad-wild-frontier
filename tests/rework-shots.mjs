@@ -13,7 +13,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 await page.addInitScript(() => localStorage.setItem('owf.settings.v1', JSON.stringify({ preset: 'high', intro: false, showFps: true })));
 await page.goto(APP);
-await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 120000 });
+await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 120000 }); await page.evaluate(() => window.__game.skipOpening());
 await page.waitForTimeout(1500);
 await page.mouse.click(5, 5);
 await page.evaluate(() => window.__game.play());

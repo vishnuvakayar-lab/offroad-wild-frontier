@@ -1,0 +1,301 @@
+{
+ "ramp": [
+  {
+   "t": 0,
+   "v": 0
+  },
+  {
+   "t": 241,
+   "v": 0.3
+  },
+  {
+   "t": 435,
+   "v": 0.5
+  },
+  {
+   "t": 609,
+   "v": 0.7
+  },
+  {
+   "t": 858,
+   "v": 0.8999999999999999
+  },
+  {
+   "t": 1084,
+   "v": 1
+  },
+  {
+   "t": 1278,
+   "v": 1
+  },
+  {
+   "t": 1491,
+   "v": 1
+  },
+  {
+   "t": 2379,
+   "v": 1
+  }
+ ],
+ "gears": {
+  "vD": 56.436064742661664,
+  "rR": false,
+  "rP": false,
+  "keep1": "D",
+  "vStop": -0.26178355097896805,
+  "rR2": true,
+  "vR": -29.75168387556045,
+  "rD": false,
+  "keep2": "R",
+  "rP2": true,
+  "pMove": 0.000470672816793626,
+  "rN": true,
+  "vN": 0.0810808552652578,
+  "vAutoRev": -25.974682225687488,
+  "log": [
+   "D:ok",
+   "R@56:REJECT(Stop before selecting R (56 km/h))",
+   "P@56:REJECT(Stop the vehicle to select P)",
+   "R@-0.3:ok",
+   "D@-30:REJECT(Stop before selecting D)",
+   "P@0.0:ok",
+   "N:ok"
+  ]
+ },
+ "transfer": {
+  "a": false,
+  "aMsg": "Stop and select N to shift into 4L",
+  "keepA": "4H",
+  "r2h": true,
+  "r4h": true,
+  "b": false,
+  "bMsg": "Stop and select N to shift into 4L",
+  "keepB": "4H",
+  "c": true,
+  "after": "4L",
+  "veh": {
+   "scout": {
+    "modes": [
+     "2H",
+     "4H",
+     "4L"
+    ],
+    "r2h": true,
+    "r4l": true,
+    "transfer": "4L"
+   },
+   "voyager": {
+    "modes": [
+     "2H",
+     "4H",
+     "4L"
+    ],
+    "r2h": true,
+    "r4l": true,
+    "transfer": "4L"
+   },
+   "sahara": {
+    "modes": [
+     "2H",
+     "4H",
+     "4L"
+    ],
+    "r2h": true,
+    "r4l": true,
+    "transfer": "4L"
+   },
+   "pickup": {
+    "modes": [
+     "2H",
+     "4H",
+     "4L"
+    ],
+    "r2h": true,
+    "r4l": true,
+    "transfer": "4L"
+   },
+   "rally": {
+    "modes": [
+     "AWD"
+    ],
+    "r2h": false,
+    "r4l": false,
+    "transfer": "AWD"
+   },
+   "recovery": {
+    "modes": [
+     "4H",
+     "4L"
+    ],
+    "r2h": false,
+    "r4l": true,
+    "transfer": "4L"
+   }
+  },
+  "log": [
+   "4L@48km/h:REJECT",
+   "2H@48km/h:ok",
+   "4H:ok",
+   "4L stopped in D:REJECT",
+   "4L stopped in N:ok"
+  ]
+ },
+ "torque": {
+  "2H": {
+   "req": [
+    0,
+    0,
+    9200,
+    9200
+   ],
+   "out": [
+    0,
+    0,
+    5931,
+    5704
+   ],
+   "engine": 18400,
+   "ratio": 1,
+   "total": 18400
+  },
+  "4H": {
+   "req": [
+    4600,
+    4600,
+    4600,
+    4600
+   ],
+   "out": [
+    4600,
+    4600,
+    4600,
+    4600
+   ],
+   "engine": 18400,
+   "ratio": 1,
+   "total": 18400
+  },
+  "4L": {
+   "req": [
+    11960,
+    11960,
+    11960,
+    11960
+   ],
+   "out": [
+    6175,
+    6391,
+    5931,
+    5704
+   ],
+   "engine": 18400,
+   "ratio": 2.6,
+   "total": 47840
+  },
+  "rally": {
+   "req": [
+    3520,
+    3520,
+    5280,
+    5280
+   ],
+   "split": 0.4,
+   "front": 0.4
+  },
+  "rpm": {
+   "4H": {
+    "kmh": 20.4,
+    "rpm": 3238
+   },
+   "4L": {
+    "kmh": 22.8,
+    "rpm": 4566
+   }
+  },
+  "steer": {
+   "angle": 0.509,
+   "dyaw": 55.3,
+   "kmh": 27.6
+  }
+ },
+ "table": {
+  "rows": {
+   "2H": {
+    "wheelForceN": 14656,
+    "t0_30": 0.92,
+    "wheelRadS": 24.9,
+    "atKmh": 38.5,
+    "stop30m": 3.47,
+    "stopFromKmh": 30.3,
+    "sand": {
+     "dist3s": 16.77,
+     "kmh": 33.1,
+     "slip": 0.259
+    },
+    "mud": {
+     "dist3s": 12.84,
+     "kmh": 23.2,
+     "slip": 0.376
+    },
+    "climb": {
+     "surface": "rock",
+     "t_plus8m": null,
+     "success": false,
+     "rise12s": 6.92
+    },
+    "top8s": 89.2
+   },
+   "4H": {
+    "wheelForceN": 17931,
+    "t0_30": 0.88,
+    "wheelRadS": 24.8,
+    "atKmh": 38.4,
+    "stop30m": 3.45,
+    "stopFromKmh": 30.2,
+    "sand": {
+     "dist3s": 28.5,
+     "kmh": 54.3,
+     "slip": 0.218
+    },
+    "mud": {
+     "dist3s": 19.69,
+     "kmh": 35.8,
+     "slip": 0.55
+    },
+    "climb": {
+     "surface": "rock",
+     "t_plus8m": null,
+     "success": false,
+     "rise12s": 6.8
+    },
+    "top8s": 88.8
+   },
+   "4L": {
+    "wheelForceN": 25961,
+    "t0_30": 0.7,
+    "wheelRadS": 25.1,
+    "atKmh": 38.8,
+    "stop30m": 3.54,
+    "stopFromKmh": 30.5,
+    "sand": {
+     "dist3s": 25.75,
+     "kmh": 43.2,
+     "slip": 0.267
+    },
+    "mud": {
+     "dist3s": 17.02,
+     "kmh": 28.5,
+     "slip": 0.745
+    },
+    "climb": {
+     "surface": "rock",
+     "t_plus8m": null,
+     "success": false,
+     "rise12s": 6.77
+    },
+    "top8s": 48.5
+   }
+  },
+  "grade": 24
+ }
+}

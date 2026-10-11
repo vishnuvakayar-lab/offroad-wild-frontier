@@ -151,7 +151,7 @@ export async function runPhase6({ openPage, ok, area }) {
     const after = await page.evaluate(() => ({ s: window.__game.save, lockShown: !document.getElementById('g-lock').classList.contains('hidden'), driveDisabled: document.getElementById('g-drive').disabled }));
     ok('p6 unlock: locked vehicle blocks Drive; unlocking spends earned credits', lockUI.lockShown && lockUI.driveDisabled && !after.lockShown && !after.driveDisabled && after.s.vehicles.includes('pickup') && after.s.credits === before.credits - 1200,
       `pickup locked ("${lockUI.text}"), ${before.credits} cr / Lv ${1 + Math.floor(before.xp / 300)} -> unlocked, ${after.s.credits} cr left`);
-    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
+    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 }); await page.evaluate(() => window.__game.skipOpening());
     const rl2 = await page.evaluate(() => ({ s: window.__game.save, v: window.__game.vehicle.id }));
     ok('p6 persistence: credits, XP, unlocks and best times survive reload', rl2.s.vehicles.includes('pickup') && rl2.s.credits === after.s.credits && rl2.s.xp === after.s.xp && rl2.s.best['race-dash'] && rl2.v === 'pickup',
       `after reload: ${rl2.s.credits} cr, ${rl2.s.xp} XP, vehicles ${rl2.s.vehicles}, best ${Object.keys(rl2.s.best).join(',')}, driving ${rl2.v}`);
@@ -196,7 +196,7 @@ export async function runPhase6({ openPage, ok, area }) {
       `travel ${m.tyres.travel.toFixed(3)} -> ${m.susp.travel.toFixed(3)} m, stiffness ${m.tyres.stiff.toFixed(1)} -> ${m.susp.stiff.toFixed(1)}, settled ride height ${m.tyres.ride.toFixed(3)} -> ${m.susp.ride.toFixed(3)} m`);
     ok('p6 upgrades: capped at level 3, cost credits, saved', m.extra === false && m.save.upgrades.scout.engine === 3 && m.save.upgrades.scout.tyres === 3 && m.save.upgrades.scout.susp === 3 && m.save.credits === 8000 - 3 * 2400,
       `${JSON.stringify(m.save.upgrades.scout)}, ${m.save.credits} cr left (3 x 2400 spent), 4th engine upgrade refused`);
-    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
+    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 }); await page.evaluate(() => window.__game.skipOpening());
     const sp = await page.evaluate(() => window.__game.spec);
     ok('p6 upgrades: persist across reload into the physics spec', Math.abs(sp.engine - m.susp.engine) < 1e-6 && Math.abs(sp.susp.travel - m.susp.travel) < 1e-9, `engine ${sp.engine.toFixed(0)}, travel ${sp.susp.travel.toFixed(3)} after reload`);
 
@@ -216,7 +216,7 @@ export async function runPhase6({ openPage, ok, area }) {
       `bad -> ${JSON.stringify({ c: mg.bad.credits, xp: mg.bad.xp, v: mg.bad.vehicles, up: mg.bad.upgrades })}; future v9 -> ${mg.future.credits} cr, ${mg.future.vehicles}`);
     // end-to-end: a v1 save in localStorage is loaded + rewritten as v2 on the next store
     await page.evaluate(() => { localStorage.setItem('owf.save', JSON.stringify({ version: 1, cash: 1300, unlocked: ['pickup'], bestTimes: {} })); localStorage.removeItem('owf.settings.v1'); });
-    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
+    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 }); await page.evaluate(() => window.__game.skipOpening());
     const e2e = await page.evaluate(() => { const g = window.__game; const s = g.save; g.addCredits(0); return { s, raw: JSON.parse(localStorage.getItem('owf.save')) }; });
     ok('p6 migration: v1 save in storage loads and is rewritten as v2', e2e.s.v === 2 && e2e.s.credits === 1300 && e2e.s.vehicles.includes('pickup') && e2e.raw.v === 2 && e2e.raw.version === undefined, `loaded ${e2e.s.credits} cr, ${e2e.s.vehicles}; stored v${e2e.raw.v}`);
     ok('p6: no console errors (upgrades/migration)', errors.length === 0, errors.slice(0, 5).join(' | '));
@@ -238,7 +238,7 @@ export async function runPhase6({ openPage, ok, area }) {
       const ids = ['mhud', 'btn-winch', 'btn-mreset', 'pause-btn', 'speedo'];
       const opaque = [document.querySelector('#mhud .mh-box'), ...document.querySelectorAll('#mhud .mh-actions .btn')].map((e) => e.getBoundingClientRect()).filter((b) => b.width > 0).reduce((t, b) => t + b.width * b.height, 0);
       const o = {}; for (const id of ids) if (document.getElementById(id)) o[id] = r(id);
-      const touch = [...document.querySelectorAll('#touch .tbtn, #touch [data-t], #touch button')].map((e) => e.getBoundingClientRect()).filter((b) => b.width > 0);
+      const touch = [...document.querySelectorAll('#cockpit button, #tzones .tpill')].map((e) => e.getBoundingClientRect()).filter((b) => b.width > 0);
       return { o, touch, opaque, attached: window.__game.mission.attached, W: innerWidth, H: innerHeight };
     });
     const inView = (b) => b.x >= 0 && b.y >= 0 && b.r <= hud.W + 0.5 && b.b <= hud.H + 0.5;

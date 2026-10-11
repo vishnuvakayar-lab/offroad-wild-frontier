@@ -7,6 +7,14 @@ import { Kit, mergeStatic, type Mats, type Lod } from './kit';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export interface DriveInput { throttle: number; brake: number; steer: number; handbrake: boolean; }
+/** Transfer case: 2H = rear-wheel drive, 4H = 50/50 front/rear, 4L = 4H through a low-range reduction, AWD = permanent (no low range). */
+export type Transfer = '2H' | '4H' | '4L' | 'AWD';
+/** Transmission selector: A = automatic (brake at standstill engages reverse), or manual P / R / N / D. */
+export type GearSel = 'A' | 'P' | 'R' | 'N' | 'D';
+export const LOW_RANGE = 2.6;          // 4L reduction ratio: x2.6 wheel torque, top speed / 2.6
+export const SHIFT_ON_FLY_KMH = 60;    // 2H <-> 4H allowed below this speed
+export const DIR_SHIFT_KMH = 2;        // D <-> R only below this speed
+export interface ShiftResult { ok: boolean; msg: string }
 
 /** Per-surface handling. frictionSlip limits tyre grip (Rapier raycast vehicle);
  *  drag is a speed-proportional resistance (sinking into mud / ploughing sand). */
@@ -22,6 +30,12 @@ export class Vehicle {
   body: RAPIER_NS.RigidBody;
   ctrl: RAPIER_NS.DynamicRayCastVehicleController;
   group = new THREE.Group();
+  /** sprung part of the visual model (pitch under braking/acceleration, roll in corners) */
+  bodyVis = new THREE.Group();
+  tailMat: THREE.MeshStandardMaterial | null = null;
+  /** filtered local acceleration (x = lateral, +left; z = longitudinal, +forward) and body lean (rad) */
+  accLocal = new THREE.Vector2(); lean = { pitch: 0, roll: 0, vp: 0, vr: 0 }; braking = false;
+  private lastV: { x: number; y: number; z: number } | null = null;
   wheelMeshes: THREE.Object3D[] = [];
   steer = 0;
   surfaces: (Surface | null)[] = [null, null, null, null];
@@ -39,6 +53,16 @@ export class Vehicle {
   throttle = 0;
   rpm = 900;
   gear = 1;
+  /** drivetrain state */
+  transfer: Transfer = '4H'; sel: GearSel = 'A';
+  /** per-wheel drive force applied in the last step (N), for tests / HUD */
+  wheelForce = [0, 0, 0, 0];
+  /** drivetrain output per wheel before the traction limit (engine force x ratio x split) */
+  wheelReq = [0, 0, 0, 0];
+  /** wheel angular speed (rad/s) from the physics wheels */
+  wheelRate = [0, 0, 0, 0];
+  private lastRot = [0, 0, 0, 0];
+  ratio = 1; engineForce = 0;
 
   spec: VehicleSpec;
   private conn: { x: number; y: number; z: number }[];
@@ -54,6 +78,7 @@ export class Vehicle {
     this.headless = headless;
     this.lod = lod;
     this.tracks = tracks as TrackMarks; this.spec = spec; this.world = world; this.scene = scene as THREE.Scene;
+    this.transfer = this.driveModes.includes('4H') ? '4H' : this.driveModes[0];
     const W = spec.wheel;
     this.conn = [
       { x: W.x, y: W.y, z: W.zf }, { x: -W.x, y: W.y, z: W.zf }, // front left (+x is the vehicle's left), front right
@@ -202,6 +227,11 @@ export class Vehicle {
     spec.build(k, spec);
     mergeStatic(g);
     g.traverse((o) => { const mm = o as THREE.Mesh; if (mm.isMesh) this.geos.push(mm.geometry); });
+    // sprung body: everything built so far (shell, cabin, lamps) leans on top of the physical chassis motion
+    this.bodyVis = new THREE.Group(); this.bodyVis.name = 'body:sprung';
+    for (const ch of [...g.children]) this.bodyVis.add(ch);
+    g.add(this.bodyVis);
+    this.tailMat = m.tail;
 
     // ---- wheels: tread-pattern tyre + styled rim with brake disc (spin), caliper (steers, does not spin)
     const R = spec.wheel.r, WW = spec.wheel.w, rr = R - Math.min(0.12, R * 0.28);
@@ -312,6 +342,7 @@ export class Vehicle {
     this.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true);
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    this.lastV = null; this.accLocal.set(0, 0); this.lean = { pitch: 0, roll: 0, vp: 0, vr: 0 }; this.braking = false;
     this.steer = 0;
     this.tracks?.reset();
   }
@@ -337,6 +368,27 @@ export class Vehicle {
     return (Object.keys(c) as Surface[]).reduce((a, b) => (c[b] > c[a] ? b : a));
   }
 
+  get driveModes(): Transfer[] { return this.spec.drive ?? ['4H']; }
+  /** Transfer-case shift with the usual interlocks. Rejected shifts keep the current mode. */
+  setTransfer(t: Transfer): ShiftResult {
+    const kmh = Math.abs(this.forwardSpeed()) * 3.6;
+    if (!this.driveModes.includes(t)) return { ok: false, msg: `${t} is not available on the ${this.spec.name}` };
+    if (t === this.transfer) return { ok: true, msg: t };
+    if (t === '4L' || this.transfer === '4L') {
+      if (kmh > 1 || (this.sel !== 'N' && this.sel !== 'P')) return { ok: false, msg: `Stop and select N to shift ${t === '4L' ? 'into' : 'out of'} 4L` };
+    } else if (kmh > SHIFT_ON_FLY_KMH) return { ok: false, msg: `Slow below ${SHIFT_ON_FLY_KMH} km/h to shift to ${t}` };
+    this.transfer = t; return { ok: true, msg: t };
+  }
+  /** Gear selector with interlocks: P only at a standstill, no D <-> R while moving. */
+  setGear(g: GearSel): ShiftResult {
+    const v = this.forwardSpeed(), kmh = v * 3.6;
+    if (g === this.sel) return { ok: true, msg: g };
+    if (g === 'P' && Math.abs(kmh) > 1) return { ok: false, msg: 'Stop the vehicle to select P' };
+    if (g === 'R' && kmh > DIR_SHIFT_KMH) return { ok: false, msg: `Stop before selecting R (${Math.round(kmh)} km/h)` };
+    if ((g === 'D' || g === 'A') && kmh < -DIR_SHIFT_KMH) return { ok: false, msg: `Stop before selecting ${g === 'A' ? 'Auto' : 'D'}` };
+    this.sel = g; return { ok: true, msg: g };
+  }
+
   step(dt: number, inp: DriveInput) {
     const ctrl = this.ctrl;
     const speed = this.forwardSpeed();
@@ -352,18 +404,38 @@ export class Vehicle {
     const target = inp.steer * maxSteer;
     this.steer += (target - this.steer) * Math.min(1, dt * 8);
 
-    // drive / brake / reverse logic
+    // drive / brake / reverse logic (transmission selector + transfer case)
     let engine = 0, brake = 0;
     const bs = sp0.mass / 1650; // brake impulses scale with mass
-    if (inp.throttle > 0.01) {
-      if (speed < -0.8) brake = 70 * bs * inp.throttle;
-      else engine = sp0.engine * inp.throttle * Math.max(0, 1 - Math.max(0, speed) / sp0.topSpeed);
-    }
-    if (inp.brake > 0.01) {
-      if (speed > 0.8) brake = Math.max(brake, 70 * bs * inp.brake);
-      else if (inp.throttle <= 0.01) engine = -sp0.engine * 0.6 * inp.brake * Math.max(0, 1 - Math.max(0, -speed) / sp0.reverse);
-    }
-    if (inp.throttle <= 0.01 && inp.brake <= 0.01) brake = 4 * bs; // engine braking / rolling resistance
+    const low = this.transfer === '4L' ? LOW_RANGE : 1;
+    const force = sp0.engine * low, top = sp0.topSpeed / low, rev = sp0.reverse / low;
+    const fwdDrive = (t: number) => force * t * Math.max(0, 1 - Math.max(0, speed) / top);
+    const revDrive = (t: number) => -force * 0.6 * t * Math.max(0, 1 - Math.max(0, -speed) / rev);
+    const sel = this.sel;
+    if (sel === 'A') {
+      if (inp.throttle > 0.01) {
+        if (speed < -0.8) brake = 70 * bs * inp.throttle;
+        else engine = fwdDrive(inp.throttle);
+      }
+      if (inp.brake > 0.01) {
+        if (speed > 0.8) brake = Math.max(brake, 70 * bs * inp.brake);
+        else if (inp.throttle <= 0.01) engine = revDrive(inp.brake);
+      }
+    } else if (sel === 'D' || sel === 'R') {
+      if (inp.throttle > 0.01) {
+        const against = sel === 'D' ? speed < -0.8 : speed > 0.8; // rolling the wrong way: throttle brakes first
+        if (against) brake = 70 * bs * inp.throttle; else engine = sel === 'D' ? fwdDrive(inp.throttle) : revDrive(inp.throttle);
+      }
+      if (inp.brake > 0.01) brake = Math.max(brake, 70 * bs * inp.brake);
+    } else if (sel === 'N') {
+      if (inp.brake > 0.01) brake = 70 * bs * inp.brake;
+    } else brake = 200 * bs; // P: parking pawl
+    if (inp.throttle <= 0.01 && inp.brake <= 0.01 && sel !== 'P') brake = sel === 'N' ? 1.2 * bs : 4 * bs * low; // engine braking (stronger in low range) / rolling resistance
+    // torque split: 2H drives only the rear axle (same total force), 4H/4L/AWD split it evenly
+    // 2H: rear axle only (same total force); 4H/4L/AWD: front/rear split from the vehicle spec (frontSplit, default 50 %)
+    const fsp = sp0.frontSplit ?? 0.5;
+    const split = this.transfer === '2H' ? [0, 0, 2, 2] : [2 * fsp, 2 * fsp, 2 * (1 - fsp), 2 * (1 - fsp)];
+    this.ratio = low; this.engineForce = (engine / low) * 4; // engine drive force referred to the wheels in high range (all wheels)
 
     let contacts = 0, dragSum = 0;
     const v = this.body.linvel();
@@ -390,7 +462,7 @@ export class Vehicle {
       // suspensionForce * frictionSlip) plus sideways sliding
       if (inContact) {
         const grip = (ctrl.wheelSuspensionForce(i) ?? 0) * gripK;
-        const req = Math.abs(engine) + (inp.handbrake && i >= 2 ? 3000 * bs : 0);
+        const req = Math.abs(engine * split[i]) + (inp.handbrake && i >= 2 ? 3000 * bs : 0);
         const lon = req > grip && req > 0 ? (req - grip) / req : 0;
         this.slip[i] = Math.min(1, lon + latV / 7);
       } else this.slip[i] = 0;
@@ -398,20 +470,42 @@ export class Vehicle {
       ctrl.setWheelFrictionSlip(i, gripK);
       ctrl.setWheelSideFrictionStiffness(i, sp.side * sp0.side * (rear && inp.handbrake ? 0.35 : 1));
       ctrl.setWheelSteering(i, rear ? 0 : this.steer);
-      ctrl.setWheelEngineForce(i, engine / 1); // per wheel (4WD)
+      // traction limit for force above the arcade baseline: the tuned tyre model always delivers the high-range per-wheel
+      // force; anything beyond it (2H doubling the rear, 4L multiplication) is limited by load x grip -> wheelspin instead
+      const reqF = engine * split[i];
+      let outF = reqF;
+      if (inContact) { const cap = Math.max(Math.abs(engine) / low, (ctrl.wheelSuspensionForce(i) ?? 0) * gripK); outF = Math.sign(reqF) * Math.min(Math.abs(reqF), cap); }
+      ctrl.setWheelEngineForce(i, outF); this.wheelReq[i] = reqF; this.wheelForce[i] = outF;
       ctrl.setWheelBrake(i, rear && inp.handbrake ? 160 * bs : brake);
       // visual wheel-spin on loose surfaces under power
-      this.extraSpin[i] += Math.sign(engine) * (inContact ? this.slip[i] : Math.abs(engine) / sp0.engine) * dt * 20;
+      if (split[i] > 0) this.extraSpin[i] += Math.sign(engine) * (inContact ? this.slip[i] : Math.abs(engine) / force) * dt * 20;
     }
     ctrl.updateVehicle(dt);
+    for (let i = 0; i < 4; i++) { const r = ctrl.wheelRotation(i) ?? 0; this.wheelRate[i] = (r - this.lastRot[i]) / dt; this.lastRot[i] = r; }
+    { // local acceleration for the sprung-body lean + brake lights
+      const v1 = this.body.linvel(), q = this.body.rotation();
+      if (this.lastV) {
+        const qq = new THREE.Quaternion(q.x, q.y, q.z, q.w).invert();
+        const a = new THREE.Vector3((v1.x - this.lastV.x) / dt, (v1.y - this.lastV.y) / dt, (v1.z - this.lastV.z) / dt).applyQuaternion(qq);
+        const k = 1 - Math.exp(-dt * 8);
+        this.accLocal.x += (THREE.MathUtils.clamp(a.x, -25, 25) - this.accLocal.x) * k;
+        this.accLocal.y += (THREE.MathUtils.clamp(a.z, -25, 25) - this.accLocal.y) * k;
+      }
+      this.lastV = { x: v1.x, y: v1.y, z: v1.z };
+      // spring-damper towards the target lean (looks like body roll / dive / squat on the springs)
+      const L = this.lean, tp = THREE.MathUtils.clamp(-this.accLocal.y * 0.0055, -0.055, 0.055), tr = THREE.MathUtils.clamp(this.accLocal.x * 0.0065, -0.065, 0.065);
+      L.vp += ((tp - L.pitch) * 90 - L.vp * 11) * dt; L.pitch += L.vp * dt;
+      L.vr += ((tr - L.roll) * 80 - L.vr * 10) * dt; L.roll += L.vr * dt;
+      this.braking = (inp.brake > 0.05 && speed > 0.5) || (inp.handbrake && Math.abs(speed) > 0.5);
+    }
 
     // simple automatic gearbox -> engine RPM for audio/HUD
     this.throttle = Math.max(inp.throttle, engine < 0 ? inp.brake : 0);
     const kmh = Math.abs(speed) * 3.6;
-    const gk = (sp0.topSpeed * 3.6) / 130;
+    const gk = (top * 3.6) / 130;
     const GEARS = [0, 18, 36, 58, 82, 108, 140].map((g) => g * gk);
     let gI = 1; while (gI < GEARS.length - 1 && kmh > GEARS[gI]) gI++;
-    this.gear = speed < -0.5 ? -1 : gI;
+    this.gear = speed < -0.5 || sel === 'R' ? -1 : gI;
     const lo = GEARS[gI - 1], hi = GEARS[gI];
     const avgSlip = (this.slip[0] + this.slip[1] + this.slip[2] + this.slip[3]) / 4;
     const frac = Math.min(1, (kmh - lo) / (hi - lo));
@@ -449,6 +543,8 @@ export class Vehicle {
     const t = this.body.translation(), r = this.body.rotation();
     this.group.position.set(t.x, t.y, t.z);
     this.group.quaternion.set(r.x, r.y, r.z, r.w);
+    this.bodyVis.rotation.set(this.lean.pitch, 0, this.lean.roll);
+    if (this.tailMat) this.tailMat.emissiveIntensity = this.braking ? 5 : 1.2; // brake lights
     for (let i = 0; i < 4; i++) {
       const c = this.conn[i];
       const len = this.ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest;

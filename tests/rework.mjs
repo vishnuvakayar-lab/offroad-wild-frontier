@@ -7,7 +7,8 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME || '/
 async function openPage(ctxOpts, label, query = '') {
   const ctx = await browser.newContext(ctxOpts); const page = await ctx.newPage(); const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); }); page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-  await page.goto(APP_URL + query); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 }); await page.waitForTimeout(1200);
+  await page.goto(APP_URL + query); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 });
+  await page.evaluate(() => window.__game.skipOpening()); // the opening cinematic has its own check (drive-block) await page.waitForTimeout(1200);
   return { ctx, page, errors, label };
 }
 const area = async (page, sel) => { const b = await page.locator(sel).boundingBox(); const v = page.viewportSize(); if (!b) return 0;

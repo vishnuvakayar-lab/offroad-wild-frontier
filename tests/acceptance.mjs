@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { runPhase6 } from './phase6-block.mjs';
 import { runPhase6b } from './phase6b-block.mjs';
 import { runRework } from './rework-block.mjs';
+import { runDrive } from './drive-block.mjs';
 
 const APP_URL = process.env.URL || 'http://127.0.0.1:4173/';
 const SHOTS = new URL('../screenshots/', import.meta.url).pathname;
@@ -18,7 +19,7 @@ const browser = await chromium.launch({
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 });
 
-async function openPage(ctxOpts, label, query = '') {
+async function openPage(ctxOpts, label, query = '', o = {}) {
   const ctx = await browser.newContext(ctxOpts);
   const page = await ctx.newPage();
   const errors = [];
@@ -27,7 +28,8 @@ async function openPage(ctxOpts, label, query = '') {
   page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url()));
   const t0 = Date.now();
   await page.goto(APP_URL + query);
-  await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
+  await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 });
+  if (!o.keepOpening) await page.evaluate(() => window.__game.skipOpening()); // the opening cinematic has its own check (drive-block)
   const loadMs = Date.now() - t0;
   await page.waitForTimeout(1200); // loading screen fade
   return { ctx, page, errors, loadMs, label };
@@ -178,24 +180,24 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   await page.tap('#btn-skip'); await page.waitForTimeout(300);
   const iph2 = await page.evaluate(() => window.__game.phase);
   ok(`${label}: intro plays and tap on Skip ends it`, iph === 'intro' && iph2 === 'playing', `${iph} -> ${iph2}`);
-  await page.evaluate(() => window.__game.setControls('buttons', false)); // legacy compact-button scheme (rework: default is tilt + auto-throttle, tested in rework-block)
+  await page.evaluate(() => window.__game.setControls('buttons', false)); // ◀ ▶ buttons + pedals (default wheel + pedals, tilt and halves are tested in drive-block / rework-block)
   const au = (await st(page)).audio.state;
   ok(`${label}: audio running after tap`, au === 'running', `state=${au}`);
-  const vis = await page.locator('#touch').isVisible();
-  const btns = await page.locator('#touch .tbtn').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return { k: e.dataset.k, w: r.width, h: r.height, in: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight }; }));
-  ok(`${label}: touch controls visible, >=48px, on-screen`, vis && btns.length === 5 && btns.every((b) => b.w >= 48 && b.h >= 48 && b.in), btns.map((b) => `${b.k}:${Math.round(b.w)}x${Math.round(b.h)}`).join(' '));
+  const vis = await page.locator('#pedals').isVisible();
+  const btns = await page.locator('#sb-l, #sb-r, #pd-gas, #pd-brake').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return { k: e.id, w: r.width, h: r.height, in: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight }; }));
+  ok(`${label}: touch controls visible, >=48px, on-screen`, vis && btns.length === 4 && btns.every((b) => b.w >= 48 && b.h >= 48 && b.in), btns.map((b) => `${b.k}:${Math.round(b.w)}x${Math.round(b.h)}`).join(' '));
   // hold GAS + steer via pointer events (multi-touch: two pointer ids)
   const s0 = await st(page);
-  await page.dispatchEvent('#touch .gas', 'pointerdown', { pointerId: 11, pointerType: 'touch', isPrimary: true, bubbles: true });
+  await page.dispatchEvent('#pd-gas', 'pointerdown', { pointerId: 11, pointerType: 'touch', isPrimary: true, bubbles: true });
   // steer while still on the flat start area (from ~35 m out the route crosses bumps where the 4x4 can get airborne)
   await sleep(2000);
-  await page.dispatchEvent('#touch [data-k="left"]', 'pointerdown', { pointerId: 12, pointerType: 'touch', bubbles: true });
+  await page.dispatchEvent('#sb-l', 'pointerdown', { pointerId: 12, pointerType: 'touch', bubbles: true });
   let air = 0;
   for (let k = 0; k < 6; k++) { await sleep(250); if ((await st(page)).wheels.every((w) => w === null)) air++; }
   await page.screenshot({ path: `${SHOTS}${label}-gameplay.png` });
   const s1 = await st(page);
-  await page.dispatchEvent('#touch [data-k="left"]', 'pointerup', { pointerId: 12, pointerType: 'touch', bubbles: true });
-  await page.dispatchEvent('#touch .gas', 'pointerup', { pointerId: 11, pointerType: 'touch', bubbles: true });
+  await page.dispatchEvent('#sb-l', 'pointerup', { pointerId: 12, pointerType: 'touch', bubbles: true });
+  await page.dispatchEvent('#pd-gas', 'pointerup', { pointerId: 11, pointerType: 'touch', bubbles: true });
   const moved = Math.hypot(s1.x - s0.x, s1.z - s0.z);
   const dyaw = Math.atan2(Math.sin(s1.yaw - s0.yaw), Math.cos(s1.yaw - s0.yaw));
   ok(`${label}: touch GAS + steer drives and turns`, moved > 2 && Math.abs(dyaw) > 0.05, `moved ${moved.toFixed(2)} m, heading change ${(dyaw * 180 / Math.PI).toFixed(1)} deg, airborne samples ${air}/6`);
@@ -418,7 +420,8 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   while ((await page.evaluate(() => window.__game.vehicle.id)) !== 'pickup') await page.click('#g-next');
   await page.click('#g-colors button[title="Rescue Red"]'); await page.waitForTimeout(300);
   const chosen = await page.evaluate(() => window.__game.vehicle);
-  await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 }); await page.waitForTimeout(1200);
+  await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 });
+  await page.evaluate(() => window.__game.skipOpening()); await page.waitForTimeout(1200); // opening cinematic has its own check (drive-block)
   const after = await page.evaluate(() => ({ v: window.__game.vehicle, label: document.getElementById('menu-vehicle').textContent }));
   await page.click('#btn-play'); await page.waitForTimeout(400); await page.click('#btn-skip'); await page.waitForFunction(() => window.__game.phase === 'playing');
   const inPlay = await page.evaluate(() => window.__game.vehicle);
@@ -560,6 +563,8 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
 await runPhase6({ openPage, ok, area });
 await runPhase6b({ openPage, ok, area });
 await runRework({ openPage, ok, area });
+console.log('\n== Drive controls: cockpit wheel + pedals, transmission, transfer case, opening ==');
+await runDrive({ openPage, ok });
 await browser.close();
 const failed = results.filter((r) => !r.pass);
 fs.writeFileSync(new URL('../screenshots/test-results.json', import.meta.url), JSON.stringify(results, null, 2));

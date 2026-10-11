@@ -47,8 +47,8 @@
       <button id="btn-settings" class="btn">Settings</button>
       <button id="btn-garage" class="btn">Garage <em id="menu-vehicle"></em></button>
       <button id="btn-online" class="btn">Online Multiplayer</button>
-      <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset (to checkpoint in missions) · H tow hook · T weather · M mute · Esc pause · drag to look</p>
-      <p class="hint touch-only">Tilt the phone to steer (or pick Touch halves in Settings) · right half = gas · left half = brake</p>
+      <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · Q gear (A/D/N/R/P) · 1 2 3 = 2H 4H 4L · R reset (to checkpoint in missions) · H tow hook · T weather · M mute · Esc pause · drag to look</p>
+      <p class="hint touch-only">Wheel bottom-left · GAS / BRAKE pedals bottom-right · drive chip (A · 4H) for P R N D and 2H / 4H / 4L · Settings: buttons, tilt or touch halves</p>
     </section>
 
     <div id="hud" class="hidden">
@@ -71,22 +71,38 @@
       <div class="tz l"><span id="tz-l">BRAKE</span></div><div class="tz r"><span id="tz-r">GAS</span></div>
       <div class="tz-pills">
         <button class="tpill" id="tp-cal" aria-label="Centre tilt steering">⟲ Centre</button>
-        <button class="tpill" id="tp-hb" data-k="hand" aria-label="Handbrake">HB</button>
+        <button class="tpill" id="tp-rec" aria-label="Recover vehicle">↻ Recover</button>
+        <button class="tpill" id="tp-hb" aria-label="Handbrake">HB</button>
+        <button class="tpill brake" id="tp-brake" aria-label="Brake / reverse">■ Brake</button>
       </div>
       <div id="tz-hint" class="tz-hint"></div>
     </div>
-    <div id="touch" class="hidden" aria-hidden="true">
-      <div class="cluster left">
-        <button class="tbtn steer" data-k="left" aria-label="Steer left">◀</button>
-        <button class="tbtn steer" data-k="right" aria-label="Steer right">▶</button>
+    <div id="opening" class="hidden">
+      <div class="lb top"></div><div class="lb bottom"></div>
+      <div class="o-title"><span>OFFROAD</span><small>WILD FRONTIER</small><em>Desert · Jungle · Mountain</em></div>
+      <button id="btn-oskip" class="skip">Skip ▸</button>
+    </div>
+    <div id="cockpit" class="hidden" aria-label="Driving controls">
+      <div id="wheel" class="wheel" role="slider" aria-label="Steering wheel" aria-valuemin="-1" aria-valuemax="1"><div class="w-rim"><i class="sp a"></i><i class="sp b"></i><i class="sp c"></i><b class="hub"></b><span class="w-mark"></span></div></div>
+      <div id="steer-btns" class="steer-btns"><button class="sbtn" id="sb-l" aria-label="Steer left">◀</button><button class="sbtn" id="sb-r" aria-label="Steer right">▶</button></div>
+      <div id="pedals" class="pedals">
+        <button id="pd-brake" class="pedal brake" aria-label="Brake / reverse"><span>BRAKE</span><i class="fill"></i></button>
+        <button id="pd-gas" class="pedal gas" aria-label="Accelerator"><span>GAS</span><i class="fill"></i></button>
       </div>
-      <div class="cluster right">
-        <button class="tbtn hand" data-k="hand" aria-label="Handbrake">HB</button>
-        <button class="tbtn brake" data-k="brake" aria-label="Brake / reverse">BRAKE</button>
-        <button class="tbtn gas" data-k="gas" aria-label="Accelerate">GAS</button>
+      <div class="ck-pills">
+        <button class="tpill" id="ck-cal" aria-label="Centre tilt steering">⟲ Centre</button>
+        <button class="tpill" id="ck-rec" aria-label="Recover vehicle">↻ Recover</button>
+        <button class="tpill" id="ck-hb" aria-label="Handbrake">HB</button>
       </div>
     </div>
-
+    <div id="drv" class="drv hidden">
+      <button id="drv-chip" class="drv-chip" aria-label="Transmission and transfer case" aria-expanded="false"><b id="drv-gear">A</b><span id="drv-mode">4H</span></button>
+      <div id="drv-pop" class="drv-pop hidden">
+        <div class="drv-row" id="drv-sel" aria-label="Gear selector"><button data-g="P">P</button><button data-g="R">R</button><button data-g="N">N</button><button data-g="D">D</button><button data-g="A">AUTO</button></div>
+        <div class="drv-row" id="drv-tc" aria-label="Transfer case"><button data-t="2H">2H</button><button data-t="4H">4H</button><button data-t="4L">4L</button><button data-t="AWD">AWD</button></div>
+        <p class="drv-note" id="drv-note"></p>
+      </div>
+    </div>
     <div id="intro" class="hidden">
       <div class="lb top"></div><div class="lb bottom"></div>
       <div class="intro-title"><small id="intro-kicker">Test Track</small><span id="intro-name">FRONTIER SCOUT 4×4</span></div>
@@ -169,9 +185,10 @@
     </section>
 
     <section id="garage" class="panel garage hidden" aria-label="Garage">
+      <nav id="g-cats" class="g-cats" aria-label="Vehicle categories"></nav>
       <header class="g-head">
         <button id="g-prev" class="round" aria-label="Previous vehicle">‹</button>
-        <div class="g-title"><small id="g-class"></small><h2 id="g-name"></h2><div id="g-dots" class="g-dots"></div></div>
+        <div class="g-title"><small id="g-class"></small><h2 id="g-name"></h2><span id="g-price" class="g-price"></span><div id="g-dots" class="g-dots"></div></div>
         <button id="g-next" class="round" aria-label="Next vehicle">›</button>
       </header>
       <p id="g-desc" class="g-desc"></p>
@@ -208,8 +225,9 @@
       <div class="row vol"><input type="range" id="rng-volume" min="0" max="1" step="0.05" aria-label="Volume" /><label><input type="checkbox" id="chk-mute" /> Mute</label></div>
       <label class="group-label">Mobile controls</label>
       <div class="seg" id="seg-ctrl">
-        <button data-v="tilt">📱 Tilt</button><button data-v="halves">✋ Touch halves</button><button data-v="buttons">Buttons</button>
+        <button data-v="wheel">🛞 Wheel + pedals</button><button data-v="buttons">◀▶ Buttons</button><button data-v="tilt">📱 Tilt</button><button data-v="halves">✋ Halves</button>
       </div>
+      <div class="row cam" id="row-wsens"><span>Wheel</span><input type="range" id="rng-wsens" min="0.6" max="1.6" step="0.05" aria-label="Steering wheel sensitivity" /></div>
       <label class="row"><input type="checkbox" id="chk-auto" /> Auto-throttle (drive forward automatically)</label>
       <p class="note" id="ctrl-note"></p>
       <label class="group-label">Show touch controls</label>
@@ -217,7 +235,11 @@
         <button data-v="auto">Auto</button><button data-v="on">On</button><button data-v="off">Off</button>
       </div>
       <label class="row"><input type="checkbox" id="chk-fps" /> Show FPS counter</label>
-      <label class="row"><input type="checkbox" id="chk-intro" /> Play intro flyover</label>
+      <label class="row"><input type="checkbox" id="chk-intro" /> Cinematics (opening scene + vehicle intro)</label>
+      <label class="group-label">Camera</label>
+      <div class="row cam"><span>Distance</span><input type="range" id="rng-camdist" min="0.75" max="1.45" step="0.05" aria-label="Camera distance" /></div>
+      <div class="row cam"><span>Height</span><input type="range" id="rng-camheight" min="0.6" max="1.6" step="0.05" aria-label="Camera height" /></div>
+      <label class="row"><input type="checkbox" id="chk-shake" /> Camera shake on rough terrain</label>
       <p class="note">Build 0.6.0 · rework in progress</p>
     </aside>
   </div>

@@ -35,7 +35,7 @@ export async function runRework({ openPage, ok, area }) {
   {
     const { ctx, page, errors } = await openPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, userAgent: IPHONE_UA }, 'rework-portrait');
     const c0 = await ctl(page);
-    ok('rework controls: mobile defaults = tilt steering + auto-throttle', c0.setting === 'tilt' && c0.auto === true, JSON.stringify(c0));
+    ok('rework controls: mobile default = cockpit wheel + pedals (auto-throttle preset on for the optional tilt mode)', c0.setting === 'wheel' && c0.auto === true, JSON.stringify(c0));
     await page.tap('#btn-levels'); await page.waitForTimeout(500);
     const cards = await page.$$eval('#lv-list .lv-card', (cs) => cs.map((c) => ({ n: +c.dataset.n, st: c.querySelector('.st').className.split(' ')[1], locked: c.classList.contains('locked'), start: !!c.querySelector('[data-level]') })));
     const cnt = (s) => cards.filter((c) => c.st === s).length;
@@ -45,14 +45,15 @@ export async function runRework({ openPage, ok, area }) {
       `playable ${cnt('playable')}, prototype ${cnt('prototype')}, online ${cnt('online')}, planned ${cnt('planned')}; panel ${(lvA * 100).toFixed(0)}%`);
     await page.tap('#lv-back'); await page.waitForTimeout(300);
     await stubPermission(page, 'granted');
+    await page.evaluate(() => window.__game.setControls('tilt', true)); // tilt is optional: permission is only asked once it is chosen
     await startL1ByTap(page);
     await orient(page, 20, 0); // a real phone streams sensor samples right after permission is granted
     const perm = await page.evaluate(() => window.__perm.asked);
     await page.evaluate(() => window.__game.skipCountdown());
     await orient(page, 20, 0); await page.waitForTimeout(400); // neutral pose -> auto-calibrated as "straight"
-    const vis = await page.evaluate(() => ({ zones: !document.getElementById('tzones').classList.contains('hidden'), buttons: !document.getElementById('touch').classList.contains('hidden'), cal: !document.getElementById('tp-cal').classList.contains('hidden') }));
+    const vis = await page.evaluate(() => { const v = (id) => { const e = document.getElementById(id); return !!e && e.offsetParent !== null; }; return { pedals: v('pedals'), wheel: v('wheel'), cal: v('ck-cal'), zones: v('tzones') }; });
     const c1 = await ctl(page);
-    ok('rework tilt: iOS requestPermission called once from the Start tap and granted; no on-screen wheel/pedals', perm === 1 && c1.tiltState === 'granted' && vis.zones && !vis.buttons && vis.cal, `asked ${perm}, state ${c1.tiltState}, zones ${vis.zones}, buttons ${vis.buttons}`);
+    ok('rework tilt: iOS requestPermission called once from the Start tap and granted; tilt mode = pedals + Centre, no wheel', perm === 1 && c1.tiltState === 'granted' && vis.pedals && !vis.wheel && vis.cal && !vis.zones, `asked ${perm}, state ${c1.tiltState}, ${JSON.stringify(vis)}`);
     const i0 = await inp(page);
     await orient(page, 20, -15); await page.waitForTimeout(150); // tilt the phone left (portrait: gamma < 0)
     const c2 = await ctl(page); await page.waitForTimeout(300); const i1 = await inp(page);
@@ -62,11 +63,11 @@ export async function runRework({ openPage, ok, area }) {
     const moved = Math.hypot(p1.x - p0.x, p1.z - p0.z);
     ok('rework tilt: real-time drive (auto-throttle + tilt) moves and turns the car left', moved > 5 && dy > 0.2, `moved ${moved.toFixed(1)} m, yaw ${(dy * 180 / Math.PI).toFixed(0)} deg, speed ${(p1.speed * 3.6).toFixed(0)} km/h`);
     await page.screenshot({ path: SH + 'l1-portrait-tilt.png' });
-    await page.tap('#tp-cal'); await page.waitForTimeout(100);
+    await page.tap('#ck-cal'); await page.waitForTimeout(100);
     const c3 = await ctl(page);
-    await zone(page, 'l', 'pointerdown', 5); await page.waitForTimeout(100); const i2 = await inp(page);
-    await zone(page, 'l', 'pointerup', 5);
-    ok('rework tilt: ⟲ Centre recalibrates; left half = brake (overrides auto-throttle)', Math.abs(c3.tilt) < 0.05 && i2.brake === 1 && i2.throttle === 0, `tilt after centre ${c3.tilt.toFixed(2)}, brake ${i2.brake}, throttle ${i2.throttle}`);
+    await page.dispatchEvent('#pd-brake', 'pointerdown', { pointerId: 5, pointerType: 'touch', bubbles: true }); await page.waitForTimeout(100); const i2 = await inp(page);
+    await page.dispatchEvent('#pd-brake', 'pointerup', { pointerId: 5, pointerType: 'touch', bubbles: true });
+    ok('rework tilt: ⟲ Centre recalibrates; BRAKE pedal overrides auto-throttle', Math.abs(c3.tilt) < 0.05 && i2.brake > 0.3 && i2.throttle === 0, `tilt after centre ${c3.tilt.toFixed(2)}, brake ${i2.brake.toFixed(2)}, throttle ${i2.throttle}`);
     ok('rework portrait: no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
     await ctx.close();
   }
@@ -75,6 +76,7 @@ export async function runRework({ openPage, ok, area }) {
   for (const [label, answer] of [['denied', 'denied'], ['no sensor data', null]]) {
     const { ctx, page, errors } = await openPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, userAgent: IPHONE_UA }, 'rework-' + label);
     await stubPermission(page, answer);
+    await page.evaluate(() => window.__game.setControls('tilt', true));
     await startL1ByTap(page);
     await page.waitForTimeout(2300);
     const c = await ctl(page);
@@ -102,6 +104,7 @@ export async function runRework({ openPage, ok, area }) {
   {
     const { ctx, page, errors } = await openPage({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, userAgent: IPHONE_UA }, 'rework-landscape');
     await stubPermission(page, 'granted');
+    await page.evaluate(() => window.__game.setControls('tilt', true));
     await startL1ByTap(page); await orient(page, 0, 30); await page.evaluate(() => window.__game.skipCountdown());
     const ang = await page.evaluate(() => screen.orientation?.angle ?? window.orientation ?? 0);
     await orient(page, 0, 30); await page.waitForTimeout(400);
@@ -111,7 +114,7 @@ export async function runRework({ openPage, ok, area }) {
     const i = await inp(page), c = await ctl(page);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: SH + 'l1-landscape-tilt.png' });
-    const fit = await page.evaluate(() => ['tp-cal', 'tp-hb', 'mhud', 'hud-speed', 'btn-pause'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight; }));
+    const fit = await page.evaluate(() => ['ck-cal', 'ck-hb', 'pd-gas', 'pd-brake', 'mhud', 'hud-speed', 'btn-pause'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight; }));
     ok('rework landscape: roll steers left (orientation-aware) and controls/HUD fit on screen', i.steer > 0.3 && c.tilt > 0.5 && fit.every(Boolean), `screen angle ${ang}, tilt ${c.tilt.toFixed(2)}, steer ${i.steer.toFixed(2)}, fit ${fit.join(',')}`);
     ok('rework landscape: no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
     await ctx.close();
@@ -137,7 +140,7 @@ export async function runRework({ openPage, ok, area }) {
     ok('rework L1: human-like bot finishes within bronze', hb.state === 'success' && hb.t <= mdef.targets.bronze, `${hb.t.toFixed(2)} s (bronze ${mdef.targets.bronze})`);
     await page.waitForFunction(() => window.__game.phase === 'results', null, { timeout: 15000 });
     const before = await page.evaluate(() => ({ save: window.__game.save, lv: window.__game.levelState() }));
-    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
+    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 }); await page.evaluate(() => window.__game.skipOpening());
     const after = await page.evaluate(() => ({ save: window.__game.save, lv: window.__game.levelState() }));
     ok('rework persistence: points, XP, L1 completion/best time and L2 unlock survive a reload', after.save.credits === before.save.credits && after.save.credits > 0 && after.save.xp === before.save.xp && after.lv[0].done && after.lv[1].unlocked && !after.lv[2].unlocked && after.save.best['lv1-desert-training']?.time === before.save.best['lv1-desert-training']?.time,
       `${after.save.credits} pts, ${after.save.xp} XP, L1 best ${after.save.best['lv1-desert-training']?.time.toFixed(2)} s, L2 unlocked ${after.lv[1].unlocked}, L3 unlocked ${after.lv[2].unlocked}`);
@@ -150,7 +153,7 @@ export async function runRework({ openPage, ok, area }) {
     const post = await page.evaluate(() => ({ save: window.__game.save, lock: !document.getElementById('g-lock').classList.contains('hidden') }));
     await page.screenshot({ path: SH + 'garage-points-unlock.png' });
     ok('rework garage: vehicle unlocked with points (price deducted), lock removed', pre.lock && post.save.vehicles.includes('pickup') && !post.lock && post.save.credits === pre.pts - 1200, `"${pre.btn}" ${pre.pts} -> ${post.save.credits} pts, vehicles ${post.save.vehicles.join(',')}`);
-    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 });
+    await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 }); await page.evaluate(() => window.__game.skipOpening());
     await page.click('#btn-play'); await page.waitForFunction(() => window.__game.phase !== 'menu'); await page.evaluate(() => window.__game.skipIntro());
     const drv = await page.evaluate(() => { const g = window.__game; const r = g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 3); return { id: g.vehicle.id, saveV: g.save.vehicles, d: r.distance, v: r.finalSpeed }; });
     ok('rework persistence: unlocked + selected vehicle survives reload and is the one that drives', drv.id === 'pickup' && drv.saveV.includes('pickup') && drv.d > 10, `${drv.id} drove ${drv.d.toFixed(1)} m in 3 s (${(drv.v * 3.6).toFixed(0)} km/h)`);

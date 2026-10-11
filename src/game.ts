@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
 import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES, setTerrainDetail, surfaceAt, TRAIL, SCREE, HAIRPINS } from './terrain';
-import { Vehicle, SURFACE_PARAMS, type DriveInput } from './vehicle';
+import { Vehicle, SURFACE_PARAMS, LOW_RANGE, type DriveInput, type GearSel, type Transfer } from './vehicle';
 import { TrackMarks } from './tracks';
-import { VEHICLES, PAINTS, vehicleById, stats } from './vehicles';
+import { VEHICLES, PAINTS, vehicleById, stats, CATEGORIES } from './vehicles';
 import { Input } from './input';
 import { GameAudio } from './audio';
 import { Particles, Rain } from './particles';
@@ -16,14 +16,17 @@ import { loadSave, storeSave, migrate, award, applyUpgrades, upgradesOf, vehicle
   VEHICLE_UNLOCK, PAINT_LEVEL, UPGRADE_KINDS, MAX_UPGRADE, XP_PER_LEVEL, SAVE_KEY, type UpgradeKind, type Medal } from './save';
 import type { TrackMarks as TM } from './tracks';
 import { OnlineSession } from './online';
+import { buildBackdrop } from './backdrop';
 import { setNatureDetail, updateNature, natureStats, NATURE_COUNTS } from './nature';
 import { groundUniforms, setGroundDetail, NOISE_GLSL } from './groundShader';
 import { groundMaterials } from './terrain';
 import { LEVELS, LEVEL_MISSIONS, missionById, levelDone, levelUnlocked, levelOfMission } from './levels';
 
-type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results' | 'lobby' | 'levels';
+type Phase = 'loading' | 'opening' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results' | 'lobby' | 'levels';
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
+const SAND_GRAIN = new THREE.Color(0xe2c28a);
+const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3();
 const IDLE: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: true };
 const sstep = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
@@ -95,13 +98,17 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // spawn facing open ground towards the dunes (no trees on this line)
   const spawn = { x: 0, z: -8, yaw: Math.atan2(ZONES.sand.x - 0, ZONES.sand.z + 8) };
   let onTeleport: (() => void) | null = null; // set by the mission block
-  const resetCar = (x = spawn.x, z = spawn.z, yaw = spawn.yaw) => { car.reset(x, heightAt(x, z) + car.spawnLift, z, yaw); onTeleport?.(); };
+  let resetImpact: (() => void) | null = null;
+  const resetCar = (x = spawn.x, z = spawn.z, yaw = spawn.yaw) => { car.reset(x, heightAt(x, z) + car.spawnLift, z, yaw); onTeleport?.(); resetImpact?.(); };
   resetCar();
 
   const mudP = new Particles(scene, 1800, 9.8, 0.6, 0.95);
   const dustP = new Particles(scene, 1400, -0.3, 1.3, 0.34);
   const splashP = new Particles(scene, 1000, 9.8, 0.4, 0.75);
-  const allP = [mudP, dustP, splashP];
+  const windP = new Particles(scene, 600, 0.35, 0.05, 0.22); // wind-blown sand drifting across the dunes
+  const allP = [mudP, dustP, splashP, windP];
+  const backdrop = buildBackdrop(scene);
+  let windAcc = 0;
   const rain = new Rain(scene, 5000);
   setLoad(85, 'Checking the weather…');
 
@@ -182,6 +189,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     groundUniforms.uWetAll.value = w.wet ? 1 : 0;
     groundUniforms.uSkyRefl.value.set(w.skyBottom).lerp(new THREE.Color(w.skyTop), 0.35);
     skyMat.uniforms.uCloud.value = w.cloud; skyMat.uniforms.uCloudCol.value.set(w.cloudCol);
+    { const haze = new THREE.Color(w.fog).lerp(new THREE.Color(w.skyBottom), 0.5), rock = new THREE.Color(0x6f6457).multiply(new THREE.Color(w.hemiSky)).lerp(haze, 0.2);
+      if (id === 'night') rock.multiplyScalar(0.35); backdrop.setColors(rock, haze); }
     rebuildSkyEnv();
     for (const ps of allP) ps.uniforms.uTint.value.set(w.tint);
     const night = id === 'night';
@@ -211,11 +220,32 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
 
   // ---------- input & UI ----------
   const input = new Input();
-  document.querySelectorAll<HTMLElement>('#touch .tbtn').forEach((el) => input.bindHold(el, el.dataset.k as any));
   input.scheme = settings.controls; input.autoThrottle = settings.autoThrottle;
   input.bindZones($('tzones'), (l, r) => { $('tzones').querySelector('.tz.l')!.classList.toggle('on', l); $('tzones').querySelector('.tz.r')!.classList.toggle('on', r); });
-  input.bindHold($('tp-hb'), 'hand');
+  input.bindHold($('tp-hb'), 'hand'); input.bindHold($('tp-brake'), 'brake');
+  $('tp-rec').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.onReset?.(); });
   $('tp-cal').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.calibrateTilt(); toast('Tilt centred'); });
+  // cockpit HUD: wheel, steering buttons, pedals, pills
+  input.wheelSens = settings.wheelSens;
+  const wheelRim = $('wheel').querySelector<HTMLElement>('.w-rim')!;
+  input.onWheel = (deg) => { wheelRim.style.transform = `rotate(${deg.toFixed(1)}deg)`; };
+  input.bindWheel($('wheel'));
+  input.bindHold($('sb-l'), 'left'); input.bindHold($('sb-r'), 'right');
+  input.bindHold($('pd-gas'), 'gas'); input.bindHold($('pd-brake'), 'brake'); input.bindHold($('ck-hb'), 'hand');
+  $('ck-rec').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.onReset?.(); });
+  $('ck-cal').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.calibrateTilt(); toast('Tilt centred'); });
+  // drivetrain: gear selector (A/P/R/N/D) + transfer case (2H/4H/4L/AWD) with interlocks
+  const drvNote = (m: string) => { $('drv-note').textContent = m; };
+  const shiftGear = (gs: GearSel) => { const r = car.setGear(gs); if (!r.ok) { toast('⛔ ' + r.msg); drvNote(r.msg); } else drvNote(''); refreshDrv(); return r; };
+  const shiftTransfer = (t: Transfer) => { const r = car.setTransfer(t); if (!r.ok) { toast('⛔ ' + r.msg); drvNote(r.msg); } else { drvNote(t === '4L' ? 'Low range: x' + LOW_RANGE + ' torque, top speed / ' + LOW_RANGE : ''); toast(t + (t === '4L' ? ' · low range' : t === '2H' ? ' · rear-wheel drive' : ' · four-wheel drive')); } refreshDrv(); return r; };
+  const refreshDrv = () => {
+    $('drv-gear').textContent = car.sel === 'A' ? 'A' : car.sel; $('drv-mode').textContent = car.transfer;
+    document.querySelectorAll<HTMLButtonElement>('#drv-sel button').forEach((b) => b.classList.toggle('on', b.dataset.g === car.sel));
+    document.querySelectorAll<HTMLButtonElement>('#drv-tc button').forEach((b) => { const t = b.dataset.t as Transfer; b.classList.toggle('on', t === car.transfer); b.disabled = !car.driveModes.includes(t); b.hidden = t === 'AWD' ? !car.driveModes.includes('AWD') : car.driveModes.length === 1 && car.driveModes[0] === 'AWD'; });
+  };
+  $('drv-chip').onclick = () => { const p = $('drv-pop'); const open = p.classList.contains('hidden'); p.classList.toggle('hidden', !open); $('drv-chip').setAttribute('aria-expanded', String(open)); refreshDrv(); };
+  document.querySelectorAll<HTMLElement>('#drv-sel button').forEach((b) => b.onclick = () => shiftGear(b.dataset.g as GearSel));
+  document.querySelectorAll<HTMLElement>('#drv-tc button').forEach((b) => b.onclick = () => shiftTransfer(b.dataset.t as Transfer));
   let tiltFallback = false, tiltCheck = 0, needCal = false;
   input.onTiltData = () => { if (tiltFallback && settings.controls === 'tilt') { tiltFallback = false; refreshUI(); setTimeout(() => input.calibrateTilt(), 200); toast('Tilt steering active'); } };
   /** called from Play / Start taps (user gestures): asks iOS for motion access when tilt steering is selected */
@@ -262,23 +292,30 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     input.touchActive = tOn;
     if (!tiltFallback) input.scheme = settings.controls;
     input.autoThrottle = settings.autoThrottle;
-    show('touch', tOn && input.scheme === 'buttons');
-    show('tzones', tOn && input.scheme !== 'buttons');
     const sc = input.scheme;
+    show('tzones', tOn && sc === 'halves');
+    show('cockpit', tOn && sc !== 'halves');
+    show('wheel', sc === 'wheel'); show('steer-btns', sc === 'buttons'); show('ck-cal', sc === 'tilt');
+    show('drv', phase === 'playing' || phase === 'paused'); if (phase !== 'playing') $('drv-pop').classList.add('hidden'); refreshDrv();
+    show('row-wsens', settings.controls === 'wheel'); $<HTMLInputElement>('rng-wsens').value = String(settings.wheelSens);
     $('tz-l').textContent = sc === 'halves' ? '◀ STEER' : 'BRAKE';
     $('tz-r').textContent = sc === 'halves' ? 'STEER ▶' : settings.autoThrottle ? 'AUTO-GAS' : 'GAS';
     $('tz-hint').textContent = sc === 'halves' ? 'Drives forward · hold both sides to brake / reverse' : sc === 'tilt' ? 'Tilt the phone to steer' : '';
     show('tp-cal', sc === 'tilt');
     document.querySelectorAll('#seg-ctrl button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.controls));
     $<HTMLInputElement>('chk-auto').checked = settings.autoThrottle;
-    $('ctrl-note').textContent = settings.controls === 'tilt' ? `Tilt the phone like a steering wheel. Right half = gas, left half = brake/reverse. Motion access: ${input.tiltState}${tiltFallback ? ' (using touch halves)' : ''}.`
+    $('ctrl-note').textContent = settings.controls === 'wheel' ? 'Drag the wheel (bottom-left) to steer - it centres itself when released. Pedals (bottom-right): GAS and BRAKE are progressive; brake at a standstill reverses in AUTO.'
+      : settings.controls === 'buttons' ? '◀ ▶ buttons steer (bottom-left); GAS / BRAKE pedals bottom-right.'
+      : settings.controls === 'tilt' ? `Tilt the phone like a steering wheel; pedals bottom-right${settings.autoThrottle ? ' (auto-throttle on: GAS is automatic, BRAKE overrides)' : ''}. Motion access: ${input.tiltState}${tiltFallback ? ' (using touch halves)' : ''}.`
       : settings.controls === 'halves' ? 'Hold the left or right half of the screen to steer. The car drives forward by itself; hold both halves to brake or reverse.'
-      : 'Compact buttons: ◀ ▶ steer, GAS / BRAKE / HB.';
+      : '';
     $('hud-fps').classList.toggle('hidden', !settings.showFps);
     document.querySelectorAll('#seg-preset button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.preset));
     document.querySelectorAll('#seg-touch button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.touch));
     $<HTMLInputElement>('chk-fps').checked = settings.showFps;
     $<HTMLInputElement>('chk-intro').checked = settings.intro;
+    $<HTMLInputElement>('rng-camdist').value = String(settings.camDist); $<HTMLInputElement>('rng-camheight').value = String(settings.camHeight);
+    $<HTMLInputElement>('chk-shake').checked = settings.shake;
     $<HTMLInputElement>('chk-mute').checked = settings.muted;
     $<HTMLInputElement>('rng-volume').value = String(settings.volume);
     $('btn-mute').textContent = settings.muted ? '🔇' : '🔊';
@@ -298,6 +335,11 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const spec = VEHICLES[gIndex];
     $('g-name').textContent = spec.name; $('g-class').textContent = spec.klass; $('g-desc').textContent = spec.desc;
     $('g-dots').innerHTML = VEHICLES.map((_, i) => `<i class="${i === gIndex ? 'on' : ''}"></i>`).join('');
+    $('g-cats').innerHTML = CATEGORIES.map((c) => `<button data-cat="${c.id}" class="${c.id === spec.cat ? 'on' : ''}">${c.label} <b>${VEHICLES.filter((v) => v.cat === c.id).length}</b></button>`).join('');
+    $('g-cats').querySelectorAll<HTMLElement>('button').forEach((b) => b.onclick = () => { const i = VEHICLES.findIndex((v) => v.cat === b.dataset.cat); if (i >= 0 && i !== gIndex) garageStep(i - gIndex); });
+    { const own = vehicleUnlocked(save, spec.id), rq = VEHICLE_UNLOCK[spec.id];
+      $('g-price').textContent = own ? (spec.id === settings.vehicle ? '✓ Selected' : '✓ Owned') : `${rq.price.toLocaleString()} pts · level ${rq.level}`;
+      $('g-price').className = 'g-price ' + (own ? 'own' : 'buy'); }
     const st = stats(spec);
     $('g-stats').innerHTML = Object.entries(st).map(([k, v]) => `<span>${k}</span><div class="bar"><i style="width:${Math.round(v * 100)}%"></i></div>`).join('');
     const cur = paintFor(spec.id);
@@ -603,6 +645,72 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camPos.copy(camera.position); camHeading = Math.atan2(car.forward().x, car.forward().z); camInit = true;
     setPhase('playing');
   };
+  // ---- opening cinematic (on launch): establishing shot -> 4x4 drives into the scene -> live 3D main menu ----
+  const OPEN_PATH: [number, number][] = [[74, -52], [64, -44], [51, -35], [39, -27], [27, -21], [15, -13], [6, -6]];
+  const OPEN_LEN = 12.5;
+  let openT = 0, openWp = 1, openEnding = false, menuBlend = 1;
+  const startOpening = () => {
+    const [a, b] = OPEN_PATH; resetCar(a[0], a[1], Math.atan2(b[0] - a[0], b[1] - a[1])); openT = 0; openWp = 1; openEnding = false;
+    const el = $('opening'); el.classList.remove('hidden', 'out'); el.classList.add('in');
+    phase = 'opening'; refreshUI();
+  };
+  const endOpening = (skipped: boolean) => {
+    if (phase !== 'opening' || openEnding) return;
+    openEnding = true;
+    if (skipped) { const e = OPEN_PATH[OPEN_PATH.length - 1], d = OPEN_PATH[OPEN_PATH.length - 2]; resetCar(e[0], e[1], Math.atan2(e[0] - d[0], e[1] - d[1])); }
+    const el = $('opening'); el.classList.add('out'); setTimeout(() => el.classList.add('hidden'), 900);
+    menuT = 0; menuBlend = 0; setPhase('menu');
+    const m = $('menu'); m.classList.remove('reveal'); void m.offsetWidth; m.classList.add('reveal');
+  };
+  /** auto-driver for the opening: pure pursuit along OPEN_PATH, eases off and stops at the menu spot */
+  function openingDrive(): DriveInput {
+    const t = car.body.translation(), f = car.forward(tmpF), last = OPEN_PATH.length - 1;
+    let w = OPEN_PATH[openWp]; const dWp = Math.hypot(w[0] - t.x, w[1] - t.z);
+    if (dWp < 7 && openWp < last) { openWp++; w = OPEN_PATH[openWp]; }
+    const d = Math.hypot(w[0] - t.x, w[1] - t.z);
+    let diff = Math.atan2(w[0] - t.x, w[1] - t.z) - Math.atan2(f.x, f.z); diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+    const steer = THREE.MathUtils.clamp(diff * 2.2, -1, 1), sp = car.forwardSpeed();
+    if (openWp === last && d < 16) return { throttle: 0, brake: sp > 0.6 ? Math.min(1, 0.35 + (16 - d) / 16) : 0, steer, handbrake: sp <= 0.6 };
+    return { throttle: sp < 7.2 ? 0.75 : 0.15, brake: 0, steer, handbrake: false };
+  }
+  const menuPose = (p: THREE.Vector3, heading: number, t: number, outPos: THREE.Vector3, outLook: THREE.Vector3) => {
+    const a = t + 2.2 + heading, r = 9.5, portrait = window.innerWidth < window.innerHeight;
+    outPos.set(p.x + Math.sin(a) * r, p.y + 2.6, p.z + Math.cos(a) * r);
+    outLook.set(p.x, p.y + (portrait ? -1.2 : 0.6), p.z);
+  };
+  const oPos = new THREE.Vector3(), oLook = new THREE.Vector3(), oA = new THREE.Vector3(), oB = new THREE.Vector3();
+  function openingCamera(p: THREE.Vector3, heading: number, dt: number) {
+    const t = openT, portrait = window.innerWidth < window.innerHeight;
+    const hAt = (x: number, z: number) => heightAt(x, z);
+    if (t < 4.2) { // wide establishing shot: high crane drifting over the dunes, slowly finding the 4x4
+      const k = sstep(0, 4.2, t);
+      oA.set(-46, hAt(-46, 38) + 46, 38); oB.set(-14, hAt(-14, 20) + 20, 20);
+      oPos.lerpVectors(oA, oB, k);
+      oLook.set(110 - 60 * k, 6 + 2 * (1 - k), -90 + 50 * k).lerp(p, k * k);
+    } else if (t < 8.0) { // low ground camera beside the trail: the 4x4 rushes towards and past the lens
+      const gx = 33, gz = -16; oPos.set(gx, hAt(gx, gz) + 0.9, gz);
+      oLook.set(p.x, p.y + 0.7, p.z);
+    } else if (t < OPEN_LEN - 2.2) { // tracking front three-quarter shot
+      const fx = Math.sin(heading), fz = Math.cos(heading);
+      const k = (t - 8.0) / (OPEN_LEN - 2.2 - 8.0);
+      const ang = heading + 0.7 + k * 0.9, r = 7.5 - k * 1.2;
+      oPos.set(p.x + Math.sin(ang) * r, p.y + 1.3 + k * 0.6, p.z + Math.cos(ang) * r);
+      oLook.set(p.x + fx * 1.2, p.y + 0.7, p.z + fz * 1.2);
+    } else { // settle into the live menu orbit
+      const k = sstep(OPEN_LEN - 2.2, OPEN_LEN, t);
+      const ang = heading + 1.6, r = 6.3;
+      oA.set(p.x + Math.sin(ang) * r, p.y + 1.9, p.z + Math.cos(ang) * r);
+      menuPose(p, heading, 0, oB, oLook);
+      oPos.lerpVectors(oA, oB, k);
+      if (!portrait) { /* menu shot pans left of the car once the panel shows */ }
+    }
+    const y = hAt(oPos.x, oPos.z) + 0.6; if (oPos.y < y) oPos.y = y;
+    camera.position.lerp(oPos, t < 0.05 ? 1 : 1 - Math.exp(-dt * 6));
+    camLook.lerp(oLook, t < 0.05 ? 1 : 1 - Math.exp(-dt * 6));
+    camera.lookAt(camLook);
+    camera.fov = t < 4.2 ? baseFov - 10 : t < 8 ? baseFov - 18 : baseFov; camera.updateProjectionMatrix();
+    $('opening').classList.toggle('titled', t > 1.2 && t < 5.6);
+  }
   const cycleWeather = () => {
     const i = (WEATHER_ORDER.indexOf(weather) + 1) % WEATHER_ORDER.length;
     settings.weather = WEATHER_ORDER[i]; saveSettings(settings); applyWeather(settings.weather); toast(WEATHER[settings.weather].icon + '  ' + WEATHER[settings.weather].label);
@@ -626,12 +734,19 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (phase === 'garage') { leaveGarage(); setPhase(garageReturn); return; }
     if (phase === 'modes' || phase === 'levels') { setPhase('menu'); return; }
     if (phase === 'intro') { endIntro(); return; }
+    if (phase === 'opening') { endOpening(true); return; }
     if (online.inRoom) { setPhase(phase === 'lobby' ? 'playing' : 'lobby'); return; }
     if (phase === 'lobby') { setPhase('menu'); return; }
     if (phase === 'playing') setPhase('paused'); else if (phase === 'paused') setPhase('playing');
   };
   input.onKey = (code) => {
     if (phase === 'intro' && !/^(Shift|Control|Alt|Meta)/.test(code)) { endIntro(); return true; }
+    if (phase === 'opening' && !/^(Shift|Control|Alt|Meta)/.test(code)) { endOpening(true); return true; }
+    if (phase === 'playing' && !online.inRoom) {
+      const T: Record<string, Transfer> = { Digit1: '2H', Digit2: '4H', Digit3: '4L', Digit4: 'AWD' };
+      if (T[code]) { shiftTransfer(T[code]); return true; }
+      if (code === 'KeyQ') { const order: GearSel[] = ['A', 'D', 'N', 'R', 'P']; shiftGear(order[(order.indexOf(car.sel) + 1) % order.length]); return true; }
+    }
     if (phase === 'garage') {
       if (code === 'ArrowLeft' || code === 'KeyA') { garageStep(-1); return true; }
       if (code === 'ArrowRight' || code === 'KeyD') { garageStep(1); return true; }
@@ -659,6 +774,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (settings.controls === 'tilt') input.requestTilt().then(() => refreshUI()); // inside the tap: required by iOS
     refreshUI();
   });
+  $<HTMLInputElement>('rng-wsens').oninput = (e) => { settings.wheelSens = Number((e.target as HTMLInputElement).value); input.wheelSens = settings.wheelSens; saveSettings(settings); };
   $<HTMLInputElement>('chk-auto').onchange = (e) => { settings.autoThrottle = (e.target as HTMLInputElement).checked; saveSettings(settings); refreshUI(); };
   document.querySelectorAll<HTMLElement>('#seg-touch button').forEach((b) => b.onclick = () => {
     settings.touch = b.dataset.v as TouchMode; saveSettings(settings); refreshUI();
@@ -667,6 +783,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     settings.weather = b.dataset.v as WeatherId; saveSettings(settings); applyWeather(settings.weather);
   });
   $<HTMLInputElement>('chk-fps').onchange = (e) => { settings.showFps = (e.target as HTMLInputElement).checked; saveSettings(settings); refreshUI(); };
+  $<HTMLInputElement>('rng-camdist').oninput = (e) => { settings.camDist = Number((e.target as HTMLInputElement).value); saveSettings(settings); };
+  $<HTMLInputElement>('rng-camheight').oninput = (e) => { settings.camHeight = Number((e.target as HTMLInputElement).value); saveSettings(settings); };
+  $<HTMLInputElement>('chk-shake').onchange = (e) => { settings.shake = (e.target as HTMLInputElement).checked; saveSettings(settings); };
   $<HTMLInputElement>('chk-intro').onchange = (e) => { settings.intro = (e.target as HTMLInputElement).checked; saveSettings(settings); };
   $<HTMLInputElement>('chk-mute').onchange = (e) => { settings.muted = (e.target as HTMLInputElement).checked; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); };
   $<HTMLInputElement>('rng-volume').oninput = (e) => { settings.volume = Number((e.target as HTMLInputElement).value); saveSettings(settings); audio.setVolume(settings.volume, settings.muted); };
@@ -680,6 +799,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     c.addEventListener('webglcontextrestored', () => { $('gl-lost').classList.add('hidden'); });
     c.addEventListener('pointerdown', (e) => {
       if (phase === 'intro') { endIntro(); return; }
+      if (phase === 'opening') { endOpening(true); return; }
       dragging = e.pointerId; lastX = e.clientX; lastY = e.clientY; c.setPointerCapture(e.pointerId);
     });
     c.addEventListener('pointermove', (e) => {
@@ -754,7 +874,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // ---------- main loop ----------
   const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
   let camInit = false, camHeading = 0, towCamK = 0;
-  let acc = 0, last = performance.now(), menuT = 0, clock = 0;
+  let acc = 0, last = performance.now(), menuT = 0, clock = 0, impactCool = 0.5, impactPrev: { x: number; y: number; z: number } | null = null;
+  resetImpact = () => { impactPrev = null; impactCool = 0.4; };
   let fpsFrames = 0, fpsT = 0, fps = 0;
   const fpsHistory: number[] = [];
   let lastInput: DriveInput = IDLE;
@@ -762,6 +883,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   const tmpF = new THREE.Vector3(), want = new THREE.Vector3(), pivot = new THREE.Vector3(), dir = new THREE.Vector3(), look = new THREE.Vector3();
   const bufSize = new THREE.Vector2();
 
+  let prevVy = 0, shakeAmp = 0;
   function chaseCamera(dt: number, p: THREE.Vector3, heading: number, snap: boolean) {
     const v = car.body.linvel(); const sp = Math.hypot(v.x, v.z); const fs = car.forwardSpeed();
     let d = heading - camHeading; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -770,8 +892,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const yaw = camHeading + lookYaw;
     // towing: lift and pull back the camera so it looks over the towed vehicle instead of into it
     towCamK += ((rope ? 1 : 0) - towCamK) * Math.min(1, dt * 2);
-    const dist = 7.4 + Math.min(3, Math.abs(fs) * 0.085) + towCamK * 3.2;
-    const height = 2.7 + Math.min(0.9, sp * 0.03) + lookPitch * 6 + towCamK * 3.4;
+    const dist = (7.4 + Math.min(3, Math.abs(fs) * 0.085)) * settings.camDist + towCamK * 3.2;
+    const height = (2.7 + Math.min(0.9, sp * 0.03)) * settings.camHeight + lookPitch * 6 + towCamK * 3.4;
     pivot.set(p.x, p.y + 1.6, p.z);
     want.set(p.x - Math.sin(yaw) * dist, p.y + height, p.z - Math.cos(yaw) * dist);
     // terrain avoidance along the camera line
@@ -794,6 +916,16 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camLook.lerp(look, 1 - Math.exp(-dt * 10));
     camera.position.copy(camPos);
     camera.lookAt(camLook);
+    // rough-terrain shake: driven by vertical jolts of the chassis + surface roughness at speed (comfort toggle in Settings)
+    const jolt = Math.abs(v.y - prevVy) / Math.max(dt, 1e-3); prevVy = v.y;
+    const surf = car.surface(), rough = (surf === 'rock' ? 0.022 : surf === 'ground' ? 0.008 : surf === 'mud' ? 0.012 : 0.006) * Math.min(1, sp / 12);
+    const shakeT = settings.shake && !snap ? Math.min(0.14, Math.max(0, jolt - 4) * 0.006 + rough) : 0;
+    shakeAmp += (shakeT - shakeAmp) * Math.min(1, dt * (shakeT > shakeAmp ? 20 : 4));
+    if (shakeAmp > 0.002) {
+      camera.position.x += (Math.sin(clock * 37.1) + Math.sin(clock * 23.7)) * shakeAmp * 0.5;
+      camera.position.y += (Math.sin(clock * 41.3) + Math.sin(clock * 29.9)) * shakeAmp * 0.5;
+      camera.rotateZ(Math.sin(clock * 19.3) * shakeAmp * 0.08);
+    }
     const fovT = baseFov + Math.min(14, Math.abs(fs) * 0.45);
     camera.fov += (fovT - camera.fov) * Math.min(1, dt * 3);
     camera.updateProjectionMatrix();
@@ -836,7 +968,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const drive = phase === 'playing' ? input.read(dt) : IDLE; lastInput = drive;
       online.frame(rawDt, drive);
     } else if (phase !== 'paused') {
-      const drive = phase === 'playing' ? input.read(dt) : (input.override ?? IDLE);
+      const drive = phase === 'playing' ? input.read(dt) : phase === 'opening' ? (input.override ?? openingDrive()) : (input.override ?? IDLE);
       lastInput = drive;
       acc += dt;
       let n = 0;
@@ -844,8 +976,16 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       if (n === 8) acc = 0;
     }
     car.sync();
+    { // collision / hard-landing sounds from sudden velocity changes (ignores teleports/resets: impactCool)
+      const v = car.body.linvel();
+      if (impactPrev && phase !== 'paused' && impactCool <= 0) {
+        const dv = Math.hypot(v.x - impactPrev.x, (v.y - impactPrev.y) * 0.6, v.z - impactPrev.z);
+        if (dv > 3.2) { audio.impact((dv - 3.2) / 6); impactCool = 0.25; }
+      }
+      impactCool -= dt; impactPrev = { x: v.x, y: v.y, z: v.z };
+    }
     online.afterSync(dt);
-    if (phase === 'playing') emitParticles(dt);
+    if (phase === 'playing' || phase === 'opening') emitParticles(dt);
     if (phase !== 'paused') for (const ps of allP) ps.update(dt, heightAt);
 
     // ---- camera ----
@@ -854,11 +994,14 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const heading = Math.atan2(tmpF.x, tmpF.z);
     if (phase === 'menu' || phase === 'modes' || phase === 'levels' || (phase === 'lobby' && !online.inRoom)) {
       menuT += dt * 0.15;
-      const a = menuT + 2.2 + heading, r = 9.5;
-      camera.position.set(p.x + Math.sin(a) * r, p.y + 2.6, p.z + Math.cos(a) * r);
       const portrait = window.innerWidth < window.innerHeight;
-      camera.lookAt(p.x, p.y + (portrait ? -1.2 : 0.6), p.z);
-      if (!portrait) camera.translateX(-2.2);
+      menuPose(p, heading, menuT, oPos, oLook);
+      if (menuBlend < 1) { // ease out of the opening shot instead of cutting
+        menuBlend = Math.min(1, menuBlend + dt * 0.8); const k = sstep(0, 1, menuBlend);
+        camera.position.lerp(oPos, k); camLook.lerp(oLook, k);
+      } else { camera.position.copy(oPos); camLook.copy(oLook); }
+      camera.lookAt(camLook);
+      if (!portrait) camera.translateX(-2.2 * (menuBlend < 1 ? sstep(0, 1, menuBlend) : 1));
       camera.fov = baseFov; camera.updateProjectionMatrix();
       camInit = false;
     } else if (phase === 'garage') {
@@ -870,6 +1013,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       if (!portrait) camera.translateX(window.innerHeight < 480 ? 2.6 : 2.4);
       camera.fov = baseFov - 4; camera.updateProjectionMatrix();
       camInit = false;
+    } else if (phase === 'opening') {
+      openT += dt;
+      openingCamera(p, heading, dt);
+      if (openT >= OPEN_LEN) endOpening(false);
     } else if (phase === 'intro') {
       introT += dt;
       introCamera(p, heading);
@@ -895,6 +1042,21 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       }
     }
     rain.update(clock, camera.position);
+    backdrop.update(camera, -6);
+    // blowing sand: low drifting grains around the car whenever it is on/near the dunes (dry weather only)
+    if ((phase === 'playing' || phase === 'opening' || phase === 'menu') && weather !== 'rain' && weather !== 'fog') {
+      const near = surfaceAt(p.x, p.z) === 'sand' || surfaceAt(p.x + 12, p.z - 6) === 'sand';
+      windAcc += near ? dt * 70 * PRESETS[settings.preset].particles : 0;
+      while (windAcc >= 1) {
+        windAcc--;
+        const ox = (Math.random() - 0.5) * 36 - 10, oz = (Math.random() - 0.5) * 36 - 4;
+        const x = p.x + ox, z = p.z + oz;
+        if (surfaceAt(x, z) !== 'sand') continue;
+        tmpV.set(x, heightAt(x, z) + 0.05 + Math.random() * 0.6, z);
+        tmpV2.set(6.5 + Math.random() * 3, 0.4 + Math.random() * 0.5, 2.2 + Math.random() * 1.5);
+        windP.emit(tmpV, tmpV2, 1.6 + Math.random() * 1.4, 0.18 + Math.random() * 0.2, 1.8, SAND_GRAIN, 0.4);
+      }
+    }
     groundUniforms.uTime.value = clock;
     updateNature(camera.position);
     renderer.getDrawingBufferSize(bufSize);
@@ -906,12 +1068,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     for (const s of car.surfaces) if (s) { surfN[s]++; cN++; }
     const sl = (car.slip[0] + car.slip[1] + car.slip[2] + car.slip[3]) / 4;
     audio.update({ rpm: car.rpm, throttle: phase === 'paused' ? 0 : car.throttle, speed: car.forwardSpeed(), mud: cN ? surfN.mud / 4 : 0, sand: cN ? surfN.sand / 4 : 0,
-      ground: cN ? surfN.ground / 4 : 0, rock: cN ? surfN.rock / 4 : 0, slip: sl, active: phase === 'playing' || phase === 'intro', weather });
+      ground: cN ? surfN.ground / 4 : 0, rock: cN ? surfN.rock / 4 : 0, slip: sl, active: phase === 'playing' || phase === 'intro' || phase === 'opening', weather });
 
     // ---- HUD ----
     if (phase === 'playing' || phase === 'paused') {
       $('hud-speed').textContent = Math.round(Math.abs(car.forwardSpeed()) * 3.6).toString();
-      $('hud-gear').textContent = car.gear < 0 ? 'R' : String(car.gear);
+      $('hud-gear').textContent = car.sel === 'P' ? 'P' : car.sel === 'N' ? 'N' : car.gear < 0 ? 'R' : (car.sel === 'D' ? 'D' : '') + String(car.gear);
+      if (input.touchActive) { ($('pd-gas').querySelector('.fill') as HTMLElement).style.height = `${Math.round(input.gasV * 100)}%`; ($('pd-brake').querySelector('.fill') as HTMLElement).style.height = `${Math.round(input.brakeV * 100)}%`; }
       const s = car.surface(); const chip = $('hud-surface');
       chip.textContent = SURFACE_PARAMS[s].label + (car.inPuddle.some(Boolean) ? ' · water' : ''); chip.className = 'chip ' + s;
     }
@@ -1025,7 +1188,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt, surfaceAt, trail: TRAIL.map((p) => ({ x: p.x, z: p.z, h: p.h, hw: p.hw })), hairpins: HAIRPINS.map((h) => ({ ...h })),
     get audioRock() { return audio.rockLevel; },
     controls: () => ({ setting: settings.controls, scheme: input.scheme, auto: settings.autoThrottle, tiltState: input.tiltState, tiltEvents: input.tiltEvents, tilt: input.tiltValue, touchActive: input.touchActive, fallback: tiltFallback }),
-    setControls: (c: 'tilt' | 'halves' | 'buttons', auto = false) => { settings.controls = c; settings.autoThrottle = auto; tiltFallback = false; saveSettings(settings); refreshUI(); },
+    setControls: (c: 'wheel' | 'buttons' | 'tilt' | 'halves', auto = false) => { settings.controls = c; settings.autoThrottle = auto; tiltFallback = false; saveSettings(settings); refreshUI(); },
     readInput: () => input.read(1 / 60),
     nature: () => ({ ...natureStats(), counts: { ...NATURE_COUNTS } }),
     groundDetail: () => groundMaterials.map((m) => 'OW_DETAIL' in (m.defines ?? {})),
@@ -1045,6 +1208,14 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       else skyMat.uniforms.uCloud.value = on ? 0.5 : 0;
     },
     screeCount: () => SCREE.mesh?.count ?? 0,
+    get openT() { return openT; },
+    skipOpening: () => endOpening(true),
+    lean: () => ({ ...car.lean, braking: car.braking, tail: car.tailMat?.emissiveIntensity ?? 0, acc: { lat: car.accLocal.x, lon: car.accLocal.y } }),
+    camShake: () => shakeAmp,
+    impacts: () => audio.impacts,
+    drive: () => ({ sel: car.sel, transfer: car.transfer, modes: car.driveModes.slice(), wheelForce: car.wheelForce.slice(), wheelReq: car.wheelReq.slice(), wheelRate: car.wheelRate.slice(), ratio: car.ratio, engineForce: car.engineForce, frontSplit: car.spec.frontSplit ?? 0.5, gear: car.gear, rpm: car.rpm, steerAngle: car.steer, kmh: car.forwardSpeed() * 3.6 }),
+    setGear: (gs: GearSel) => shiftGear(gs), setTransfer: (t: Transfer) => shiftTransfer(t),
+    pedals: () => ({ gas: input.gasV, brake: input.brakeV, wheelDeg: input.wheelDeg, wheel: input.wheelValue }),
     get dusk() { return { k: duskK, exposure: renderer.toneMappingExposure, sun: sun.intensity }; },
     /** test hook: roll the car onto its roof in place */
     flip: () => { const t = car.body.translation(), r = car.body.rotation(); const q = new THREE.Quaternion(r.x, r.y, r.z, r.w).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
@@ -1124,7 +1295,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
 
   renderGarage();
   setLoad(100, 'Ready');
-  phase = 'menu';
-  refreshUI();
+  $('btn-oskip').onclick = () => endOpening(true);
+  if (settings.intro && !/[?&]noopening/.test(location.search)) startOpening(); else { phase = 'menu'; refreshUI(); }
   requestAnimationFrame((t) => { last = t; frame(t); });
 }
