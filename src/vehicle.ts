@@ -14,6 +14,8 @@ export const SURFACE_PARAMS: Record<Surface, { slip: number; side: number; drag:
   ground: { slip: 1.5, side: 1.0, drag: 0.04, label: 'Dirt' },
   sand: { slip: 0.75, side: 0.7, drag: 0.28, label: 'Sand' },
   mud: { slip: 0.42, side: 0.45, drag: 0.55, label: 'Mud' },
+  // rock: hard but loose scree on top - less grip than packed dirt, very little drag
+  rock: { slip: 1.12, side: 0.82, drag: 0.05, label: 'Rock' },
 };
 
 export class Vehicle {
@@ -325,7 +327,7 @@ export class Vehicle {
 
   /** Dominant surface under the wheels that are touching the ground. */
   surface(): Surface {
-    const c: Record<Surface, number> = { ground: 0, mud: 0, sand: 0 };
+    const c: Record<Surface, number> = { ground: 0, mud: 0, sand: 0, rock: 0 };
     let any = false;
     for (const s of this.surfaces) if (s) { c[s]++; any = true; }
     if (!any) return 'ground';
@@ -378,8 +380,8 @@ export class Vehicle {
       this.surfaces[i] = s;
       const sp = SURFACE_PARAMS[s ?? 'ground'];
       const surf = s ?? 'ground';
-      const gripK = sp0.grip[surf] * sp.slip;
-      const dragK = sp.drag * (surf === 'ground' ? 1 : sp0.drag[surf]);
+      const gripK = sp0.grip[surf === 'rock' ? 'ground' : surf] * sp.slip; // tyres: rock uses the hard-surface grip rating
+      const dragK = sp.drag * (surf === 'ground' || surf === 'rock' ? 1 : sp0.drag[surf]);
       dragSum += inContact ? dragK + (this.inPuddle[i] ? 0.35 : 0) : 0;
       // slip estimate: requested drive force vs available grip (Rapier clamps the forward impulse at
       // suspensionForce * frictionSlip) plus sideways sliding
@@ -454,7 +456,7 @@ export class Vehicle {
       spin.rotation.x = (this.ctrl.wheelRotation(i) ?? 0) + this.extraSpin[i];
       // continuous tyre tracks on soft ground
       const s = this.surfaces[i];
-      if (s && s !== 'ground' && this.ctrl.wheelIsInContact(i) && !this.inPuddle[i]) {
+      if (s && s !== 'ground' && s !== 'rock' && this.ctrl.wheelIsInContact(i) && !this.inPuddle[i]) {
         const p = this.ctrl.wheelContactPoint(i);
         if (p) {
           const n = this.ctrl.wheelContactNormal(i);

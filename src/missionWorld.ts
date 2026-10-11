@@ -10,7 +10,8 @@ export class MissionWorld {
   private disposables: { dispose(): void }[] = [];
   constructor(private scene: THREE.Scene, def: MissionDef) {
     scene.add(this.group);
-    def.gates.forEach((g, i) => this.addGate(g, i === def.gates.length - 1 && def.type !== 'climb' ? 'FINISH' : String(i + 1)));
+    const per = def.laps ? def.gates.length / def.laps : def.gates.length;
+    def.gates.forEach((g, i) => this.addGate(g, i === def.gates.length - 1 && (def.type === 'race' || def.type === 'mudrun') ? 'FINISH' : String((i % per) + 1)));
     if (def.zone) {
       if (def.type === 'climb') this.addFlag(def.zone.x, def.zone.z);
       if (def.type === 'deliver') this.addCamp(def.zone.x, def.zone.z);
@@ -46,9 +47,11 @@ export class MissionWorld {
     this.group.add(grp); this.gates.push({ g: grp, banner, posts });
   }
   /** highlight the next gate, dim passed ones */
+  /** lap length: with repeated laps only the current lap's gates are shown (no doubled banners) */
+  lapLen = Infinity;
   setGateState(next: number) {
     this.gates.forEach((x, i) => {
-      x.g.visible = i >= next;
+      x.g.visible = i >= next && i < next + this.lapLen;
       const on = i === next;
       x.posts.color.set(on ? 0xffb03a : 0xf2f2f2); x.posts.emissive.set(on ? 0x7a4a00 : 0x000000);
       x.banner.emissiveIntensity = on ? 0.7 : 0.12; x.banner.color.set(on ? 0xffc060 : 0xb0b0b0); x.banner.emissive.set(on ? 0xffa628 : 0xffffff);

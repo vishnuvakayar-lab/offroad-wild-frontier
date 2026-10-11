@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
-import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES } from './terrain';
+import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES, setTerrainDetail, surfaceAt, TRAIL } from './terrain';
 import { Vehicle, SURFACE_PARAMS, type DriveInput } from './vehicle';
 import { TrackMarks } from './tracks';
 import { VEHICLES, PAINTS, vehicleById, stats } from './vehicles';
@@ -129,6 +129,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       sun.shadow.map?.dispose(); (sun.shadow as any).map = null;
     }
     for (const ps of allP) ps.budget = cfg.particles;
+    setTerrainDetail(p === 'low' ? 0 : p === 'medium' ? 1 : 2);
     rain.setDensity(cfg.rain);
     $('preset-note').textContent = p === 'low' ? 'No shadows, no anti-aliasing, fewer particles — best for older phones.'
       : p === 'medium' ? 'Shadows, anti-aliasing, balanced resolution and particles.' : 'Full resolution, high-res shadows, max particles.';
@@ -334,7 +335,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (!vehicleUnlocked(save, settings.vehicle)) settings.vehicle = 'scout';
     setVehicle(settings.vehicle);
     mission = new MissionRunner(def);
-    mworld = new MissionWorld(scene, def); mworld.setGateState(0);
+    mworld = new MissionWorld(scene, def); if (def.laps) mworld.lapLen = def.gates.length / def.laps; mworld.setGateState(0);
     if (def.stuck) {
       stuck = new Vehicle(world, RAPIER, scene, NO_TRACKS, vehicleById('voyager'), 0x7b8087, 0);
       for (const l of [...stuck.headlights, stuck.beam]) l.visible = false;
@@ -554,7 +555,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // ---------- particles ----------
   const emitAcc = [0, 0, 0, 0];
   const prevPuddle = [false, false, false, false];
-  const C_MUD = new THREE.Color(0x2e2014), C_SAND = new THREE.Color(0xd8b47a), C_DIRT = new THREE.Color(0x8a7458), C_WATER = new THREE.Color(0x6d6250);
+  const C_MUD = new THREE.Color(0x2e2014), C_SAND = new THREE.Color(0xd8b47a), C_DIRT = new THREE.Color(0x8a7458), C_ROCKDUST = new THREE.Color(0x9b968e), C_CHIP = new THREE.Color(0x6e6a64), C_WATER = new THREE.Color(0x6d6250);
   const tv = new THREE.Vector3(), tp = new THREE.Vector3(), fwd = new THREE.Vector3(), rightV = new THREE.Vector3();
   function emitParticles(dt: number) {
     const w = WEATHER[weather];
@@ -577,6 +578,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       if (car.inPuddle[i]) rate = speed > 1.2 ? speed * 9 + slip * 40 : 0;
       else if (s === 'mud') rate = slip * 110 + speed * (rear ? 5 : 2.5);
       else if (s === 'sand') rate = slip * 70 + speed * 3.5;
+      else if (s === 'rock') rate = slip * 45 + (speed > 3 ? speed * 1.1 : 0) * (rear ? 1 : 0.5); // grey rock dust + chips
       else if (w.dust > 0 && speed > 6) rate = (speed - 6) * 1.4 * w.dust * (rear ? 1 : 0.4);
       emitAcc[i] += rate * mudP.budget * dt;
       let n = 0;
@@ -591,9 +593,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
           tv.set(-fwd.x * fling + rightV.x * side * Math.random() * 1.6 + v.x * 0.45, 1.2 + Math.random() * (2 + slip * 3), -fwd.z * fling + rightV.z * side * Math.random() * 1.6 + v.z * 0.45);
           mudP.emit(tp, tv, 1.2, 0.09 + Math.random() * 0.1, 0.2, C_MUD, 0.35);
         } else {
-          const col = s === 'sand' ? C_SAND : C_DIRT;
+          const col = s === 'sand' ? C_SAND : s === 'rock' ? C_ROCKDUST : C_DIRT;
           tv.set(-fwd.x * (0.5 + slip * 3) + (Math.random() - 0.5) * 1.5 + v.x * 0.15, 0.4 + Math.random() * 0.9, -fwd.z * (0.5 + slip * 3) + (Math.random() - 0.5) * 1.5 + v.z * 0.15);
           dustP.emit(tp, tv, s === 'sand' ? 2.4 : 1.8, s === 'sand' ? 1.1 : 0.8, 2.6, col, 0.5);
+          if (s === 'rock' && Math.random() < 0.25 + slip) { // stone chips flicked out by the tread
+            tv.set(-fwd.x * (1.5 + slip * 4) + (Math.random() - 0.5) * 2 + v.x * 0.3, 0.8 + Math.random() * 1.8, -fwd.z * (1.5 + slip * 4) + (Math.random() - 0.5) * 2 + v.z * 0.3);
+            mudP.emit(tp, tv, 0.7, 0.05 + Math.random() * 0.05, 0, C_CHIP, 0.25);
+          }
           if (s === 'sand' && slip > 0.15 && Math.random() < slip) { // sand grains thrown by spinning tyres
             tv.set(-fwd.x * (2 + slip * 4) + v.x * 0.3, 1 + Math.random() * 2, -fwd.z * (2 + slip * 4) + v.z * 0.3);
             mudP.emit(tp, tv, 0.8, 0.06, 0, C_SAND, 0.3);
@@ -744,11 +750,11 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     for (const ps of allP) ps.uniforms.uScale.value = scale;
 
     // ---- audio ----
-    const surfN = { ground: 0, mud: 0, sand: 0 }; let cN = 0;
+    const surfN = { ground: 0, mud: 0, sand: 0, rock: 0 }; let cN = 0;
     for (const s of car.surfaces) if (s) { surfN[s]++; cN++; }
     const sl = (car.slip[0] + car.slip[1] + car.slip[2] + car.slip[3]) / 4;
     audio.update({ rpm: car.rpm, throttle: phase === 'paused' ? 0 : car.throttle, speed: car.forwardSpeed(), mud: cN ? surfN.mud / 4 : 0, sand: cN ? surfN.sand / 4 : 0,
-      ground: cN ? surfN.ground / 4 : 0, slip: sl, active: phase === 'playing' || phase === 'intro', weather });
+      ground: cN ? surfN.ground / 4 : 0, rock: cN ? surfN.rock / 4 : 0, slip: sl, active: phase === 'playing' || phase === 'intro', weather });
 
     // ---- HUD ----
     if (phase === 'playing' || phase === 'paused') {
@@ -847,37 +853,75 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const f1 = car.forward();
       return { yaw: Math.atan2(f1.x, f1.z), distance: Math.hypot(t1.x - start.x, t1.z - start.z), finalSpeed: car.forwardSpeed(), surface: car.surface(), trace };
     },
-    zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt,
+    zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt, surfaceAt, trail: TRAIL.map((p) => ({ x: p.x, z: p.z, h: p.h, hw: p.hw })),
+    get audioRock() { return audio.rockLevel; },
     /** test hook: roll the car onto its roof in place */
     flip: () => { const t = car.body.translation(), r = car.body.rotation(); const q = new THREE.Quaternion(r.x, r.y, r.z, r.w).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI));
       car.body.setTranslation({ x: t.x, y: t.y + 1.8, z: t.z }, true); car.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true); car.body.setLinvel({ x: 0, y: 0, z: 0 }, true); car.body.setAngvel({ x: 0, y: 0, z: 0 }, true); },
     pose: () => { const c = sampleCar(); const t = car.body.translation(); return { ...c, y: t.y }; },
     /** Test bot: steers toward the current mission objective using the deterministic fixed step; returns the mission state. */
-    botRun: (maxSeconds: number, o: { throttle?: number; slowZone?: boolean; autoHook?: boolean } = {}) => {
+    /** Test bots. Clean bot: pure-pursuit along the mission's driving line with curvature-based speed control.
+     *  human:true adds a reaction delay, steering/throttle noise, softer inputs and slower corner speeds (seeded). */
+    botRun: (maxSeconds: number, o: { throttle?: number; slowZone?: boolean; autoHook?: boolean; human?: boolean; seed?: number } = {}) => {
       if (!mission) return null;
       if (mission.state === 'countdown') mission.countdown = 0.0001;
-      let stuckT = 0, rev = 0, lastP = sampleCar();
+      const def = mission.def, H = !!o.human;
+      let seed = (o.seed ?? 1) * 9301 + 49297; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+      const line: { x: number; z: number }[] = def.path ?? [{ x: def.start.x, z: def.start.z }, ...def.gates.map((g) => ({ x: g.x + Math.sin(g.yaw) * 4, z: g.z + Math.cos(g.yaw) * 4 })), ...(def.zone ? [def.zone] : [])];
+      const cum = [0]; for (let i = 1; i < line.length; i++) cum.push(cum[i - 1] + Math.hypot(line[i].x - line[i - 1].x, line[i].z - line[i - 1].z));
+      const at = (s: number) => { s = Math.min(cum[cum.length - 1], Math.max(0, s)); let i = 1; while (i < cum.length - 1 && cum[i] < s) i++; const u = (s - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1); return { x: line[i - 1].x + (line[i].x - line[i - 1].x) * u, z: line[i - 1].z + (line[i].z - line[i - 1].z) * u }; };
+      let prog = 0; // arc-length progress along the line (monotonic, local search)
+      const project = (x: number, z: number) => { let best = prog, bd = Infinity; for (let s = Math.max(0, prog - 10); s <= Math.min(cum[cum.length - 1], prog + 40); s += 1) { const p = at(s), d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; best = s; } } prog = best; return Math.sqrt(bd); };
+      let stuckT = 0, rev = 0, lastP = sampleCar(), steerNoise = 0, thrNoise = 0, lift = 0, offT = 0;
+      const delayQ: number[] = []; let steerOut = 0, thrOut = 0;
       for (let k = 0; k < Math.round(maxSeconds / STEP) && !mission.finished; k++) {
-        const c = sampleCar(), def = mission.def;
-        let tg: { x: number; z: number };
-        if (def.gates.length && mission.next < def.gates.length) {
-          const g = def.gates[mission.next]; tg = { x: g.x + Math.sin(g.yaw) * 6, z: g.z + Math.cos(g.yaw) * 6 }; // aim through the gate
-        } else if (def.type === 'tow' && stuck && !mission.attached) {
-          const st = stuck.body.translation(), sf = stuck.forward(); tg = { x: st.x + sf.x * 9, z: st.z + sf.z * 9 };
+        const c = sampleCar();
+        let tg: { x: number; z: number }, vmax = 30;
+        if (def.type === 'tow' && stuck && !mission.attached) {
+          const st = stuck.body.translation(), sf = stuck.forward(); tg = { x: st.x + sf.x * 9, z: st.z + sf.z * 9 }; vmax = 12;
           if (Math.hypot(c.x - tg.x, c.z - tg.z) < 4 || toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront())) < 8) { if (o.autoHook !== false) toggleHook(); }
-        } else tg = def.zone!;
+        } else if (def.type === 'tow') { tg = def.zone!; vmax = 8; }
+        else {
+          let off = project(c.x, c.z);
+          // like a player: lost / fallen off the line for 2 s -> reset to the last checkpoint
+          offT = off > 9 || c.up < 0.4 ? offT + STEP : 0;
+          if (offT > 2 && !def.noReset && mission.state === 'running') {
+            missionReset(); offT = 0; const p = sampleCar(); prog = 0;
+            let bd = Infinity; for (let s2 = 0; s2 <= cum[cum.length - 1]; s2 += 2) { const q = at(s2), d = (q.x - p.x) ** 2 + (q.z - p.z) ** 2; if (d < bd) { bd = d; prog = s2; } }
+            off = Math.sqrt(bd);
+          }
+          const L = (H ? 7 : 6) + Math.abs(c.speed) * (H ? 0.45 : 0.5);
+          tg = at(prog + L);
+          // corner speed from the turn angle over the next stretch of the line
+          // max heading change over any 12 m stretch within the braking horizon (catches hairpins)
+          let turn = 0; const horizon = 12 + Math.abs(c.speed) * 1.6;
+          for (let d0 = 0; d0 <= horizon; d0 += 3) {
+            const q0 = at(prog + d0), q1 = at(prog + d0 + 6), q2 = at(prog + d0 + 12);
+            let tt = Math.atan2(q2.x - q1.x, q2.z - q1.z) - Math.atan2(q1.x - q0.x, q1.z - q0.z); tt = Math.abs(Math.atan2(Math.sin(tt), Math.cos(tt)));
+            turn = Math.max(turn, tt * (1 - 0.35 * d0 / horizon));
+          }
+          vmax = Math.max(H ? 4.2 : 4.8, (H ? 19 : 26) - turn * (H ? 19 : 17));
+          if (off > 6) vmax = Math.min(vmax, 8);
+          if (def.zone && (def.type === 'deliver' || o.slowZone) && Math.hypot(def.zone.x - c.x, def.zone.z - c.z) < 22 && prog > cum[cum.length - 1] - 30) vmax = 3;
+        }
         if (def.type === 'tow' && mission.attached) winching = ropeLen > 4;
-        let err = Math.atan2(tg.x - c.x, tg.z - c.z) - c.yaw; while (err > Math.PI) err -= 2 * Math.PI; while (err < -Math.PI) err += 2 * Math.PI;
-        const dist = Math.hypot(tg.x - c.x, tg.z - c.z);
+        let err = Math.atan2(tg.x - c.x, tg.z - c.z) - c.yaw; err = Math.atan2(Math.sin(err), Math.cos(err));
         if (k % 60 === 0) { const moved = Math.hypot(c.x - lastP.x, c.z - lastP.z); stuckT = moved < 1.0 && mission.state === 'running' ? stuckT + 1 : 0; lastP = c; if (stuckT >= 2) { rev = 90; stuckT = 0; } }
-        let thr = o.throttle ?? 1, brk = 0;
-        if (o.slowZone && dist < 20) { thr = c.speed > 3 ? 0 : 0.4; brk = c.speed > 3 ? 1 : 0; }
-        let steer = Math.max(-1, Math.min(1, err * 2.2));
+        let thr = c.speed < vmax ? (o.throttle ?? 1) : 0, brk = c.speed > vmax + (H ? 2.5 : 1) ? 1 : 0;
+        let steer = Math.max(-1, Math.min(1, err * (H ? 1.7 : 2.2)));
+        if (H) { // reaction delay (~0.25 s), wandering hands, throttle lifts
+          if (k % 6 === 0) { steerNoise = steerNoise * 0.7 + (rnd() - 0.5) * 0.5; thrNoise = rnd(); if (lift <= 0 && rnd() < 0.03) lift = 20 + rnd() * 30; }
+          delayQ.push(steer); steer = delayQ.length > 15 ? delayQ.shift()! : 0;
+          steer = Math.max(-1, Math.min(1, steer + steerNoise));
+          if (lift > 0) { lift--; thr *= 0.3; }
+          thr *= 0.8 + thrNoise * 0.2;
+          steerOut += (steer - steerOut) * 0.25; thrOut += (thr - thrOut) * 0.2; steer = steerOut; thr = thrOut;
+        }
         if (rev > 0) { rev--; thr = 0; brk = 1; steer = -steer; }
         physStep({ throttle: thr, brake: brk, steer, handbrake: false });
       }
       winching = false; car.sync(); stuck?.sync();
-      return { state: mission.state, t: mission.t, next: mission.next, splits: mission.splits.slice(), failReason: mission.failReason, rejected: mission.rejected, attached: mission.attached };
+      return { state: mission.state, t: mission.t, next: mission.next, splits: mission.splits.slice(), failReason: mission.failReason, rejected: mission.rejected, attached: mission.attached, resets: mission.resets };
     },
   };
 

@@ -65,7 +65,7 @@ body.touch .desktop-only, body:not(.touch) .touch-only { display: none; }
 .speed b { font-size: 30px; font-variant-numeric: tabular-nums; min-width: 2.2ch; text-align: right; }
 .speed span { opacity: .7; font-size: 12px; }
 .chip { background: rgba(0,0,0,.45); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; }
-.chip.mud { color: #d7a46b; } .chip.sand { color: #ffd88a; }
+.chip.mud { color: #d7a46b; } .chip.sand { color: #ffd88a; } .chip.rock { color: #cfd3d8; }
 .fps { font-variant-numeric: tabular-nums; font-weight: 600; opacity: .85; }
 
 #touch { position: absolute; z-index: 9; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: flex-end;

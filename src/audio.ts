@@ -5,7 +5,7 @@
  */
 export interface AudioFrame {
   rpm: number; throttle: number; speed: number;
-  mud: number; sand: number; ground: number; // 0..1 fraction of wheels on each surface
+  mud: number; sand: number; ground: number; rock?: number; // 0..1 fraction of wheels on each surface
   slip: number; active: boolean; weather: string;
 }
 
@@ -20,6 +20,7 @@ export class GameAudio {
   private noise!: AudioBuffer;
   private wind!: GainNode; private windF!: BiquadFilterNode;
   private rain!: GainNode;
+  private rockG!: GainNode; private rockF!: BiquadFilterNode; private nextCrunch = 0; rockLevel = 0;
   private dirt!: GainNode; private sandG!: GainNode; private mudG!: GainNode; private mudF!: BiquadFilterNode;
   private nextChirp = 0; private nextSquelch = 0;
   volume = 0.8; muted = false;
@@ -102,6 +103,9 @@ export class GameAudio {
     this.loopNoise().connect(dF).connect(this.dirt).connect(this.master);
     const sF = this.bp('bandpass', 3200, 0.8); this.sandG = this.gain(0);
     this.loopNoise().connect(sF).connect(this.sandG).connect(this.master);
+    // rock / gravel: crackly mid-high band bursts (stones popping under the tyres)
+    this.rockF = this.bp('bandpass', 1800, 1.3); this.rockG = this.gain(0);
+    this.loopNoise().connect(this.rockF).connect(this.rockG).connect(this.master);
     this.mudF = this.bp('bandpass', 320, 2.5); this.mudG = this.gain(0);
     this.loopNoise().connect(this.mudF).connect(this.mudG).connect(this.master);
   }
@@ -159,6 +163,13 @@ export class GameAudio {
     const roll = Math.min(1, Math.abs(f.speed) / 12);
     this.dirt.gain.setTargetAtTime(f.ground * roll * 0.08 * act, t, k);
     this.sandG.gain.setTargetAtTime(f.sand * (roll * 0.06 + f.slip * 0.1) * act, t, k);
+    // gravel crunch on rock: fast random bursts, louder with speed and wheelspin
+    this.rockLevel = (f.rock ?? 0) * (roll * 0.11 + f.slip * 0.12) * act;
+    if (t > this.nextCrunch) {
+      this.nextCrunch = t + 0.02 + Math.random() * 0.05;
+      this.rockF.frequency.setTargetAtTime(1200 + Math.random() * 1800, t, 0.01);
+      this.rockG.gain.setTargetAtTime(this.rockLevel * (0.3 + Math.random() * 0.9), t, 0.012);
+    }
     // mud squelch: randomly modulated low band-pass bursts
     const mudLevel = f.mud * (roll * 0.5 + f.slip * 0.8) * act;
     if (t > this.nextSquelch) {
