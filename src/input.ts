@@ -28,9 +28,11 @@ export class Input {
   private tiltRaw: number | null = null;
   private tiltZero = 0;
   tiltEvents = 0;
+  /** first sensor sample after a fallback (game switches back to tilt) */
+  onTiltData: () => void = () => {};
   private onOrient = (e: DeviceOrientationEvent) => {
     if (e.beta === null || e.gamma === null) return;
-    this.tiltEvents++;
+    if (this.tiltEvents++ === 0) this.onTiltData();
     if (this.tiltState === 'no-data' || this.tiltState === 'pending') this.tiltState = 'granted';
     const ang = (screen.orientation?.angle ?? (window as any).orientation ?? 0) as number;
     // positive = steer left. Portrait: tilt left (left edge down) => gamma < 0. Landscape: roll is beta, sign by orientation.

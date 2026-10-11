@@ -119,7 +119,6 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     skyEnvRT?.dispose();
     skyEnvRT = pmrem.fromScene(skyEnvScene, 0, 1, 1000);
     waterMat.envMap = skyEnvRT.texture; waterMat.needsUpdate = true;
-    for (const m of groundMaterials) { m.envMap = skyEnvRT.texture; m.envMapIntensity = 1; m.needsUpdate = true; }
   }
   function makeRenderer(aa: boolean) {
     const old = rendererAA === null ? null : renderer;
@@ -181,6 +180,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     car.paint.roughness = w.wet ? 0.15 : 0.45;
     waterMat.color.set(0x2b241a).lerp(new THREE.Color(w.fog), 0.12);
     groundUniforms.uWetAll.value = w.wet ? 1 : 0;
+    groundUniforms.uSkyRefl.value.set(w.skyBottom).lerp(new THREE.Color(w.skyTop), 0.35);
     skyMat.uniforms.uCloud.value = w.cloud; skyMat.uniforms.uCloudCol.value.set(w.cloudCol);
     rebuildSkyEnv();
     for (const ps of allP) ps.uniforms.uTint.value.set(w.tint);
@@ -216,7 +216,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   input.bindZones($('tzones'), (l, r) => { $('tzones').querySelector('.tz.l')!.classList.toggle('on', l); $('tzones').querySelector('.tz.r')!.classList.toggle('on', r); });
   input.bindHold($('tp-hb'), 'hand');
   $('tp-cal').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.calibrateTilt(); toast('Tilt centred'); });
-  let tiltFallback = false, tiltCheck = 0;
+  let tiltFallback = false, tiltCheck = 0, needCal = false;
+  input.onTiltData = () => { if (tiltFallback && settings.controls === 'tilt') { tiltFallback = false; refreshUI(); setTimeout(() => input.calibrateTilt(), 200); toast('Tilt steering active'); } };
   /** called from Play / Start taps (user gestures): asks iOS for motion access when tilt steering is selected */
   const prepControls = () => {
     if (!touchOn() || settings.controls !== 'tilt' || input.tiltState === 'granted') return;
@@ -226,12 +227,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     clearTimeout(tiltCheck);
     if (!input.touchActive || settings.controls !== 'tilt') return;
     tiltFallback = false; input.scheme = 'tilt';
-    setTimeout(() => input.calibrateTilt(), 250);
+    needCal = true;
+    setTimeout(() => { if (input.tiltEvents > 0) { needCal = false; input.calibrateTilt(); } }, 250);
     tiltCheck = window.setTimeout(() => { // no motion data -> touch halves for this session (setting kept)
       if (phase === 'playing' && input.scheme === 'tilt' && input.tiltEvents === 0) {
         tiltFallback = true; input.scheme = 'halves'; refreshUI();
         toast(input.tiltState === 'denied' ? 'Motion access denied — using touch halves' : 'No tilt sensor data — using touch halves');
-      } else input.calibrateTilt();
+      } else if (needCal) { needCal = false; input.calibrateTilt(); } // only if no sample was there to centre on at the start
     }, 1800);
   };
   let phase: Phase = 'loading';
@@ -1036,6 +1038,12 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     placeStuck: (x: number, z: number, yaw: number) => { if (!stuck || !mission) return false; if (rope) { world.removeImpulseJoint(rope, true); rope = null; mission.attached = false; }
       placeAt(stuck, { x, z, yaw }); stuck.sync(); return true; },
     setPreset: (p: Preset) => { settings.preset = p; applyPreset(p); },
+    /** test hook: isolate render cost of the rework layers */
+    perfToggle: (k: 'ground' | 'nature' | 'clouds', on: boolean) => {
+      if (k === 'ground') setGroundDetail(groundMaterials, on);
+      else if (k === 'nature') setNatureDetail(on ? 2 : 0);
+      else skyMat.uniforms.uCloud.value = on ? 0.5 : 0;
+    },
     screeCount: () => SCREE.mesh?.count ?? 0,
     get dusk() { return { k: duskK, exposure: renderer.toneMappingExposure, sun: sun.intensity }; },
     /** test hook: roll the car onto its roof in place */

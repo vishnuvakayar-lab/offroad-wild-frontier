@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { runPhase6 } from './phase6-block.mjs';
 import { runPhase6b } from './phase6b-block.mjs';
+import { runRework } from './rework-block.mjs';
 
 const APP_URL = process.env.URL || 'http://127.0.0.1:4173/';
 const SHOTS = new URL('../screenshots/', import.meta.url).pathname;
@@ -177,6 +178,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   await page.tap('#btn-skip'); await page.waitForTimeout(300);
   const iph2 = await page.evaluate(() => window.__game.phase);
   ok(`${label}: intro plays and tap on Skip ends it`, iph === 'intro' && iph2 === 'playing', `${iph} -> ${iph2}`);
+  await page.evaluate(() => window.__game.setControls('buttons', false)); // legacy compact-button scheme (rework: default is tilt + auto-throttle, tested in rework-block)
   const au = (await st(page)).audio.state;
   ok(`${label}: audio running after tap`, au === 'running', `state=${au}`);
   const vis = await page.locator('#touch').isVisible();
@@ -222,7 +224,10 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   const drive = (i) => page.evaluate((i) => window.__game.setInput(i), i);
   const window_ = async (setup, ms) => {
     await page.evaluate(setup);
-    const a = (await st(page)).particles.spawned; await page.waitForTimeout(ms); const b = await st(page);
+    const a = (await st(page)).particles.spawned;
+    // wall-clock window, but never fewer than 20 rendered frames (the reworked scene renders fewer frames/s on SwiftShader)
+    await page.evaluate(async (ms) => { const t0 = performance.now(); let n = 0; while (performance.now() - t0 < ms || n < 20) { await new Promise((r) => requestAnimationFrame(r)); n++; } }, ms);
+    const b = await st(page);
     return { spawned: b.particles.spawned - a, active: b.particles, slip: b.slip.reduce((x, y) => x + y, 0) / 4, surface: b.surface, kmh: b.speed * 3.6 };
   };
   const G = { throttle: 1, brake: 0, steer: 0, handbrake: false };
@@ -554,6 +559,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
 // ---------------- Phase 6: missions, results, progression, upgrades, save migration ----------------
 await runPhase6({ openPage, ok, area });
 await runPhase6b({ openPage, ok, area });
+await runRework({ openPage, ok, area });
 await browser.close();
 const failed = results.filter((r) => !r.pass);
 fs.writeFileSync(new URL('../screenshots/test-results.json', import.meta.url), JSON.stringify(results, null, 2));

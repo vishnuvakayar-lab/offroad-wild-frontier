@@ -44,12 +44,12 @@ export async function runPhase6b({ openPage, ok }) {
       for (let i = 0; i < 12; i++) { g.simulate(I(1), 0.1); const s = g.state(); slip += s.slip.reduce((a, b) => a + b, 0) / 4; n++; maxRock = Math.max(maxRock, g.audioRock); }
       const s1 = g.state(); return { surface: s1.surface, wheels: s1.wheels, slip: slip / n, dist: Math.hypot(s1.x - s0.x, s1.z - s0.z), chip: document.getElementById('hud-surface').textContent, rockAudio: maxRock, dust: s1.particles.dust }; };
     const T = g.trail, i0 = Math.round(T.length * 0.5), a = T[i0], b = T[i0 + 3], hp = a; // a near-level stretch of the rocky switchback
-    const rock = launch(hp.x, hp.z, Math.atan2(b.x - a.x, b.z - a.z)); await new Promise((r) => setTimeout(r, 250)); rock.chip = document.getElementById('hud-surface').textContent; rock.cls = document.getElementById('hud-surface').className;
+    const rock = launch(hp.x, hp.z, Math.atan2(b.x - a.x, b.z - a.z)); for (let f = 0; f < 3; f++) await new Promise((r) => requestAnimationFrame(r)); rock.chip = document.getElementById('hud-surface').textContent; rock.cls = document.getElementById('hud-surface').className;
     const ground = launch(0, 0, 0);
     // real-time drive on rock: dust/chips and the gravel crunch are produced by the frame loop
     g.teleport(a.x, a.z, Math.atan2(b.x - a.x, b.z - a.z)); await new Promise((r) => setTimeout(r, 500)); g.setInput({ throttle: 0.8, brake: 0, steer: 0, handbrake: false });
-    let rt = 0, dust = 0, au = 0; const t0 = performance.now();
-    while (performance.now() - t0 < 1500) { await new Promise((r) => requestAnimationFrame(r)); const s = g.state(); dust = Math.max(dust, s.particles.dust); au = Math.max(au, g.audioRock); rt = s.audio.state; }
+    let rt = 0, dust = 0, au = 0, nf = 0; const t0 = performance.now();
+    while (performance.now() - t0 < 1500 || nf++ < 12) { await new Promise((r) => requestAnimationFrame(r)); const s = g.state(); dust = Math.max(dust, s.particles.dust); au = Math.max(au, g.audioRock); rt = s.audio.state; }
     g.setInput(null); rock.dust = dust; rock.rockAudio = au; rock.audioState = rt;
     return { rock, ground, sAt: g.surfaceAt(hp.x, hp.z), sGround: g.surfaceAt(0, 0) };
   });
