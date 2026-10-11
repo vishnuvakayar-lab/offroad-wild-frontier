@@ -247,7 +247,7 @@ export async function runPhase6({ openPage, ok, area }) {
     const overlapTouch = hud.touch.some((t) => overlaps(mh, t));
     await o.page.screenshot({ path: `${SH}test-${label}-tow-hud.png` });
     ok(`p6 ${label}: mode select fits, mission HUD inside viewport, small, clear of touch controls`, mA < 0.62 && startVisible && inView(mh) && hudA < 0.08 && bboxA < 0.18 && !overlapTouch && inView(hud.o['btn-winch']) && hud.o['btn-winch'].vis && hud.attached,
-      `modes ${(mA * 100).toFixed(0)}%, HUD opaque panels ${(hudA * 100).toFixed(1)}% (bounding box incl. message ${mh.w.toFixed(0)}x${mh.h.toFixed(0)} px = ${(bboxA * 100).toFixed(1)}%) at y ${mh.y.toFixed(0)}, touch overlap ${overlapTouch}, winch on-screen ${inView(hud.o['btn-winch'])}, hook tap attached ${hud.attached}`);
+      `modes ${(mA * 100).toFixed(0)}%, HUD opaque panels ${(hudA * 100).toFixed(1)}% (bounding box incl. message ${mh.w.toFixed(0)}x${mh.h.toFixed(0)} px = ${(bboxA * 100).toFixed(1)}%) at y ${mh.y.toFixed(0)}, touch overlap ${overlapTouch}, winch on-screen ${inView(hud.o['btn-winch'])}, hook tap attached ${hud.attached}, start button visible ${startVisible}, mhud rect ${Math.round(mh.x)},${Math.round(mh.y)},${Math.round(mh.r)},${Math.round(mh.b)} in ${hud.W}x${hud.H}`);
     ok(`p6 ${label}: no console errors`, o.errors.length === 0, o.errors.slice(0, 5).join(' | '));
     await o.ctx.close();
   }

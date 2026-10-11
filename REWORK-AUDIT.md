@@ -111,3 +111,25 @@ Disk < 1 GB. Ports: **443** (and 80 for the TLS certificate challenge/redirect) 
 - Multiplayer has never run on a public server; it is not claimed as working cross-platform online play.
 - L3–L5 reuse existing routes; L6, L7, L10 not built; L8/L9 need hosting.
 - No Android APK / iOS app package (toolchains/accounts not available).
+
+## Build 0.7.0: mobile default, menus, drivetrain (status at preview deploy, 2026-10-11)
+- **Mobile default controls = touch halves + auto-forward.** Hold the left or right half to steer. Small ■ Brake/Rev, HB and ↻ Recover pills.
+  Wheel + pedals, buttons and tilt are opt-in under Settings → Mobile controls. Tilt asks for iOS motion permission only when it is chosen.
+  Older saves are migrated once (`ctlV`). Desktop keyboard controls and the drivetrain logic are unchanged.
+- **Menus:** every panel is a sized card or drawer. Settings opened from Pause replaces the card, and closing it returns straight to driving.
+  Garage categories now wrap instead of being clipped. Panels move above the on-screen keyboard while a text field is focused
+  (headless tests simulate `visualViewport`; the real iOS keyboard is not verified).
+- **Drivetrain table** (scout, headless, fixed conditions; `tests/drive-block.mjs`, `screenshots/rework/drive-metrics.json`):
+
+| mode | wheel force at launch | 0–30 km/h | wheel rad/s (km/h) | stop 30→0 | sand 3 s | mud 3 s | rocky climb +5 m (24 %) | top speed after 8 s |
+|---|---|---|---|---|---|---|---|---|
+| 2H | 14656 N | 0.92 s | 24.9 (38.5) | 3.47 m | 16.77 m / 33.1 km/h | 12.84 m / 23.2 km/h | 3.5 s | 89.2 km/h |
+| 4H | 17931 N | 0.88 s | 24.8 (38.4) | 3.45 m | 28.5 m / 54.3 km/h | 19.69 m / 35.8 km/h | 3 s | 88.8 km/h |
+| 4L | 25961 N | 0.70 s | 25.1 (38.8) | 3.54 m | 25.75 m / 43.2 km/h | 17.02 m / 28.5 km/h | 2.75 s | 48.5 km/h |
+
+  Torque split: 2H gives the front wheels 0 N. 4H splits 50/50; the rally car's AWD splits 40/60. In 4L, wheel force divided by engine
+  force is exactly 2.600. At about 18 km/h, 4H turns 3238 rpm and 4L turns 4566 rpm.
+- Known limits: acceleration is arcade-quick. The climb is limited by power, not traction. The 2H↔4H rejection above 60 km/h is not tested.
+  Body lean is visual only. There are no diff locks and no trailers.
+- **Preview:** https://vishnuvakayar-lab.github.io/offroad-wild-frontier/preview/ (gh-pages `preview/` only). The root still serves v0.4.1.
+- Remaining: L6, L7 and L10 are not built; there are no leaderboards; multiplayer hosting is not set up; real-device (iPhone) testing has not been done.

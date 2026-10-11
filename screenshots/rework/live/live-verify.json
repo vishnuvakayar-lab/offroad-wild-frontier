@@ -1,0 +1,60 @@
+{
+ "preview-desktop": {
+  "loadMs": 4253,
+  "build": "Build 0.7.0",
+  "firstPhase": "opening",
+  "controls": "wheel",
+  "moved": 1.5,
+  "kmh": 18.6,
+  "ui": {
+   "zones": false,
+   "wheel": false,
+   "pedals": false,
+   "hud": true
+  },
+  "errors": [],
+  "failedRequests": []
+ },
+ "preview-iphone-portrait": {
+  "loadMs": 4538,
+  "build": "Build 0.7.0",
+  "firstPhase": "opening",
+  "controls": "halves",
+  "moved": 1.5,
+  "kmh": 15.6,
+  "ui": {
+   "zones": true,
+   "wheel": false,
+   "pedals": false,
+   "hud": true
+  },
+  "errors": [],
+  "failedRequests": []
+ },
+ "preview-iphone-landscape": {
+  "loadMs": 4348,
+  "build": "Build 0.7.0",
+  "firstPhase": "opening",
+  "controls": "halves",
+  "moved": 1.8,
+  "kmh": 17.2,
+  "ui": {
+   "zones": true,
+   "wheel": false,
+   "pedals": false,
+   "hud": true
+  },
+  "errors": [],
+  "failedRequests": []
+ },
+ "root": {
+  "build": "Build 0.4.0",
+  "hasOpening": false,
+  "hasCockpit": false,
+  "scripts": [
+   "index-BM24eBJB.js"
+  ],
+  "errors": [],
+  "failedRequests": []
+ }
+}
