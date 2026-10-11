@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 2487 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 2418 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -32,22 +32,22 @@
   {
     "name": "intro: Play starts the intro and Skip ends it",
     "pass": true,
-    "detail": "phase after Play=intro, skip->playing in 280 ms"
+    "detail": "phase after Play=intro, skip->playing in 439 ms"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 161.5 Hz measured / 170.0 Hz set, 5099 rpm (gear 3)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 145.3 Hz measured / 155.9 Hz set, 4677 rpm (gear 3)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 15.20 m, speed 53.3 km/h (render-paced)"
+    "detail": "moved 12.80 m, speed 49.8 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 67.1 deg"
+    "detail": "heading change 48.5 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -72,7 +72,7 @@
   {
     "name": "holding brake at standstill reverses",
     "pass": true,
-    "detail": "-25.3 km/h"
+    "detail": "-25.2 km/h"
   },
   {
     "name": "vehicle stays upright through tests",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "66 track decals in 5 s"
+    "detail": "42 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.4 fps, Low preset 16.4 fps"
+    "detail": "High preset 10.9 fps, Low preset 16.6 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 2327 ms"
+    "detail": "load 1873 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -127,7 +127,7 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 16.97 m, heading change 66.2 deg, airborne samples 0/6"
+    "detail": "moved 19.87 m, heading change 50.5 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
@@ -147,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 2270 ms"
+    "detail": "load 1931 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -157,7 +157,7 @@
   {
     "name": "mobile-landscape-844x390: settings drawer partial",
     "pass": true,
-    "detail": "covers 31%"
+    "detail": "covers 0%"
   },
   {
     "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
@@ -177,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 12.89 m, heading change 51.6 deg, airborne samples 0/6"
+    "detail": "moved 21.38 m, heading change 64.2 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "11.1 fps @ preset medium"
+    "detail": "10.5 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,22 +197,22 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 0 / mud 205 / sand 215; slip dirt 0.05 / mud 0.59 / sand 0.27"
+    "detail": "dirt 0 / mud 238 / sand 219; slip dirt 0.08 / mud 0.58 / sand 0.27"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "t=4.65 s, wheels in water=true, peak splash particles 52, chassis y in puddle 0.67 vs water level -0.10"
+    "detail": "t=4.50 s, wheels in water=true, peak splash particles 210, chassis y in puddle 0.65 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "76 ribbon segments"
+    "detail": "80 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
     "pass": true,
-    "detail": "62.7 deg at rest -> 68.7 deg at speed"
+    "detail": "62.5 deg at rest -> 69.0 deg at speed"
   },
   {
     "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
@@ -227,42 +227,42 @@
   {
     "name": "weather: clear loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "11.6 fps (High)"
   },
   {
     "name": "weather: sunset loads without console errors",
     "pass": true,
-    "detail": "11.6 fps (High)"
+    "detail": "10.0 fps (High)"
   },
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "10.0 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
     "pass": true,
-    "detail": "11.6 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "11.3 fps (High)"
+    "detail": "10.0 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "16.4 fps, 34 draw calls, 68340 tris, particles {\"mud\":114,\"dust\":0,\"splash\":0,\"spawned\":4649}"
+    "detail": "17.2 fps, 34 draw calls, 68224 tris, particles {\"mud\":106,\"dust\":0,\"splash\":0,\"spawned\":4960}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "11.6 fps, 70 draw calls, 127032 tris, particles {\"mud\":192,\"dust\":0,\"splash\":0,\"spawned\":5096}"
+    "detail": "11.0 fps, 70 draw calls, 126948 tris, particles {\"mud\":189,\"dust\":0,\"splash\":0,\"spawned\":5449}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.8 fps, 70 draw calls, 127312 tris, particles {\"mud\":276,\"dust\":0,\"splash\":0,\"spawned\":5775}"
+    "detail": "11.2 fps, 70 draw calls, 127204 tris, particles {\"mud\":280,\"dust\":0,\"splash\":0,\"spawned\":6060}"
   },
   {
     "name": "AA toggled without page reload",
@@ -367,7 +367,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 103.0 vs 103.0 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 39.3 -> 67.7; clear 102.9 vs 102.9 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -462,12 +462,12 @@
   {
     "name": "Low preset swaps to simplified model live (no reload)",
     "pass": true,
-    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.27"
+    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.24"
   },
   {
     "name": "mud builds up on the body in the mud basin (cosmetic)",
     "pass": true,
-    "detail": "dirt level 0.52 after ~6 s in mud"
+    "detail": "dirt level 0.45 after ~6 s in mud"
   },
   {
     "name": "phase5b desktop: no console errors",
