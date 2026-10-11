@@ -1,23 +1,33 @@
 {
   "name": "offroad-wild-frontier",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "OFFROAD: WILD FRONTIER - cross-platform 3D off-road game (web-first prototype)",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && tsc --noEmit -p server && vite build && npm run build:server",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
-    "test:accept": "node tests/acceptance.mjs"
+    "test:accept": "node tests/acceptance.mjs",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outfile=dist-server/server.mjs",
+    "start": "node dist-server/server.mjs",
+    "test:mp": "node tests/phase7.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.21.0",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@types/three": "^0.186.0",
+    "@types/ws": "^8.18.2",
+    "esbuild": "^0.28.2",
     "playwright": "^1.64.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

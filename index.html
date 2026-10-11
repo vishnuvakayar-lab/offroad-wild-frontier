@@ -32,13 +32,13 @@
 
     <section id="menu" class="panel menu hidden" aria-label="Main menu">
       <div class="logo small"><span>OFFROAD</span><small>WILD FRONTIER</small></div>
-      <p class="tag">Prototype build · Phase 6 missions</p>
+      <p class="tag">Prototype build · Phase 7 online</p>
       <div class="prog-chip" id="menu-prog"></div>
       <button id="btn-modes" class="btn primary">Play — Select Mode</button>
       <button id="btn-play" class="btn">Free Roam</button>
       <button id="btn-settings" class="btn">Settings</button>
       <button id="btn-garage" class="btn">Garage <em id="menu-vehicle"></em></button>
-      <button class="btn" disabled title="Coming in Phase 7">Multiplayer <em>soon</em></button>
+      <button id="btn-online" class="btn">Online Multiplayer</button>
       <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset (to checkpoint in missions) · H tow hook · T weather · M mute · Esc pause · drag to look</p>
       <p class="hint touch-only">Left thumb steers · right thumb gas / brake / handbrake · drag the view to look around</p>
     </section>
@@ -91,6 +91,40 @@
       </div>
     </div>
     <div id="countdown" class="countdown hidden"></div>
+
+    <div id="tags" aria-hidden="true"></div>
+    <div id="ohud" class="hidden" aria-live="polite">
+      <div class="mh-box">
+        <small id="oh-title"></small>
+        <b id="oh-main"></b>
+        <div class="mh-row"><i id="oh-arrow">▲</i><em id="oh-dist"></em><span id="oh-sub"></span></div>
+      </div>
+      <div class="mh-actions"><span id="oh-net" class="chip net">○ Offline</span><button id="btn-wp" class="btn small hidden" title="Mark a waypoint for the convoy (G)">📍 Waypoint</button><button id="btn-olobby" class="btn small" title="Lobby (Esc)">☰ Lobby</button></div>
+    </div>
+
+    <section id="lobby" class="panel lobby hidden" aria-label="Online multiplayer">
+      <header class="m-head"><h2>Online multiplayer</h2><span id="net-status" class="net-chip offline">Offline</span></header>
+      <div id="lb-setup" class="lb-setup">
+        <label class="group-label" for="lb-name">Driver name</label>
+        <input id="lb-name" class="lb-input" maxlength="16" autocomplete="off" spellcheck="false" />
+        <p id="lb-veh" class="note"></p>
+        <label class="group-label">Public match</label>
+        <div class="lb-row"><button class="btn primary small" data-quick="convoy">Quick match · Convoy</button><button class="btn primary small" data-quick="race">Quick match · Race</button></div>
+        <label class="group-label">Private room</label>
+        <div class="lb-row"><select id="lb-mode" class="lb-input" aria-label="Room mode"><option value="convoy">Convoy (free roam)</option><option value="race">Checkpoint race</option></select><button id="lb-create" class="btn small">Create room</button></div>
+        <div class="lb-row"><input id="lb-code" class="lb-input code" maxlength="5" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Room code" /><button id="lb-join" class="btn small">Join with code</button></div>
+        <p id="lb-err" class="lb-err" role="alert"></p>
+        <p class="note">Rooms hold up to 8 people. Only real players connected to this server appear — there are no AI bots online.</p>
+      </div>
+      <div id="lb-room" class="lb-room hidden">
+        <div class="lb-roomhead"><span id="lb-roomkind"></span><span id="lb-count"></span></div>
+        <div id="lb-codebox" class="lb-codebox hidden"><span>Room code</span><b id="lb-code-big"></b><button id="lb-copy" class="btn small">Copy</button></div>
+        <ul id="lb-players" class="lb-players"></ul>
+        <div id="lb-results" class="lb-results"></div>
+        <div class="g-actions"><button id="lb-leave" class="btn">Leave</button><button id="lb-start" class="btn hidden">Start race</button><button id="lb-drive" class="btn primary">Drive</button></div>
+      </div>
+      <div class="g-actions" id="lb-backrow"><button id="lb-back" class="btn">Back</button></div>
+    </section>
 
     <section id="modes" class="panel modes hidden" aria-label="Select mode">
       <header class="m-head"><h2>Select mode</h2><span class="prog-chip" id="modes-prog"></span></header>
@@ -155,7 +189,7 @@
       </div>
       <label class="row"><input type="checkbox" id="chk-fps" /> Show FPS counter</label>
       <label class="row"><input type="checkbox" id="chk-intro" /> Play intro flyover</label>
-      <p class="note">Build 0.4.0 · Phases 1–6 prototype</p>
+      <p class="note">Build 0.5.0 · Phases 1–7 prototype</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>

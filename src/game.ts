@@ -15,8 +15,9 @@ import { MissionWorld } from './missionWorld';
 import { loadSave, storeSave, migrate, award, applyUpgrades, upgradesOf, vehicleUnlocked, paintUnlocked, devMode, levelOf, upgradeCost,
   VEHICLE_UNLOCK, PAINT_LEVEL, UPGRADE_KINDS, MAX_UPGRADE, XP_PER_LEVEL, SAVE_KEY, type UpgradeKind, type Medal } from './save';
 import type { TrackMarks as TM } from './tracks';
+import { OnlineSession } from './online';
 
-type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results';
+type Phase = 'loading' | 'menu' | 'garage' | 'intro' | 'playing' | 'paused' | 'modes' | 'results' | 'lobby';
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
 const IDLE: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: true };
@@ -191,6 +192,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     show('menu', phase === 'menu');
     show('garage', phase === 'garage');
     show('modes', phase === 'modes');
+    show('lobby', phase === 'lobby');
+    if (phase !== 'playing') $('ohud').classList.add('hidden');
     show('results', phase === 'results');
     show('mhud', !!mission && (phase === 'playing' || phase === 'paused'));
     show('btn-quit', !!mission);
@@ -462,6 +465,29 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (m.finished && phase === 'playing') { resultT += dt; if (resultT > 1.2) finishMission(); }
   }
 
+  // ---------- Phase 7: online multiplayer ----------
+  const MP_NAME = 'owf.mp.name';
+  if (!localStorage.getItem(MP_NAME)) localStorage.setItem(MP_NAME, 'Driver' + Math.floor(100 + Math.random() * 900));
+  const online: OnlineSession = new OnlineSession({
+    world, R: RAPIER, scene, camera,
+    car: () => car,
+    useCar: (id, paint) => {
+      endMission(); car.dispose();
+      car = new Vehicle(world, RAPIER, scene, tracks, vehicleById(id), paint, lodFor(settings.preset)); // stock spec online
+      applyWeather(weather); camInit = false; return car;
+    },
+    restoreCar: () => { setVehicle(settings.vehicle, true); resetCar(); camInit = false; },
+    profile: () => ({ name: localStorage.getItem(MP_NAME) || 'Driver', vehicle: settings.vehicle, paint: paintFor(settings.vehicle) }),
+    setName: (n) => { const v = n.replace(/[^\p{L}\p{N} _.\-]/gu, '').trim().slice(0, 16); if (v) localStorage.setItem(MP_NAME, v); },
+    setPhase: (p) => setPhase(p),
+    phase: () => phase,
+    toast: (t) => toast(t),
+    resetCamera: () => { camInit = false; },
+  });
+  $('btn-online').onclick = () => { endMission(); leaveGarage(); setPhase('lobby'); online.renderLobby(); };
+  $('lb-back').onclick = () => setPhase(online.inRoom ? 'playing' : 'menu');
+  $('btn-olobby').onclick = () => setPhase('lobby');
+
   // ---- cinematic intro ----
   const INTRO_LEN = 7.6;
   let introT = 0;
@@ -489,7 +515,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $('btn-settings').onclick = () => openDrawer(true);
   $('btn-settings2').onclick = () => openDrawer(true);
   $('btn-close-drawer').onclick = () => openDrawer(false);
-  $('btn-pause').onclick = () => setPhase('paused');
+  $('btn-pause').onclick = () => setPhase(online.inRoom ? 'lobby' : 'paused');
   $('btn-weather').onclick = cycleWeather;
   $('btn-mute').onclick = toggleMute;
   $('btn-resume').onclick = () => setPhase('playing');
@@ -501,6 +527,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (phase === 'garage') { leaveGarage(); setPhase(garageReturn); return; }
     if (phase === 'modes') { setPhase('menu'); return; }
     if (phase === 'intro') { endIntro(); return; }
+    if (online.inRoom) { setPhase(phase === 'lobby' ? 'playing' : 'lobby'); return; }
+    if (phase === 'lobby') { setPhase('menu'); return; }
     if (phase === 'playing') setPhase('paused'); else if (phase === 'paused') setPhase('playing');
   };
   input.onKey = (code) => {
@@ -513,11 +541,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (phase !== 'playing' && phase !== 'paused') return false;
     if (code === 'KeyT') { cycleWeather(); return true; }
     if (code === 'KeyH' && mission) { toggleHook(); return true; }
+    if (code === 'KeyG' && online.inRoom) { $('btn-wp').click(); return true; }
     if (code === 'KeyM') { toggleMute(); return true; }
     return false;
   };
   input.onReset = () => {
     if (phase !== 'playing') return;
+    if (online.inRoom) { online.requestReset(); return; }
     if (mission) { missionReset(); return; }
     const t = car.body.translation(); const f = car.forward();
     resetCar(t.x, t.z, Math.atan2(f.x, f.z)); // flip upright in place
@@ -535,7 +565,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $<HTMLInputElement>('chk-intro').onchange = (e) => { settings.intro = (e.target as HTMLInputElement).checked; saveSettings(settings); };
   $<HTMLInputElement>('chk-mute').onchange = (e) => { settings.muted = (e.target as HTMLInputElement).checked; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); };
   $<HTMLInputElement>('rng-volume').oninput = (e) => { settings.volume = Number((e.target as HTMLInputElement).value); saveSettings(settings); audio.setVolume(settings.volume, settings.muted); };
-  document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'playing') setPhase('paused'); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'playing' && !online.inRoom) setPhase('paused'); }); // online games cannot pause
 
   // drag-to-look (mouse or touch on empty game area); recentres when released
   let lookYaw = 0, lookPitch = 0, dragging: number | null = null, lastX = 0, lastY = 0;
@@ -689,11 +719,15 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   }
 
   function frame(now: number) {
+    const rawDt = Math.min(0.5, Math.max(0, (now - last) / 1000)); // online prediction keeps real time even at low fps
     const dt = Math.min(0.1, (now - last) / 1000); last = now; clock += dt;
     fpsFrames++; fpsT += dt;
     if (fpsT >= 1) { fps = fpsFrames / fpsT; fpsHistory.push(fps); if (fpsHistory.length > 120) fpsHistory.shift(); fpsFrames = 0; fpsT = 0; $('hud-fps').textContent = fps.toFixed(0) + ' fps'; }
 
-    if (phase !== 'paused') {
+    if (online.inRoom) { // server-authoritative: predict own car, send inputs (see online.ts)
+      const drive = phase === 'playing' ? input.read(dt) : IDLE; lastInput = drive;
+      online.frame(rawDt, drive);
+    } else if (phase !== 'paused') {
       const drive = phase === 'playing' ? input.read(dt) : (input.override ?? IDLE);
       lastInput = drive;
       acc += dt;
@@ -702,6 +736,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       if (n === 5) acc = 0;
     }
     car.sync();
+    online.afterSync(dt);
     if (phase === 'playing') emitParticles(dt);
     if (phase !== 'paused') for (const ps of allP) ps.update(dt, heightAt);
 
@@ -709,7 +744,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const p = car.group.position;
     car.forward(tmpF);
     const heading = Math.atan2(tmpF.x, tmpF.z);
-    if (phase === 'menu' || phase === 'modes') {
+    if (phase === 'menu' || phase === 'modes' || (phase === 'lobby' && !online.inRoom)) {
       menuT += dt * 0.15;
       const a = menuT + 2.2 + heading, r = 9.5;
       camera.position.set(p.x + Math.sin(a) * r, p.y + 2.6, p.z + Math.cos(a) * r);
@@ -781,6 +816,18 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   }
 
   // ---------- test / debug hook ----------
+  (window as any).__net = {
+    get status() { return online.net.status; }, get rtt() { return online.net.rtt; }, get room() { return online.room; }, get myId() { return online.myId; },
+    get inRoom() { return online.inRoom; }, get metrics() { return online.metrics; }, get interpDelay() { return online.interpDelay; }, get reconnects() { return online.net.reconnects; },
+    get lastErr() { return online.lastErr; }, get url() { return online.net.url; }, get bytesIn() { return online.net.bytesIn; }, get seq() { return [online.seq, online.lastAck, online.histFirst()]; },
+    quick: (m: 'convoy' | 'race') => online.quick(m), create: (m: 'convoy' | 'race') => online.create(m), join: (c: string) => online.join(c), leave: () => online.leave(),
+    startRace: () => online.startRace(), setWaypoint: (clear = false) => online.setWaypoint(clear), drop: () => online.net.dropConnection(), sendRaw: (s: string) => online.net.sendRaw(s),
+    setPilot: (o: any) => online.setPilot(o), drive: () => { setPhase('playing'); camInit = false; },
+    own: () => { const t = car.body.translation(); return { x: t.x, y: t.y, z: t.z, vx: car.group.position.x, vz: car.group.position.z }; },
+    remotes: () => [...online.remotes.values()].map((r) => ({ id: r.id, name: r.name, away: r.away, x: r.vis.p.x, y: r.vis.p.y, z: r.vis.p.z, visible: r.v.group.visible, tag: r.tag.textContent })),
+    lobbyNames: () => [...document.querySelectorAll('#lb-players li b')].map((b) => b.textContent),
+    resetMetrics: () => { const m = online.metrics; m.corrections = m.hardSnaps = m.maxErr = m.maxVisOff = m.extrap = m.replaySteps = 0; m.errs.length = m.corrErrs.length = m.remoteJerk.length = m.ownJerk.length = 0; m.snaps = 0; },
+  };
   (window as any).__game = {
     get phase() { return phase; },
     play: () => $('btn-play').click(),

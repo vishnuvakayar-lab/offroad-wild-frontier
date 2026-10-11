@@ -48,9 +48,12 @@ export class Vehicle {
   spawnLift: number;
   private inertiaY = 4800;
 
-  constructor(world: RAPIER_NS.World, R: typeof RAPIER_NS, scene: THREE.Scene, tracks: TrackMarks, spec: VehicleSpec, paint: number, lod: Lod = 1) {
+  /** `headless` (multiplayer server): physics only, no visual model. */
+  readonly headless: boolean;
+  constructor(world: RAPIER_NS.World, R: typeof RAPIER_NS, scene: THREE.Scene | null, tracks: TrackMarks | null, spec: VehicleSpec, paint: number, lod: Lod = 1, headless = false) {
+    this.headless = headless;
     this.lod = lod;
-    this.tracks = tracks; this.spec = spec; this.world = world; this.scene = scene;
+    this.tracks = tracks as TrackMarks; this.spec = spec; this.world = world; this.scene = scene as THREE.Scene;
     const W = spec.wheel;
     this.conn = [
       { x: W.x, y: W.y, z: W.zf }, { x: -W.x, y: W.y, z: W.zf }, // front left (+x is the vehicle's left), front right
@@ -87,20 +90,20 @@ export class Vehicle {
       this.ctrl.setWheelFrictionSlip(i, SURFACE_PARAMS.ground.slip);
       this.ctrl.setWheelSideFrictionStiffness(i, 1);
     }
-    this.buildModel(paint);
-    scene.add(this.group);
+    if (!headless) { this.buildModel(paint); scene!.add(this.group); }
   }
 
   /** Remove physics body, controller and visuals (used when switching vehicles in the garage). */
   dispose() {
     this.world.removeVehicleController(this.ctrl);
     this.world.removeRigidBody(this.body);
+    if (this.headless) return;
     this.scene.remove(this.group);
     this.disposeVisual();
   }
   private mats: THREE.Material[] = [];
   private geos: THREE.BufferGeometry[] = [];
-  setPaint(hex: number) { this.paint.color.set(hex); }
+  setPaint(hex: number) { this.paint?.color.set(hex); }
   /** visual level of detail (0 = Low preset) */
   lod: Lod = 1;
   /** 0..1 mud build-up on the lower body (cosmetic) */
@@ -310,7 +313,7 @@ export class Vehicle {
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
     this.steer = 0;
-    this.tracks.reset();
+    this.tracks?.reset();
   }
 
   forward(out = new THREE.Vector3()) {
@@ -467,6 +470,20 @@ export class Vehicle {
     this.syncSuspension();
     this.dirtU.value = this.dirt;
   }
+
+  /** Network proxy (remote player): place body + wheels from an interpolated server state instead of local physics. */
+  syncRemote(p: { x: number; y: number; z: number }, q: { x: number; y: number; z: number; w: number }, steer: number, susp: number[], speed: number, dt: number) {
+    this.group.position.set(p.x, p.y, p.z); this.group.quaternion.set(q.x, q.y, q.z, q.w);
+    this.steer = steer;
+    for (let i = 0; i < 4; i++) {
+      const c = this.conn[i], w = this.wheelMeshes[i];
+      w.position.set(c.x, c.y - susp[i], c.z); w.rotation.y = i < 2 ? steer : 0;
+      this.extraSpin[i] += (speed / this.spec.wheel.r) * dt; w.children[0].rotation.x = this.extraSpin[i];
+    }
+    this.syncSuspension();
+  }
+  /** current suspension lengths (sent to other players for wheel animation) */
+  suspLengths() { return [0, 1, 2, 3].map((i) => this.ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest); }
 
   private static _m = new THREE.Matrix4(); private static _q = new THREE.Quaternion(); private static _v = new THREE.Vector3();
   private static _a = new THREE.Vector3(); private static _b = new THREE.Vector3(); private static _s = new THREE.Vector3();

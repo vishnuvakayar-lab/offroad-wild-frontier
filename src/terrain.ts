@@ -369,6 +369,21 @@ export function buildTerrain(scene: THREE.Scene, world: RAPIER_NS.World, RAPIER:
   return mesh;
 }
 
+/** Physics-only terrain for the multiplayer server: the same colliders buildTerrain creates (same order, same shapes),
+ *  recorded once from a throwaway scene and replayed into each room's world. */
+let RECORDED: RAPIER_NS.ColliderDesc[] | null = null;
+export function buildTerrainColliders(world: RAPIER_NS.World, RAPIER: typeof RAPIER_NS) {
+  if (!RECORDED) {
+    const list: RAPIER_NS.ColliderDesc[] = [];
+    const rec = { createRigidBody: () => ({}), createCollider: (d: RAPIER_NS.ColliderDesc) => { list.push(d); return {}; } } as unknown as RAPIER_NS.World;
+    buildTerrain(new THREE.Scene(), rec, RAPIER);
+    RECORDED = list;
+  }
+  const ground = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+  for (const d of RECORDED) world.createCollider(d, ground);
+  return RECORDED.length;
+}
+
 export function mulberry(seed: number) {
   return () => {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
