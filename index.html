@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#14110d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <title>OFFROAD: WILD FRONTIER</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Game view"></canvas>
+
+    <div id="loading" class="screen">
+      <div class="logo"><span>OFFROAD</span><small>WILD FRONTIER</small></div>
+      <div class="bar"><i id="load-bar"></i></div>
+      <p id="load-text">Loading physics…</p>
+    </div>
+
+    <section id="menu" class="panel menu hidden" aria-label="Main menu">
+      <div class="logo small"><span>OFFROAD</span><small>WILD FRONTIER</small></div>
+      <p class="tag">Prototype build · Phase 3 test track</p>
+      <button id="btn-play" class="btn primary">Play — Test Track</button>
+      <button id="btn-settings" class="btn">Settings</button>
+      <button class="btn" disabled title="Coming in Phase 5">Garage <em>soon</em></button>
+      <button class="btn" disabled title="Coming in Phase 7">Multiplayer <em>soon</em></button>
+      <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · R reset · Esc pause · drag to look</p>
+      <p class="hint touch-only">Left thumb steers · right thumb gas / brake / handbrake · drag the view to look around</p>
+    </section>
+
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="speed"><b id="hud-speed">0</b><span>km/h</span></div>
+        <div class="chip" id="hud-surface">Dirt</div>
+      </div>
+      <div class="hud-right">
+        <span class="chip fps" id="hud-fps">-- fps</span>
+        <button id="btn-pause" class="round" aria-label="Pause">❚❚</button>
+      </div>
+    </div>
+
+    <div id="touch" class="hidden" aria-hidden="true">
+      <div class="cluster left">
+        <button class="tbtn steer" data-k="left" aria-label="Steer left">◀</button>
+        <button class="tbtn steer" data-k="right" aria-label="Steer right">▶</button>
+      </div>
+      <div class="cluster right">
+        <button class="tbtn hand" data-k="hand" aria-label="Handbrake">HB</button>
+        <button class="tbtn brake" data-k="brake" aria-label="Brake / reverse">BRAKE</button>
+        <button class="tbtn gas" data-k="gas" aria-label="Accelerate">GAS</button>
+      </div>
+    </div>
+
+    <section id="pause" class="panel pause hidden" aria-label="Paused">
+      <h2>Paused</h2>
+      <button id="btn-resume" class="btn primary">Resume</button>
+      <button id="btn-reset" class="btn">Reset vehicle</button>
+      <button id="btn-settings2" class="btn">Settings</button>
+      <button id="btn-menu" class="btn">Main menu</button>
+    </section>
+
+    <aside id="drawer" class="drawer" aria-label="Settings" aria-hidden="true">
+      <header><h2>Settings</h2><button id="btn-close-drawer" class="round" aria-label="Close settings">✕</button></header>
+      <label class="group-label">Graphics preset</label>
+      <div class="seg" id="seg-preset">
+        <button data-v="low">Low</button><button data-v="medium">Medium</button><button data-v="high">High</button>
+      </div>
+      <p class="note" id="preset-note"></p>
+      <label class="group-label">Touch controls</label>
+      <div class="seg" id="seg-touch">
+        <button data-v="auto">Auto</button><button data-v="on">On</button><button data-v="off">Off</button>
+      </div>
+      <label class="row"><input type="checkbox" id="chk-fps" /> Show FPS counter</label>
+      <p class="note">Build 0.1.0 · Phases 1–3 prototype</p>
+    </aside>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
