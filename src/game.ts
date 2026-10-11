@@ -840,6 +840,34 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       return { yaw: Math.atan2(f1.x, f1.z), distance: Math.hypot(t1.x - start.x, t1.z - start.z), finalSpeed: car.forwardSpeed(), surface: car.surface(), trace };
     },
     zones: ZONES, puddles: PUDDLES, trees: TREES, heightAt,
+    pose: () => { const c = sampleCar(); const t = car.body.translation(); return { ...c, y: t.y }; },
+    /** Test bot: steers toward the current mission objective using the deterministic fixed step; returns the mission state. */
+    botRun: (maxSeconds: number, o: { throttle?: number; slowZone?: boolean; autoHook?: boolean } = {}) => {
+      if (!mission) return null;
+      if (mission.state === 'countdown') mission.countdown = 0.0001;
+      let stuckT = 0, rev = 0, lastP = sampleCar();
+      for (let k = 0; k < Math.round(maxSeconds / STEP) && !mission.finished; k++) {
+        const c = sampleCar(), def = mission.def;
+        let tg: { x: number; z: number };
+        if (def.gates.length && mission.next < def.gates.length) {
+          const g = def.gates[mission.next]; tg = { x: g.x + Math.sin(g.yaw) * 6, z: g.z + Math.cos(g.yaw) * 6 }; // aim through the gate
+        } else if (def.type === 'tow' && stuck && !mission.attached) {
+          const st = stuck.body.translation(), sf = stuck.forward(); tg = { x: st.x + sf.x * 9, z: st.z + sf.z * 9 };
+          if (Math.hypot(c.x - tg.x, c.z - tg.z) < 4 || toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront())) < 8) { if (o.autoHook !== false) toggleHook(); }
+        } else tg = def.zone!;
+        if (def.type === 'tow' && mission.attached) winching = ropeLen > 4;
+        let err = Math.atan2(tg.x - c.x, tg.z - c.z) - c.yaw; while (err > Math.PI) err -= 2 * Math.PI; while (err < -Math.PI) err += 2 * Math.PI;
+        const dist = Math.hypot(tg.x - c.x, tg.z - c.z);
+        if (k % 60 === 0) { const moved = Math.hypot(c.x - lastP.x, c.z - lastP.z); stuckT = moved < 1.0 && mission.state === 'running' ? stuckT + 1 : 0; lastP = c; if (stuckT >= 2) { rev = 90; stuckT = 0; } }
+        let thr = o.throttle ?? 1, brk = 0;
+        if (o.slowZone && dist < 20) { thr = c.speed > 3 ? 0 : 0.4; brk = c.speed > 3 ? 1 : 0; }
+        let steer = Math.max(-1, Math.min(1, err * 2.2));
+        if (rev > 0) { rev--; thr = 0; brk = 1; steer = -steer; }
+        physStep({ throttle: thr, brake: brk, steer, handbrake: false });
+      }
+      winching = false; car.sync(); stuck?.sync();
+      return { state: mission.state, t: mission.t, next: mission.next, splits: mission.splits.slice(), failReason: mission.failReason, rejected: mission.rejected, attached: mission.attached };
+    },
   };
 
   renderGarage();
