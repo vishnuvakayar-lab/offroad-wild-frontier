@@ -47,7 +47,7 @@ export async function runDrive({ openPage, ok }) {
   {
     const { ctx, page, errors } = await openPage({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, userAgent: IPHONE_UA }, 'drive-landscape');
     const def = await page.evaluate(() => window.__game.controls().setting);
-    await page.evaluate(() => window.__game.setControls('wheel', false)); // wheel + pedals is an opt-in Settings choice (mobile default = touch halves)
+    await page.evaluate(() => window.__game.setControls('wheel', false)); // wheel + pedals is an opt-in Settings choice (mobile default = buttons)
     await page.evaluate(() => { const g = window.__game; g.endMission(); g.play(); g.skipIntro?.(); });
     await page.waitForFunction(() => window.__game.phase === 'playing'); await page.waitForTimeout(400);
     const ids = ['wheel', 'pd-gas', 'pd-brake', 'drv-chip', 'ck-rec', 'ck-hb', 'hud-speed', 'btn-pause'];
@@ -57,8 +57,8 @@ export async function runDrive({ openPage, ok }) {
     const clash = pairs.filter(([a, b]) => overlap(R[a], R[b])).map((p) => p.join('/'));
     const coverage = ['wheel', 'pd-gas', 'pd-brake', 'drv-chip'].reduce((t, id) => t + R[id].w * R[id].h, 0) / (W * H);
     await page.screenshot({ path: SH + 'drive-cockpit-landscape.png' });
-    ok('drive cockpit (opt-in, mobile default is touch halves): wheel bottom-left, pedals bottom-right, drive chip lower centre; all on-screen, no overlaps, small footprint',
-      def === 'halves' && allIn && clash.length === 0 && R.wheel.x < W * 0.3 && R['pd-gas'].r > W * 0.8 && R.wheel.b > H * 0.6 && coverage < 0.16,
+    ok('drive cockpit (opt-in wheel; mobile default is ◀ ▶ buttons + GAS): wheel bottom-left, pedals bottom-right, drive chip lower centre; all on-screen, no overlaps, small footprint',
+      def === 'buttons' && allIn && clash.length === 0 && R.wheel.x < W * 0.3 && R['pd-gas'].r > W * 0.8 && R.wheel.b > H * 0.6 && coverage < 0.16,
       `mobile default ${def}, in view ${allIn}, overlaps [${clash}], controls cover ${(coverage * 100).toFixed(1)}% of the screen, wheel ${Math.round(R.wheel.w)} px at x ${Math.round(R.wheel.x)}`);
 
     // D2 progressive throttle (real-time ramp), instant release

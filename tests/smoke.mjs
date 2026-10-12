@@ -9,7 +9,7 @@ console.log('boot', JSON.stringify(await p.evaluate(() => window.__boot)));
 await p.waitForTimeout(800);
 await p.click('#btn-play');
 for (const t of [1000, 2500, 4500]) { await p.waitForTimeout(t === 1000 ? 1000 : 1500); await p.screenshot({ path: `/tmp/owf-intro-${t}.png` }); }
-await p.click('#btn-skip'); await p.waitForTimeout(300);
+await p.waitForTimeout(300); // Free Roam has no fly-over any more
 console.log('phase', await p.evaluate(() => window.__game.phase));
 const st = () => p.evaluate(() => window.__game.state());
 console.log(JSON.stringify((await st()).audio), (await st()).rpm);

@@ -10,7 +10,7 @@ const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } }); cons
 const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await p.goto(APP + '?dev=1'); await p.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 90000 }); await p.waitForTimeout(1500);
 const shot = (n) => p.screenshot({ path: OUT + PRE + n + '.png' });
-await p.click('#btn-play'); await p.waitForTimeout(300); await p.click('#btn-skip').catch(() => {}); await p.waitForFunction(() => window.__game.phase === 'playing');
+await p.click('#btn-play'); await p.waitForTimeout(300); await p.waitForFunction(() => window.__game.phase === 'playing');
 if (want('far')) {
   await p.evaluate(() => { const g = window.__game; g.teleport(-20, -20, Math.atan2(-1, -1)); g.camWorld([[-14, g.heightAt(-14, -14) + 9, -14], [-96, 14, -96]]); });
   await p.waitForTimeout(1500); await shot('ridge-from-distance');

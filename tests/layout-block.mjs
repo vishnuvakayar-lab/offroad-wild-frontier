@@ -79,26 +79,26 @@ export async function runLayout({ openPage, ok }) {
     // free roam: default controls, then pause -> resume and pause -> settings -> close must both land in a playable game at once
     await tap(page, '#btn-play', touch); await page.evaluate(() => window.__game.skipIntro?.());
     await page.waitForFunction(() => window.__game.phase === 'playing'); await frames(page);
-    const ui = await page.evaluate(() => { const v = (id) => document.getElementById(id).getClientRects().length > 0; return { setting: window.__game.controls().setting, scheme: window.__game.controls().scheme, zones: v('tzones'), wheel: v('wheel'), pedals: v('pedals'), brake: v('tp-brake'), rec: v('tp-rec'), drv: v('drv-chip') }; });
+    const ui = await page.evaluate(() => { const v = (id) => document.getElementById(id).getClientRects().length > 0; return { setting: window.__game.controls().setting, scheme: window.__game.controls().scheme, zones: v('tzones'), wheel: v('wheel'), steer: v('sb-l') && v('sb-r'), gas: v('pd-gas'), brake: v('pd-brake'), rec: v('ck-rec'), drv: v('drv-chip') }; });
     m.controls = ui;
     if (touch) {
       // pills / chip must not overlap each other and stay on-screen
-      const pr = await page.evaluate(() => ['tp-rec', 'tp-hb', 'tp-brake', 'drv-chip', 'hud-speed', 'btn-pause'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return { id, x: r.left, y: r.top, r: r.right, b: r.bottom, w: r.width }; }));
+      const pr = await page.evaluate(() => ['sb-l', 'sb-r', 'pd-gas', 'pd-brake', 'ck-rec', 'ck-hb', 'drv-chip', 'hud-speed', 'btn-pause'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return { id, x: r.left, y: r.top, r: r.right, b: r.bottom, w: r.width }; }));
       const off = pr.filter((b) => b.w > 0 && (b.x < -0.5 || b.y < -0.5 || b.r > W + 0.5 || b.b > H + 0.5)).map((b) => b.id);
       const ov = []; for (let i = 0; i < pr.length; i++) for (let j = i + 1; j < pr.length; j++) { const a = pr[i], b = pr[j]; if (a.w && b.w && !(a.r <= b.x || b.r <= a.x || a.b <= b.y || b.b <= a.y)) ov.push(a.id + '/' + b.id); }
-      const ctlCover = pr.filter((b) => ['tp-rec', 'tp-hb', 'tp-brake', 'drv-chip'].includes(b.id)).reduce((t, b) => t + (b.r - b.x) * (b.b - b.y), 0) / (W * H);
+      const ctlCover = pr.filter((b) => ['sb-l', 'sb-r', 'pd-gas', 'pd-brake', 'ck-rec', 'ck-hb', 'drv-chip'].includes(b.id)).reduce((t, b) => t + (b.r - b.x) * (b.b - b.y), 0) / (W * H);
       m.controls.cover = ctlCover; m.controls.off = off; m.controls.overlaps = ov;
-      // left half steers left while the car drives forward on its own
-      const z = await page.locator('#tzones .tz.l').boundingBox();
-      await page.dispatchEvent('#tzones .tz.l', 'pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true, bubbles: true, clientX: z.x + z.width / 2, clientY: z.y + z.height / 2 });
-      const p0 = await page.evaluate(() => window.__game.pose()); await page.waitForTimeout(1500); await frames(page, 4);
+      // ◀ steers left while GAS is held (pointer path; the native touch path is covered by tests/mobile-drive.mjs)
+      const ptr = (sel, type, id) => page.evaluate(([sel, type, id]) => { const e = document.getElementById(sel), r = e.getBoundingClientRect(); e.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: 'touch', bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 })); }, [sel, type, id]);
+      await ptr('pd-gas', 'pointerdown', 1); await ptr('sb-l', 'pointerdown', 2);
+      const p0 = await page.evaluate(() => window.__game.pose()); await page.waitForTimeout(1500); await frames(page, 25); // physics is render-paced: large iPad viewports render slowly under SwiftShader
       const i1 = await page.evaluate(() => window.__game.readInput()), p1 = await page.evaluate(() => window.__game.pose());
-      await page.dispatchEvent('#tzones .tz.l', 'pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true, bubbles: true });
+      await ptr('sb-l', 'pointerup', 2); await ptr('pd-gas', 'pointerup', 1);
       m.controls.drive = { steer: +i1.steer.toFixed(2), throttle: i1.throttle, moved: +Math.hypot(p1.x - p0.x, p1.z - p0.z).toFixed(1) };
-      await page.screenshot({ path: `${SH}${label}-play-halves.png` });
-      ok(`layout ${label}: default mobile controls = touch halves + auto-forward (no wheel / pedals), small Brake/Rev + Recover + HB, nothing overlapping or off-screen; left half steers and the car drives`,
-        ui.setting === 'halves' && ui.scheme === 'halves' && ui.zones && !ui.wheel && !ui.pedals && ui.brake && ui.rec && off.length === 0 && ov.length === 0 && ctlCover < 0.06 && i1.steer > 0.3 && i1.throttle === 1 && m.controls.drive.moved > 2,
-        `setting ${ui.setting}, zones ${ui.zones}, wheel ${ui.wheel}, pedals ${ui.pedals}; buttons cover ${(ctlCover * 100).toFixed(1)}%; off [${off}] overlaps [${ov}]; steer ${i1.steer.toFixed(2)} thr ${i1.throttle}, moved ${m.controls.drive.moved} m in 1.5 s`);
+      await page.screenshot({ path: `${SH}${label}-play-buttons.png` });
+      ok(`layout ${label}: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn`,
+        ui.setting === 'buttons' && ui.scheme === 'buttons' && !ui.zones && !ui.wheel && ui.steer && ui.gas && ui.brake && ui.rec && off.length === 0 && ov.length === 0 && ctlCover < 0.2 && i1.steer > 0.3 && i1.throttle > 0.5 && m.controls.drive.moved > 2,
+        `setting ${ui.setting}, steer ${ui.steer}, gas ${ui.gas}, brake ${ui.brake}, reset ${ui.rec}, wheel ${ui.wheel}; controls cover ${(ctlCover * 100).toFixed(1)}%; off [${off}] overlaps [${ov}]; steer ${i1.steer.toFixed(2)} thr ${i1.throttle.toFixed(2)}, moved ${m.controls.drive.moved} m in >= 1.5 s + 25 frames`);
     } else {
       ok(`layout ${label}: desktop shows no touch controls (keyboard driving)`, !ui.zones && !ui.wheel && !ui.pedals, JSON.stringify(ui));
     }

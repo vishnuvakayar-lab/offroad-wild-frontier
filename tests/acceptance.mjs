@@ -74,13 +74,9 @@ async function fpsSample(page, ms) {
   await page.click('#seg-preset button[data-v="high"]');
   await page.click('#btn-close-drawer'); await page.waitForTimeout(400);
 
-  await page.click('#btn-play'); await page.waitForTimeout(1200);
-  const ph0 = await page.evaluate(() => window.__game.phase);
-  await page.screenshot({ path: SHOTS4 + 'desktop-intro-flyover.png' });
-  const tSkip = Date.now();
-  await page.click('#btn-skip');
+  const tPlay = Date.now(); await page.click('#btn-play');
   await page.waitForFunction(() => window.__game.phase === 'playing', null, { timeout: 3000 });
-  ok('intro: Play starts the intro and Skip ends it', ph0 === 'intro', `phase after Play=${ph0}, skip->playing in ${Date.now() - tSkip} ms`);
+  ok('Free Roam: Play is drivable at once (no fly-over intro blocking input)', true, `phase playing ${Date.now() - tPlay} ms after the click`);
   await page.waitForTimeout(1500);
   const hzIdle = await page.evaluate(() => window.__game.measureEngineHz());
   const sIdle = await st(page);
@@ -178,11 +174,9 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   ok(`${label}: settings drawer partial`, drA > 0.05 && drA < 0.8, `covers ${(drA * 100).toFixed(0)}%`);
   await page.screenshot({ path: `${SHOTS}${label}-settings.png` });
   await page.tap('#btn-close-drawer'); await page.waitForTimeout(400);
-  await page.tap('#btn-play'); await page.waitForTimeout(900);
-  const iph = await page.evaluate(() => window.__game.phase);
-  await page.tap('#btn-skip'); await page.waitForTimeout(300);
-  const iph2 = await page.evaluate(() => window.__game.phase);
-  ok(`${label}: intro plays and tap on Skip ends it`, iph === 'intro' && iph2 === 'playing', `${iph} -> ${iph2}`);
+  await page.tap('#btn-play'); await page.waitForTimeout(400);
+  const iph = await page.evaluate(() => window.__game.phase), iset = await page.evaluate(() => window.__game.controls());
+  ok(`${label}: Free Roam tap -> drivable at once with the default ◀ ▶ + GAS buttons`, iph === 'playing' && iset.setting === 'buttons' && iset.touchActive, `phase ${iph}, controls ${iset.setting}, touchActive ${iset.touchActive}`);
   await page.evaluate(() => window.__game.setControls('buttons', false)); // ◀ ▶ buttons + pedals (default wheel + pedals, tilt and halves are tested in drive-block / rework-block)
   const au = (await st(page)).audio.state;
   ok(`${label}: audio running after tap`, au === 'running', `state=${au}`);
@@ -224,7 +218,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
 // ---------------- Phase 4: particles, puddles, weather, camera, AA, FPS per preset ----------------
 {
   const { ctx, page, errors } = await openPage({ viewport: { width: 1280, height: 720 } }, 'phase4');
-  await page.click('#btn-play'); await page.waitForTimeout(500); await page.click('#btn-skip');
+  await page.click('#btn-play'); await page.waitForTimeout(500);
   await page.waitForFunction(() => window.__game.phase === 'playing');
   const drive = (i) => page.evaluate((i) => window.__game.setInput(i), i);
   const window_ = async (setup, ms) => {
@@ -428,7 +422,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 });
   await page.evaluate(() => window.__game.skipOpening()); await page.waitForTimeout(1200); // opening cinematic has its own check (drive-block)
   const after = await page.evaluate(() => ({ v: window.__game.vehicle, label: document.getElementById('menu-vehicle').textContent }));
-  await page.click('#btn-play'); await page.waitForTimeout(400); await page.click('#btn-skip'); await page.waitForFunction(() => window.__game.phase === 'playing');
+  await page.click('#btn-play'); await page.waitForFunction(() => window.__game.phase === 'playing');
   const inPlay = await page.evaluate(() => window.__game.vehicle);
   ok('garage: selection + colour persist across reload and are used in Free Roam', chosen.id === 'pickup' && chosen.paint === 0xb3261e && after.v.id === 'pickup' && after.v.paint === 0xb3261e && inPlay.id === 'pickup' && inPlay.paint === 0xb3261e,
     `chosen ${chosen.id}/#${chosen.paint.toString(16)}, after reload ${after.v.id}/#${after.v.paint.toString(16)} (menu shows "${after.label}"), in play ${inPlay.id}`);
@@ -523,7 +517,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
       `hub travel ${(a.hubTravel * 100).toFixed(1)} cm, front steer range ${a.steerFront.toFixed(2)} rad, damper length range ${(a.damperStretch * 100).toFixed(1)} cm, axle/arm motion ${(a.linkMove * 100).toFixed(1)} cm, ${a.instances} instanced parts; High: ${hi[id].draws} draws / ${hi[id].tris} tris`);
   }
   // Low preset LOD: switch via settings UI (live), physics untouched
-  await page.click('#btn-play'); await page.waitForTimeout(400); await page.click('#btn-skip'); await page.waitForFunction(() => window.__game.phase === 'playing');
+  await page.click('#btn-play'); await page.waitForFunction(() => window.__game.phase === 'playing');
   const p0 = await st(page);
   await page.click('#btn-pause'); await page.click('#btn-settings2'); await page.click('#seg-preset button[data-v="low"]'); await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
   await page.waitForTimeout(600);

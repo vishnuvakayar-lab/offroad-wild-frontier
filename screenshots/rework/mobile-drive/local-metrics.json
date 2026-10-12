@@ -1,0 +1,218 @@
+{
+ "local webkit iPhone 13 Pro Max landscape": {
+  "build": "Build 0.7.1",
+  "js": "index-BClW92hU.js",
+  "afterSkip": "menu",
+  "playPhase": "playing",
+  "toPlayingMs": 144,
+  "gl": {
+   "ok": true,
+   "lostOverlay": false
+  },
+  "controls": {
+   "setting": "buttons",
+   "scheme": "buttons",
+   "touchActive": true,
+   "W": 832,
+   "H": 380,
+   "R": {
+    "sb-l": {
+     "vis": true,
+     "l": 14,
+     "t": 296,
+     "r": 84,
+     "b": 366,
+     "w": 70,
+     "h": 70
+    },
+    "sb-r": {
+     "vis": true,
+     "l": 94,
+     "t": 296,
+     "r": 164,
+     "b": 366,
+     "w": 70,
+     "h": 70
+    },
+    "pd-gas": {
+     "vis": true,
+     "l": 732,
+     "t": 258,
+     "r": 818,
+     "b": 366,
+     "w": 86,
+     "h": 108
+    },
+    "pd-brake": {
+     "vis": true,
+     "l": 648,
+     "t": 286,
+     "r": 722,
+     "b": 366,
+     "w": 74,
+     "h": 80
+    },
+    "ck-rec": {
+     "vis": true,
+     "l": 701.46875,
+     "t": 214,
+     "r": 768,
+     "b": 250,
+     "w": 66.53125,
+     "h": 36
+    }
+   },
+   "sa": [
+    "0px",
+    "0px",
+    "0px",
+    "0px"
+   ]
+  },
+  "safeArea": {
+   "ins": {
+    "t": 0,
+    "b": 21,
+    "l": 47,
+    "r": 47
+   },
+   "bad": [],
+   "ov": []
+  },
+  "touchEvents": "Event with touch lists (no Touch constructor in desktop WebKit)",
+  "gas": {
+   "hitTarget": "SPAN",
+   "moved": 24.1,
+   "kmh": 60.7,
+   "throttle": 1
+  },
+  "left": {
+   "hit": "sb-l",
+   "dyawDeg": 54.1,
+   "steer": 1,
+   "throttle": 1
+  },
+  "right": {
+   "hit": "sb-r",
+   "dyawDeg": -54.3,
+   "steer": -1,
+   "throttle": 1
+  },
+  "brake": {
+   "hit": "SPAN",
+   "fromKmh": 69,
+   "toKmh": 47.6
+  },
+  "reverse": {
+   "kmh": -24.4
+  }
+ },
+ "local webkit iPhone 13 Pro Max": {
+  "build": "Build 0.7.1",
+  "js": "index-BClW92hU.js",
+  "afterSkip": "menu",
+  "playPhase": "playing",
+  "toPlayingMs": 151,
+  "gl": {
+   "ok": true,
+   "lostOverlay": false
+  },
+  "controls": {
+   "setting": "buttons",
+   "scheme": "buttons",
+   "touchActive": true,
+   "W": 428,
+   "H": 746,
+   "R": {
+    "sb-l": {
+     "vis": true,
+     "l": 14,
+     "t": 654,
+     "r": 92,
+     "b": 732,
+     "w": 78,
+     "h": 78
+    },
+    "sb-r": {
+     "vis": true,
+     "l": 102,
+     "t": 654,
+     "r": 180,
+     "b": 732,
+     "w": 78,
+     "h": 78
+    },
+    "pd-gas": {
+     "vis": true,
+     "l": 322,
+     "t": 604,
+     "r": 414,
+     "b": 732,
+     "w": 92,
+     "h": 128
+    },
+    "pd-brake": {
+     "vis": true,
+     "l": 232,
+     "t": 640,
+     "r": 312,
+     "b": 732,
+     "w": 80,
+     "h": 92
+    },
+    "ck-rec": {
+     "vis": true,
+     "l": 297.46875,
+     "t": 558,
+     "r": 364,
+     "b": 594,
+     "w": 66.53125,
+     "h": 36
+    }
+   },
+   "sa": [
+    "0px",
+    "0px",
+    "0px",
+    "0px"
+   ]
+  },
+  "safeArea": {
+   "ins": {
+    "t": 47,
+    "b": 34,
+    "l": 0,
+    "r": 0
+   },
+   "bad": [],
+   "ov": []
+  },
+  "touchEvents": "Event with touch lists (no Touch constructor in desktop WebKit)",
+  "gas": {
+   "hitTarget": "SPAN",
+   "moved": 24.3,
+   "kmh": 60.8,
+   "throttle": 1
+  },
+  "left": {
+   "hit": "sb-l",
+   "dyawDeg": 53.6,
+   "steer": 1,
+   "throttle": 1
+  },
+  "right": {
+   "hit": "sb-r",
+   "dyawDeg": -53.2,
+   "steer": -1,
+   "throttle": 1
+  },
+  "brake": {
+   "hit": "SPAN",
+   "fromKmh": 66.8,
+   "toKmh": 45.4
+  },
+  "reverse": {
+   "kmh": -23.6
+  }
+ }
+}

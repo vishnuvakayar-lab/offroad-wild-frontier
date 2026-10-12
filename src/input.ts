@@ -13,7 +13,7 @@ export type TiltState = 'off' | 'pending' | 'granted' | 'denied' | 'unsupported'
 export class Input {
   private keys = new Set<string>();
   private touch = { left: false, right: false, gas: false, brake: false, hand: false };
-  private zones = new Map<number, 'L' | 'R'>();
+  private zones = new Map<string, 'L' | 'R'>();
   private steerSmooth = 0;
   /** progressive pedal values (0..1) */
   gasV = 0; brakeV = 0;
@@ -64,29 +64,46 @@ export class Input {
 
   clearTouch() { for (const k of Object.keys(this.touch) as (keyof typeof this.touch)[]) this.touch[k] = false; this.zones.clear(); }
 
-  /** Bind a multi-touch-safe hold button (pointer events, capture, cancel handling). */
+  /**
+   * Bind a multi-touch-safe hold button. iOS Safari: native touchstart/touchend/touchcancel listeners ({passive:false},
+   * preventDefault, per-finger identifiers) are the primary path; pointer events are kept for mouse/pen and as a second
+   * source. Each source is keyed separately ('t'+identifier / 'p'+pointerId) so a stray pointercancel / lostpointercapture
+   * (which iOS can fire for a held finger) never releases a button that a finger is still holding; touchend with no finger
+   * left on the button clears it completely, so nothing can stay stuck.
+   */
   bindHold(el: HTMLElement, key: keyof Input['touch']) {
-    const active = new Set<number>();
+    const active = new Set<string>();
     const set = () => { this.touch[key] = active.size > 0; el.classList.toggle('active', active.size > 0); };
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); active.add(e.pointerId); try { el.setPointerCapture(e.pointerId); } catch { /* */ } set(); });
-    const up = (e: PointerEvent) => { active.delete(e.pointerId); set(); };
+    const opt = { passive: false } as AddEventListenerOptions;
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); for (const t of e.changedTouches) active.add('t' + t.identifier); set(); }, opt);
+    const tEnd = (e: TouchEvent) => { e.preventDefault(); for (const t of e.changedTouches) active.delete('t' + t.identifier); if (e.targetTouches.length === 0) active.clear(); set(); };
+    el.addEventListener('touchend', tEnd, opt); el.addEventListener('touchcancel', tEnd, opt);
+    el.addEventListener('touchmove', (e) => e.preventDefault(), opt);
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); active.add('p' + e.pointerId); try { el.setPointerCapture(e.pointerId); } catch { /* */ } set(); });
+    const up = (e: PointerEvent) => { active.delete('p' + e.pointerId); set(); };
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
     el.addEventListener('lostpointercapture', up);
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
-  /** Full-screen touch layer for the tilt / halves schemes: each finger counts for the half it went down on. */
+  /** Full-screen touch layer for the tilt / halves schemes: each finger counts for the half it went down on (touch + pointer, as bindHold). */
   bindZones(el: HTMLElement, onChange: (l: boolean, r: boolean) => void) {
     const emit = () => { const v = [...this.zones.values()]; onChange(v.includes('L'), v.includes('R')); };
+    const side = (x: number) => { const r = el.getBoundingClientRect(); return x - r.left < r.width / 2 ? 'L' : 'R'; };
+    const opt = { passive: false } as AddEventListenerOptions;
+    el.addEventListener('touchstart', (e) => { if ((e.target as HTMLElement).closest('button')) return; e.preventDefault(); for (const t of e.changedTouches) this.zones.set('t' + t.identifier, side(t.clientX)); emit(); }, opt);
+    const tEnd = (e: TouchEvent) => { for (const t of e.changedTouches) this.zones.delete('t' + t.identifier); if (e.targetTouches.length === 0) for (const k of [...this.zones.keys()]) if (k[0] === 'p') this.zones.delete(k); emit(); };
+    el.addEventListener('touchend', tEnd, opt); el.addEventListener('touchcancel', tEnd, opt);
+    el.addEventListener('touchmove', (e) => e.preventDefault(), opt);
     el.addEventListener('pointerdown', (e) => {
+      if ((e.target as HTMLElement).closest('button')) return;
       e.preventDefault();
-      const r = el.getBoundingClientRect();
-      this.zones.set(e.pointerId, e.clientX - r.left < r.width / 2 ? 'L' : 'R');
+      this.zones.set('p' + e.pointerId, side(e.clientX));
       try { el.setPointerCapture(e.pointerId); } catch { /* */ }
       emit();
     });
-    const up = (e: PointerEvent) => { if (this.zones.delete(e.pointerId)) emit(); };
+    const up = (e: PointerEvent) => { if (this.zones.delete('p' + e.pointerId)) emit(); };
     for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) el.addEventListener(ev, up);
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }

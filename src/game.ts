@@ -260,8 +260,14 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (!touchOn() || settings.controls !== 'tilt' || input.tiltState === 'granted') return;
     input.requestTilt().then(() => refreshUI());
   };
+  let rotHintT = 0;
+  const rotHint = () => { // landscape is preferred on phones: a non-blocking hint (pointer-events: none), portrait stays fully playable
+    const el = $('rot-hint'), on = phase === 'playing' && touchOn() && innerHeight > innerWidth && innerWidth < 600;
+    el.classList.toggle('hidden', !on); clearTimeout(rotHintT); if (on) rotHintT = window.setTimeout(() => el.classList.add('hidden'), 4000);
+  };
+  window.addEventListener('orientationchange', () => setTimeout(rotHint, 200));
   const onPlayingStarted = () => {
-    clearTimeout(tiltCheck);
+    clearTimeout(tiltCheck); rotHint();
     if (!input.touchActive || settings.controls !== 'tilt') return;
     tiltFallback = false; input.scheme = 'tilt';
     needCal = true;
@@ -302,7 +308,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const sc = input.scheme;
     show('tzones', tOn && sc === 'halves');
     show('cockpit', tOn && sc !== 'halves');
-    show('wheel', sc === 'wheel'); show('steer-btns', sc === 'buttons'); show('ck-cal', sc === 'tilt');
+    $('cockpit').dataset.sc = sc; show('wheel', sc === 'wheel'); show('steer-btns', sc === 'buttons'); show('ck-cal', sc === 'tilt');
     show('drv', phase === 'playing' || phase === 'paused'); if (phase !== 'playing') $('drv-pop').classList.add('hidden'); refreshDrv();
     show('row-wsens', settings.controls === 'wheel'); $<HTMLInputElement>('rng-wsens').value = String(settings.wheelSens);
     $('tz-l').textContent = sc === 'halves' ? '◀ STEER' : 'BRAKE';
@@ -312,7 +318,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     document.querySelectorAll('#seg-ctrl button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.controls));
     $<HTMLInputElement>('chk-auto').checked = settings.autoThrottle;
     $('ctrl-note').textContent = settings.controls === 'wheel' ? 'Drag the wheel (bottom-left) to steer - it centres itself when released. Pedals (bottom-right): GAS and BRAKE are progressive; brake at a standstill reverses in AUTO.'
-      : settings.controls === 'buttons' ? '◀ ▶ buttons steer (bottom-left); GAS / BRAKE pedals bottom-right.'
+      : settings.controls === 'buttons' ? 'Default: hold ◀ / ▶ (bottom-left) to steer and GAS (bottom-right) to drive; BRAKE / REV brakes, keep holding at a standstill to reverse. Steer and GAS work together (multi-touch).'
       : settings.controls === 'tilt' ? `Tilt the phone like a steering wheel; pedals bottom-right${settings.autoThrottle ? ' (auto-throttle on: GAS is automatic, BRAKE overrides)' : ''}. Motion access: ${input.tiltState}${tiltFallback ? ' (using touch halves)' : ''}.`
       : settings.controls === 'halves' ? 'Default: hold the left or right half of the screen to steer. The car drives forward by itself; hold both halves or ■ Brake/Rev to brake, keep holding at a standstill to reverse.'
       : '';
@@ -636,17 +642,20 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $('lb-back').onclick = () => setPhase(online.inRoom ? 'playing' : 'menu');
   $('btn-olobby').onclick = () => setPhase('lobby');
 
+  // ---- tap-through guard: a tap that skips a cinematic is consumed (iOS fires the click ~after pointerdown/touchend, on whatever is now under the finger) ----
+  let swallowUntil = 0;
+  const swallowClicks = (ms = 500) => { swallowUntil = performance.now() + ms; };
+  document.addEventListener('click', (e) => { if (performance.now() < swallowUntil) { e.stopPropagation(); e.preventDefault(); } }, true);
+  // no pinch-zoom / page scroll while driving (iOS ignores user-scalable=no for pinch; gesture* events are WebKit-only)
+  for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove', (e) => { if (phase === 'playing' || phase === 'opening') e.preventDefault(); }, { passive: false });
   // ---- cinematic intro ----
   const INTRO_LEN = 7.6;
   let introT = 0;
-  const startIntro = () => {
-    resetCar(); introT = 0;
-    $('intro-name').textContent = car.spec.name.toUpperCase(); $('intro-kicker').textContent = car.spec.klass;
-    const el = $('intro'); el.classList.remove('hidden', 'out'); $('intro-name').parentElement!.classList.remove('show');
-    setPhase('intro');
-  };
+  // (the Free Roam fly-over was removed: entering Free Roam is immediately controllable; endIntro stays for the 'intro' phase hooks)
   const endIntro = () => {
     if (phase !== 'intro') return;
+    swallowClicks();
     const el = $('intro'); el.classList.add('out'); $('intro-name').parentElement!.classList.remove('show');
     setTimeout(() => { if (phase !== 'intro') el.classList.add('hidden'); }, 650);
     camPos.copy(camera.position); camHeading = Math.atan2(car.forward().x, car.forward().z); camInit = true;
@@ -664,6 +673,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   const endOpening = (skipped: boolean) => {
     if (phase !== 'opening' || openEnding) return;
     openEnding = true;
+    if (skipped) swallowClicks(); // the skip tap must not also press the menu button that appears under the finger
     if (skipped) { const e = OPEN_PATH[OPEN_PATH.length - 1], d = OPEN_PATH[OPEN_PATH.length - 2]; resetCar(e[0], e[1], Math.atan2(e[0] - d[0], e[1] - d[1])); }
     const el = $('opening'); el.classList.add('out'); setTimeout(() => el.classList.add('hidden'), 900);
     menuT = 0; menuBlend = 0; setPhase('menu');
@@ -724,7 +734,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   };
   const toggleMute = () => { settings.muted = !settings.muted; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); toast(settings.muted ? 'Sound off' : 'Sound on'); };
 
-  $('btn-play').onclick = () => { prepControls(); endMission(); leaveGarage(); if (settings.intro) startIntro(); else { resetCar(); camInit = false; setPhase('playing'); } };
+  // Free Roam: controllable at once (the old 7.6 s fly-over showed no controls and ignored input until it ended or was tapped)
+  $('btn-play').onclick = () => { prepControls(); endMission(); leaveGarage(); resetCar(); camInit = false; setPhase('playing'); };
   $('btn-skip').onclick = (e) => { e.stopPropagation(); endIntro(); };
   $('btn-settings').onclick = () => openDrawer(true);
   // Settings from the pause card: the drawer replaces the card (no stacked overlays); closing it goes straight back to driving
@@ -798,7 +809,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $<HTMLInputElement>('chk-intro').onchange = (e) => { settings.intro = (e.target as HTMLInputElement).checked; saveSettings(settings); };
   $<HTMLInputElement>('chk-mute').onchange = (e) => { settings.muted = (e.target as HTMLInputElement).checked; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); };
   $<HTMLInputElement>('rng-volume').oninput = (e) => { settings.volume = Number((e.target as HTMLInputElement).value); saveSettings(settings); audio.setVolume(settings.volume, settings.muted); };
-  document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'playing' && !online.inRoom) setPhase('paused'); }); // online games cannot pause
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { input.clearTouch(); if (phase === 'playing' && !online.inRoom) setPhase('paused'); } }); // release held controls; online games cannot pause
 
   // drag-to-look (mouse or touch on empty game area); recentres when released
   let lookYaw = 0, lookPitch = 0, dragging: number | null = null, lastX = 0, lastY = 0;

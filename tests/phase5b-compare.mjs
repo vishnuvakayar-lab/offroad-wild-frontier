@@ -33,7 +33,7 @@ for (const [label, url] of [['before', BEFORE], ['after', AFTER]]) {
     await page.waitForTimeout(800);
     const garageFps = await fps(page, 5000);
     await page.click('#g-back'); await page.click('#btn-play'); await page.waitForTimeout(500);
-    if (await page.locator('#btn-skip').isVisible()) await page.click('#btn-skip');
+    if (await page.locator('#btn-skip').isVisible()) await page.click('#btn-skip'); // (pre-0.7.1 builds only)
     await page.waitForFunction(() => window.__game.phase === 'playing');
     await page.evaluate(() => { window.__game.teleport(-100, 30, 1.2); window.__game.setInput({ throttle: 1, brake: 0, steer: 0.2, handbrake: false }); });
     await page.waitForTimeout(1500);
