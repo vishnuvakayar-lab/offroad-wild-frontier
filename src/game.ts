@@ -333,7 +333,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     $<HTMLInputElement>('rng-volume').value = String(settings.volume);
     $('btn-mute').textContent = settings.muted ? '🔇' : '🔊';
   };
-  const setPhase = (p: Phase) => { const was = phase; phase = p; if (p !== 'paused' && p !== 'menu') openDrawer(false); input.clearTouch(); refreshUI(); if (p === 'playing' && was !== 'paused') onPlayingStarted(); };
+  const setPhase = (p: Phase) => { const was = phase; phase = p; if (split && p !== 'playing' && p !== 'paused') stopSplit(); if (p !== 'paused' && p !== 'menu') openDrawer(false); input.clearTouch(); refreshUI(); if (p === 'playing' && was !== 'paused') onPlayingStarted(); };
 
   // ---- garage ----
   let gIndex = Math.max(0, VEHICLES.findIndex((v) => v.id === settings.vehicle));
@@ -450,6 +450,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   function physStep(drive: DriveInput) {
     const d = mission && (mission.state === 'countdown' || mission.finished) ? IDLE : drive;
     car.step(STEP, d);
+    if (car2) car2.step(STEP, drive2);
     if (stuck) {
       stuck.body.setLinearDamping(stuck.surface() === 'mud' ? 0.7 : 0.05); // bogged down in the mud
       stuck.step(STEP, STUCK_IN);
@@ -737,6 +738,99 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // Free Roam: controllable at once (the old 7.6 s fly-over showed no controls and ignored input until it ended or was tapped)
   $('btn-play').onclick = () => { prepControls(); endMission(); leaveGarage(); resetCar(); camInit = false; setPhase('playing'); };
   $('btn-skip').onclick = (e) => { e.stopPropagation(); endIntro(); };
+
+  // ---------- local split-screen (2 players, one device) ----------
+  // P1: WASD + Space (+ the normal touch controls at the bottom); P2: arrow keys + Right Shift/Enter (+ the P2 touch set at the top).
+  let split = false, car2: Vehicle | null = null, drive2: DriveInput = IDLE;
+  const camera2 = new THREE.PerspectiveCamera(62, 1, 0.1, 900);
+  const cam2Pos = new THREE.Vector3(), cam2Look = new THREE.Vector3(); let cam2Heading = 0, cam2Init = false;
+  const P2_PAINT = 0x2f7fd1;
+  function spawnP2() {
+    const yaw = spawn.yaw, x = spawn.x + Math.cos(yaw) * 4.5, z = spawn.z - Math.sin(yaw) * 4.5;
+    car2!.reset(x, heightAt(x, z) + car2!.spawnLift, z, yaw); cam2Init = false;
+  }
+  function startSplit() {
+    prepControls(); endMission(); leaveGarage(); resetCar(); camInit = false;
+    if (car2) car2.dispose();
+    const id = vehicleUnlocked(save, settings.vehicle) ? settings.vehicle : 'scout';
+    car2 = new Vehicle(world, RAPIER, scene, tracks, specFor(id), paintFor(id) === P2_PAINT ? 0xd8a020 : P2_PAINT, lodFor(settings.preset));
+    spawnP2(); car2.setEnv(skyEnvRT ? skyEnvRT.texture : envTex, WEATHER[weather].env * 1.5);
+    split = true; input.split = true; document.body.classList.add('split');
+    setPhase('playing'); toast('2 players: P1 = WASD · P2 = arrow keys');
+  }
+  function stopSplit() {
+    if (!split) return;
+    split = false; input.split = false; document.body.classList.remove('split');
+    if (car2) { car2.dispose(); car2 = null; }
+    camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+  }
+  $('btn-split').onclick = () => startSplit();
+  $('p2-rec').onclick = () => { if (!car2) return; const t = car2.body.translation(), f = car2.forward(); car2.reset(t.x, heightAt(t.x, t.z) + car2.spawnLift, t.z, Math.atan2(f.x, f.z)); };
+  for (const [id, key] of [['p2-l', 'left'], ['p2-r', 'right'], ['p2-gas', 'gas'], ['p2-brake', 'brake']] as const) input.bindHold($(id), key, input.p2touch);
+  /** split layout: side by side on wide desktop screens, stacked (P2 on top, facing the top controls) on touch / portrait */
+  const splitStacked = () => touchOn() || window.innerWidth < window.innerHeight;
+  function chase2(dt: number) {
+    const c = car2!, p = c.group.position, f = c.forward(), heading = Math.atan2(f.x, f.z), v = c.body.linvel(), sp = Math.hypot(v.x, v.z);
+    let d = heading - cam2Heading; d = Math.atan2(Math.sin(d), Math.cos(d));
+    if (!cam2Init) { cam2Heading = heading; } else cam2Heading += d * Math.min(1, dt * (2.5 + sp * 0.08));
+    const dist = (7.4 + Math.min(3, Math.abs(c.forwardSpeed()) * 0.085)) * settings.camDist, h = (2.7 + Math.min(0.9, sp * 0.03)) * settings.camHeight;
+    const wx = p.x - Math.sin(cam2Heading) * dist, wz = p.z - Math.cos(cam2Heading) * dist;
+    const wy = Math.max(p.y + h, heightAt(wx, wz) + 1);
+    if (!cam2Init) { cam2Pos.set(wx, wy, wz); cam2Look.set(p.x, p.y + 1.1, p.z); cam2Init = true; }
+    cam2Pos.lerp(tmpV.set(wx, wy, wz), 1 - Math.exp(-dt * 6));
+    cam2Look.lerp(tmpV.set(p.x + v.x * 0.12, p.y + 1.1, p.z + v.z * 0.12), 1 - Math.exp(-dt * 10));
+    camera2.position.copy(cam2Pos); camera2.lookAt(cam2Look);
+    camera2.fov = baseFov + Math.min(14, Math.abs(c.forwardSpeed()) * 0.45);
+  }
+  function renderSplit() {
+    const w = window.innerWidth, h = window.innerHeight, stacked = splitStacked();
+    const v1 = stacked ? [0, 0, w, h / 2] : [0, 0, w / 2, h], v2 = stacked ? [0, h / 2, w, h / 2] : [w / 2, 0, w / 2, h]; // GL origin = bottom-left
+    camera.aspect = v1[2] / v1[3]; camera.updateProjectionMatrix();
+    camera2.aspect = v2[2] / v2[3]; camera2.far = camera.far; camera2.updateProjectionMatrix();
+    renderer.setScissorTest(true);
+    renderer.setViewport(v1[0], v1[1], v1[2], v1[3]); renderer.setScissor(v1[0], v1[1], v1[2], v1[3]); renderer.render(scene, camera);
+    renderer.setViewport(v2[0], v2[1], v2[2], v2[3]); renderer.setScissor(v2[0], v2[1], v2[2], v2[3]); renderer.render(scene, camera2);
+    renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h);
+    document.body.classList.toggle('split-stack', stacked);
+    $('p2-speed').textContent = Math.round(Math.abs(car2!.forwardSpeed()) * 3.6).toString();
+  }
+
+  // ---------- camera views: chase / in-car (3D steering wheel) / left side mirror / 360° orbit (drag to rotate) ----------
+  type CamMode = 'chase' | 'cockpit' | 'mirror' | 'orbit';
+  const CAM_MODES: CamMode[] = ['chase', 'cockpit', 'mirror', 'orbit'];
+  const CAM_LABEL: Record<CamMode, string> = { chase: 'Chase view', cockpit: 'Driver view', mirror: 'Left mirror view', orbit: '360° orbit · drag to rotate' };
+  let camMode: CamMode = 'chase', orbitYaw = 0, orbitPitch = 0.35, orbitIdle = 0;
+  const eyeW = new THREE.Vector3(), aheadW = new THREE.Vector3();
+  function setCamMode(m: CamMode) {
+    camMode = m; car.setCockpit(m === 'cockpit');
+    $('btn-cam').classList.toggle('on', m !== 'chase'); $('btn-cam').dataset.mode = m; $('btn-cam').title = CAM_LABEL[m] + ' (C)';
+    canvas.classList.toggle('mirrored', m === 'mirror');
+    if (m === 'orbit') { const f = car.forward(); orbitYaw = Math.atan2(f.x, f.z) + Math.PI * 0.75; orbitIdle = 0; }
+    toast('🎥 ' + CAM_LABEL[m]); camInit = false;
+  }
+  const cycleCam = () => setCamMode(CAM_MODES[(CAM_MODES.indexOf(camMode) + 1) % CAM_MODES.length]);
+  $('btn-cam').onclick = cycleCam;
+  function viewCamera(dt: number) {
+    if (camMode === 'cockpit' || camMode === 'mirror') {
+      if (camMode === 'cockpit' && !car.cockpitOn) car.setCockpit(true);
+      car.bodyVis.updateWorldMatrix(true, false);
+      const c = car.spec.cabin;
+      if (camMode === 'cockpit') { eyeW.copy(car.eye); aheadW.set(car.eye.x, car.eye.y - 0.9, car.eye.z + 10); }
+      else { // just outside the left (driver) mirror, looking back along the flank; the image is flipped like a real mirror
+        const mx = c.hx + 0.32, my = c.y - c.hy + 0.55, mz = c.z + c.hz - 0.15;
+        eyeW.set(mx, my, mz); aheadW.set(mx + 0.9, my - 0.45, mz - 12);
+      }
+      car.bodyVis.localToWorld(eyeW); car.bodyVis.localToWorld(aheadW);
+      camera.position.copy(eyeW); camera.up.set(0, 1, 0).applyQuaternion(car.group.quaternion); camera.lookAt(aheadW); camera.up.set(0, 1, 0);
+      camera.near = 0.05; camera.fov = camMode === 'cockpit' ? baseFov + 8 : baseFov - 12; camera.updateProjectionMatrix();
+    } else if (camMode === 'orbit') {
+      orbitIdle += dt; if (dragging === null && orbitIdle > 2.5) orbitYaw += dt * 0.25; // slow auto-spin when not dragged
+      const p = car.group.position, r = 6.5 + car.spec.chassis.hz * 1.1;
+      camera.position.set(p.x + Math.sin(orbitYaw) * Math.cos(orbitPitch) * r, p.y + 0.8 + Math.sin(orbitPitch) * r, p.z + Math.cos(orbitYaw) * Math.cos(orbitPitch) * r);
+      const gy = heightAt(camera.position.x, camera.position.z) + 0.6; if (camera.position.y < gy) camera.position.y = gy;
+      camera.lookAt(p.x, p.y + 0.6, p.z); camera.fov = baseFov; camera.updateProjectionMatrix();
+    }
+  }
   $('btn-settings').onclick = () => openDrawer(true);
   // Settings from the pause card: the drawer replaces the card (no stacked overlays); closing it goes straight back to driving
   let drawerFromPause = false;
@@ -777,6 +871,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (code === 'KeyH' && mission) { toggleHook(); return true; }
     if (code === 'KeyG' && online.inRoom) { $('btn-wp').click(); return true; }
     if (code === 'KeyM') { toggleMute(); return true; }
+    if (code === 'Slash' && split && car2) { const t = car2.body.translation(), f = car2.forward(); car2.reset(t.x, heightAt(t.x, t.z) + car2.spawnLift, t.z, Math.atan2(f.x, f.z)); return true; }
+    if (code === 'KeyC' && !split) { cycleCam(); return true; }
     return false;
   };
   input.onReset = () => {
@@ -824,6 +920,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     });
     c.addEventListener('pointermove', (e) => {
       if (dragging !== e.pointerId) return;
+      if (camMode === 'orbit') { orbitYaw -= (e.clientX - lastX) * 0.008; orbitPitch = Math.max(0.05, Math.min(1.2, orbitPitch + (e.clientY - lastY) * 0.005)); orbitIdle = 0; lastX = e.clientX; lastY = e.clientY; return; }
       lookYaw -= (e.clientX - lastX) * 0.006; lookPitch = Math.max(-0.3, Math.min(0.6, lookPitch + (e.clientY - lastY) * 0.004));
       lastX = e.clientX; lastY = e.clientY;
     });
@@ -990,12 +1087,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     } else if (phase !== 'paused') {
       const drive = phase === 'playing' ? input.read(dt) : phase === 'opening' ? (input.override ?? openingDrive()) : (input.override ?? IDLE);
       lastInput = drive;
+      drive2 = split && phase === 'playing' ? input.readP2(dt) : IDLE;
       acc += dt;
       let n = 0;
       while (acc >= STEP && n < 8) { physStep(drive); acc -= STEP; n++; } // up to 8 fixed steps per frame keeps real-time speed down to ~7.5 fps
       if (n === 8) acc = 0;
     }
-    car.sync();
+    car.sync(); if (car2) car2.sync();
     { // collision / hard-landing sounds from sudden velocity changes (ignores teleports/resets: impactCool)
       const v = car.body.linvel();
       if (impactPrev && phase !== 'paused' && impactCool <= 0) {
@@ -1043,6 +1141,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       if (introT >= INTRO_LEN) endIntro();
     } else {
       chaseCamera(dt, p, heading, false);
+      if (camMode !== 'chase' && !split && (phase === 'playing' || phase === 'paused')) viewCamera(dt);
+      else if (camera.near !== 0.1) { camera.near = 0.1; camera.updateProjectionMatrix(); }
+      if (split && car2) chase2(dt);
     }
     sun.position.set(p.x + sunDir.x * 120, p.y + sunDir.y * 120, p.z + sunDir.z * 120); sun.target.position.copy(p);
     sky.position.copy(camera.position); stars.position.copy(camera.position);
@@ -1055,6 +1156,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const studio = phase === 'garage';
       car.setEnv(studio || !skyEnvRT ? envTex : skyEnvRT.texture, studio ? 1 : w.env * 1.5);
       if (studio) car.dirt = 0;
+      car2?.setEnv(skyEnvRT ? skyEnvRT.texture : envTex, w.env * 1.5);
       keyL.intensity = studio ? 260 : 0; rimL.intensity = studio ? 200 : 0;
       if (studio) {
         keyL.position.set(p.x + Math.sin(heading + 0.8) * 7, p.y + 6, p.z + Math.cos(heading + 0.8) * 7); keyL.target.position.copy(p);
@@ -1104,7 +1206,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       camera.lookAt(car.group.localToWorld(new THREE.Vector3(...camOverride[1])));
     }
     if (camWorld) { camera.position.set(...camWorld[0]); camera.lookAt(new THREE.Vector3(...camWorld[1])); }
-    renderer.render(scene, camera);
+    canvas.classList.toggle('mirrored', camMode === 'mirror' && !split && (phase === 'playing' || phase === 'paused'));
+    if (split && car2 && (phase === 'playing' || phase === 'paused')) renderSplit();
+    else renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
 
@@ -1172,6 +1276,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     get spec() { return car.spec; },
     vehicles: VEHICLES.map((v) => v.id),
     setVehicle: (id: string) => { settings.vehicle = id; saveSettings(settings); setVehicle(id); },
+    split: { start: () => startSplit(), stop: () => { stopSplit(); setPhase('menu'); }, get on() { return split; }, setP2: (d: DriveInput | null) => { input.override2 = d; },
+      p2: () => { if (!car2) return null; const t = car2.body.translation(); return { x: t.x, y: t.y, z: t.z, speed: car2.forwardSpeed(), steer: car2.steer, input: drive2, p1input: lastInput }; } },
+    cam: (m: CamMode) => setCamMode(m), get camMode() { return camMode; }, orbit: (yaw: number, pitch = 0.35) => { orbitYaw = yaw; orbitPitch = pitch; orbitIdle = 0; },
+    wheelAngle: () => car.steeringWheel?.rotation.z ?? null,
     camOverride: (c: [[number, number, number], [number, number, number]] | null) => { camOverride = c; },
     /** screenshot hook: fixed world-space camera (null = normal camera) */
     camWorld: (c: [[number, number, number], [number, number, number]] | null) => { camWorld = c; },

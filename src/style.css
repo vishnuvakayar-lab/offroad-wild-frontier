@@ -346,3 +346,25 @@ body.kb .panel { top: calc(8px + var(--sat)); bottom: auto; transform: none; max
   #cockpit[data-sc="buttons"] .pedal.gas { width: 82px; height: 120px; } #cockpit[data-sc="buttons"] .pedal.brake { width: 70px; height: 86px; }
 }
 .rot-hint { position: absolute; z-index: 12; left: 50%; top: calc(50% - 40px); transform: translateX(-50%); background: rgba(0,0,0,.6); padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 14px; pointer-events: none; white-space: nowrap; }
+
+/* ---- 0.7.2: local split-screen (2 players) ---- */
+#p2ctl, #p2hud, #p1tag { display: none; }
+body.split #p2hud, body.split #p1tag { display: block; position: absolute; z-index: 9; pointer-events: none; color: #fff; font: 600 13px/1.2 system-ui, sans-serif;
+  background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 5px 9px; }
+body.split #p2hud b { color: #6fb2ff; } body.split #p1tag b { color: #f2a93b; }
+body.split #p2hud small, body.split #p1tag small { opacity: .7; font-weight: 400; margin-left: 4px; }
+body.split #p2hud { right: calc(12px + var(--sar)); top: calc(64px + var(--sat)); }
+body.split #p1tag { left: calc(12px + var(--sal)); bottom: calc(12px + var(--sab)); }
+body.split.touch #p1tag small, body.split.touch #p2hud small { display: none; }
+body.split.touch #p1tag { bottom: auto; top: calc(50% + 8px); }
+body.split-stack #p2hud { top: calc(8px + var(--sat)); left: 50%; right: auto; transform: translateX(-50%); }
+body.split::after { content: ''; position: fixed; z-index: 8; pointer-events: none; background: rgba(0,0,0,.85); left: 50%; top: 0; bottom: 0; width: 3px; margin-left: -1px; }
+body.split.split-stack::after { left: 0; right: 0; top: 50%; bottom: auto; width: auto; height: 3px; margin: -1px 0 0; }
+body.split.touch #p2ctl { display: block; position: absolute; left: 0; right: 0; top: calc(50% - 92px); height: 82px; z-index: 9; pointer-events: none; }
+#p2ctl .p2-steer { position: absolute; left: calc(14px + var(--sal)); bottom: 0; display: flex; gap: 10px; pointer-events: auto; }
+#p2ctl .p2-pedals { position: absolute; right: calc(14px + var(--sar)); bottom: 0; display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
+#p2ctl .pedal.gas { height: 78px; } #p2ctl .pedal.brake { height: 64px; }
+#p2ctl #p2-rec { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); pointer-events: auto; }
+#btn-cam.on { background: rgba(242,169,59,.6); }
+body.split #btn-cam { display: none; }
+canvas.mirrored { transform: scaleX(-1); }

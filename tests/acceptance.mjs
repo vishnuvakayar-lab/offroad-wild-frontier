@@ -382,8 +382,9 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   ok('vehicles: performance differs (0-60, top speed, turn rate, mud)', s60.max / s60.min > 1.8 && sTop.max - sTop.min > 30 && sTurn.max - sTurn.min > 10 && sMud.max - sMud.min > 8 && distinct(),
     `0-60 ${s60.min}-${s60.max}s, top ${sTop.min.toFixed(0)}-${sTop.max.toFixed(0)} km/h, turn ${sTurn.min.toFixed(1)}-${sTurn.max.toFixed(1)} deg/s, mud ${sMud.min.toFixed(1)}-${sMud.max.toFixed(1)} km/h; every pair differs`);
   const R = Object.fromEntries(rows.map((r) => [r.id, r]));
-  ok('vehicles: character matches class', R.rally.t60 === s60.min && R.rally.top7 === sTop.max && R.rally.mud3 === sMud.min && R.recovery.top7 === sTop.min && R.recovery.t60 === s60.max,
-    'rally quickest/fastest but worst in mud; recovery truck slowest');
+  const HEAVY = ['recovery', 'cargo6', 'mrap']; // 0.7.2: the heavy military trucks are as slow as the recovery truck
+  ok('vehicles: character matches class', R.rally.t60 === s60.min && R.rally.top7 === sTop.max && R.rally.mud3 === sMud.min && HEAVY.some((h) => R[h]?.top7 === sTop.min) && HEAVY.some((h) => R[h]?.t60 === s60.max),
+    'rally quickest/fastest but worst in mud; a heavy truck (recovery / 6x6 / MRAP) slowest');
   // Steering lightening at speed (Scout): baseline vs Phase 5
   const steer = await page.evaluate(() => {
     const g = window.__game; g.setVehicle('scout');

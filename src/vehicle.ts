@@ -38,6 +38,10 @@ export class Vehicle {
   private lastV: { x: number; y: number; z: number } | null = null;
   wheelMeshes: THREE.Object3D[] = [];
   steer = 0;
+  /** cockpit: steering wheel (rotates with steering), driver eye point in vehicle space */
+  steeringWheel: THREE.Group | null = null;
+  eye = new THREE.Vector3(0.36, 1, 0);
+  private glassMat: THREE.MeshStandardMaterial | null = null;
   surfaces: (Surface | null)[] = [null, null, null, null];
   private extraSpin = [0, 0, 0, 0];
   private tracks: TrackMarks;
@@ -225,6 +229,7 @@ export class Vehicle {
     this.mats.push(...Object.values(m));
     const k = new Kit(g, m, this.lod);
     spec.build(k, spec);
+    this.buildInterior(k);
     mergeStatic(g);
     g.traverse((o) => { const mm = o as THREE.Mesh; if (mm.isMesh) this.geos.push(mm.geometry); });
     // sprung body: everything built so far (shell, cabin, lamps) leans on top of the physical chassis motion
@@ -232,6 +237,7 @@ export class Vehicle {
     for (const ch of [...g.children]) this.bodyVis.add(ch);
     g.add(this.bodyVis);
     this.tailMat = m.tail;
+    this.glassMat = m.glass;
 
     // ---- wheels: tread-pattern tyre + styled rim with brake disc (spin), caliper (steers, does not spin)
     const R = spec.wheel.r, WW = spec.wheel.w, rr = R - Math.min(0.12, R * 0.28);
@@ -306,6 +312,51 @@ export class Vehicle {
     g.add(this.beam, this.beam.target);
     this.sync();
   }
+
+
+  /** Original 3D cockpit: dash, instrument binnacle, column and a three-spoke leather-wrapped steering wheel (no logos/badges).
+   *  Driver sits on the left (+x, left-hand drive as in the UAE). The wheel turns with the steering (see sync). */
+  private buildInterior(k: Kit) {
+    const m = k.m, c = this.spec.cabin, hi = this.lod > 0, g = this.group;
+    // static parts go through Kit (merged into the body's existing material batches: no extra draw calls)
+    const front = c.z + c.hz, floor = c.y - c.hy, dx = Math.min(0.42, c.hx * 0.45);
+    const eyeY = c.y + c.hy - 0.3, dashZ = front - 0.3, dashY = Math.max(floor + 0.2, eyeY - 0.36);
+    k.add(k.box(c.hx * 1.9, 0.16, 0.34), m.dark, 0, dashY, dashZ);                                   // dash top
+    k.add(k.box(c.hx * 1.9, 0.3, 0.1), m.dark, 0, dashY - 0.2, dashZ - 0.12);                          // dash face
+    k.add(k.box(0.42, 0.12, 0.14), m.dark, dx, dashY + 0.1, dashZ - 0.1);                              // binnacle hood
+    for (const gx of [-0.09, 0.09]) k.add(new THREE.CircleGeometry(0.055, hi ? 24 : 10), m.accent, dx + gx, dashY + 0.05, dashZ - 0.18, 0, Math.PI, 0); // dials
+    for (const gx of [-0.09, 0.09]) k.add(new THREE.RingGeometry(0.055, 0.064, hi ? 24 : 10), m.chrome, dx + gx, dashY + 0.05, dashZ - 0.181, 0, Math.PI, 0);
+    k.add(k.box(0.22, 0.12, 0.02), m.steel, 0, dashY - 0.12, dashZ - 0.18);                            // centre screen
+    for (const sx of [dx, -dx]) {                                                                      // seats
+      k.add(k.box(0.46, 0.1, 0.48, 0.03), m.rubber, sx, eyeY - 0.62, dashZ - 0.95);
+      k.add(k.box(0.46, 0.6, 0.1, 0.03), m.rubber, sx, eyeY - 0.3, dashZ - 1.22, -0.18);
+    }
+    const tilt = -0.42, cz = dashZ - 0.3, cy = dashY + 0.02;
+    k.add(k.box(0.11, 0.09, 0.14), m.dark, dx, cy, cz + 0.06, tilt);                                  // column shroud
+    k.add(k.box(0.06, 0.012, 0.03), m.steel, dx + 0.13, cy + 0.03, cz + 0.06, tilt);                  // indicator stalk
+    // the rotating wheel: its own small group (2 draw calls), turned about its axis in sync()
+    const col = new THREE.Group(); col.position.set(dx, cy, cz); col.rotation.x = tilt; g.add(col);
+    const w = new THREE.Group(); w.name = 'steering-wheel'; col.add(w);
+    const add = (geo: THREE.BufferGeometry, mat: THREE.Material, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) => {
+      const me = new THREE.Mesh(geo, mat); me.position.set(x, y, z); me.rotation.set(rx, ry, rz); me.userData.static = true; w.add(me); return me;
+    };
+    const R = 0.19, seg = hi ? 48 : 20;
+    add(new THREE.TorusGeometry(R, 0.022, hi ? 12 : 6, seg), m.rubber);                               // leather-look rim
+    add(new THREE.CylinderGeometry(0.07, 0.075, 0.05, hi ? 24 : 10), m.rubber, 0, 0, -0.02, Math.PI / 2); // plain hub / airbag pad (no logo)
+    add(new THREE.TorusGeometry(R, 0.0235, 6, 10, 0.5), m.steel, 0, 0, 0, 0, 0, Math.PI / 2 - 0.25); // 12 o'clock marker band
+    for (const a of [Math.PI, 0, -Math.PI / 2]) add(new THREE.BoxGeometry(R - 0.05, 0.03, 0.016), m.steel, Math.cos(a) * (R / 2 + 0.02), Math.sin(a) * (R / 2 + 0.02), -0.01, 0, 0, a); // 3 spokes
+    for (const sx of [-0.1, 0.1]) add(new THREE.BoxGeometry(0.03, 0.014, 0.012), m.steel, sx, 0.02, -0.03); // thumb buttons
+    add(new THREE.CylinderGeometry(0.035, 0.045, 0.2, 10), m.steel, 0, 0, 0.12, Math.PI / 2);          // column
+    mergeStatic(w);
+    w.traverse((o) => { const mm = o as THREE.Mesh; if (mm.isMesh) this.geos.push(mm.geometry); });
+    this.steeringWheel = w;
+    this.eye.set(dx, eyeY, dashZ - 0.8);
+  }
+  /** steering-wheel angle shown for a road-wheel angle (approx. 14:1 ratio, capped at about 1.25 turns lock to lock each way) */
+  static wheelTurn(steer: number) { return THREE.MathUtils.clamp(steer * 14, -7.8, 7.8); }
+  /** see-through glass for the in-car view */
+  cockpitOn = false;
+  setCockpit(on: boolean) { this.cockpitOn = on; const g = this.glassMat; if (!g) return; g.transparent = on; g.opacity = on ? 0.12 : 1; g.depthWrite = !on; g.needsUpdate = true; }
 
   /** Rim (axis along X, face towards +x) with brake disc and lug nuts, merged into one geometry. */
   private rimGeometry(k: Kit, rr: number, w: number) {
@@ -564,6 +615,7 @@ export class Vehicle {
       } else this.tracks.lift(i);
     }
     this.syncSuspension();
+    if (this.steeringWheel) this.steeringWheel.rotation.z = -Vehicle.wheelTurn(this.steer);
     this.dirtU.value = this.dirt;
   }
 
@@ -577,6 +629,7 @@ export class Vehicle {
       this.extraSpin[i] += (speed / this.spec.wheel.r) * dt; w.children[0].rotation.x = this.extraSpin[i];
     }
     this.syncSuspension();
+    if (this.steeringWheel) this.steeringWheel.rotation.z = -Vehicle.wheelTurn(steer);
   }
   /** current suspension lengths (sent to other players for wheel animation) */
   suspLengths() { return [0, 1, 2, 3].map((i) => this.ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest); }

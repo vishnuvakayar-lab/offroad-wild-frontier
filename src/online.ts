@@ -31,6 +31,7 @@ const VNAME = (id: string) => vehicleById(id).name;
 const PNAME = (hex: number) => PAINTS.find((p) => p.hex === hex)?.name ?? 'Custom';
 const STATUS_TEXT: Record<NetStatus, string> = { offline: 'Offline', connecting: 'Connecting…', online: 'Online', reconnecting: 'Reconnecting…' };
 
+const NOT_HOSTED = 'The online server is not hosted yet, so online rooms are unavailable on this site. Use Local split-screen for 2 players on one device.';
 export class OnlineSession {
   net: NetClient;
   room: RoomInfo | null = null; myId = 0;
@@ -41,12 +42,18 @@ export class OnlineSession {
   private visOff = new THREE.Vector3(); private visQ = new THREE.Quaternion();
   private pendingAction: object | null = null;
   private mworld: MissionWorld | null = null; private wpMesh: THREE.Mesh | null = null;
+  configured = false;
   private hudT = 0; lastErr = ''; private ready = false;
   pilot: { throttle: number; route: { x: number; z: number }[]; prog: number } | null = null;
   metrics = { snaps: 0, corrections: 0, hardSnaps: 0, maxErr: 0, errs: [] as number[], corrErrs: [] as number[], maxVisOff: 0, extrap: 0, noHist: 0, bigJump: 0, waiting: 0, nhLog: [] as number[][], remoteJerk: [] as number[], ownJerk: [] as number[], replaySteps: 0 };
   constructor(private ctx: OnlineCtx) {
     const q = new URLSearchParams(location.search);
-    let url = q.get('server') ?? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+    // Server URL: ?server=wss://… > build-time VITE_MP_SERVER > same host (only when the page is served by the game server itself).
+    // Static hosting (GitHub Pages) has no game server, so online play is reported as "server not hosted yet" there.
+    const cfg = (import.meta as any).env?.VITE_MP_SERVER as string | undefined;
+    const staticHost = /github\.io$/i.test(location.hostname);
+    let url = q.get('server') || cfg || (staticHost ? '' : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+    this.configured = !!url;
     const lag = q.get('simlag'), jit = q.get('simjitter'); // forwarded to servers started with ALLOW_NET_SIM=1 (testing only)
     if (lag || jit) url += (url.includes('?') ? '&' : '?') + `simlag=${lag ?? 0}&simjitter=${jit ?? 0}`;
     this.net = new NetClient(url);
@@ -62,6 +69,7 @@ export class OnlineSession {
 
   // ---------------- connection / room actions ----------------
   private act(m: object) {
+    if (!this.configured) { this.lastErr = NOT_HOSTED; this.renderLobby(); this.ctx.toast('⚠ Online server not hosted yet'); return; }
     this.lastErr = ''; this.renderLobby();
     const prof = this.ctx.profile(); this.net.profile = { ...prof };
     if (this.net.status === 'online' && this.ready) { this.net.send(m); return; }
@@ -354,6 +362,8 @@ export class OnlineSession {
     $('lb-setup').classList.toggle('hidden', !!r);
     $('lb-room').classList.toggle('hidden', !r);
     $('lb-err').textContent = this.lastErr;
+    $('lb-nohost').classList.toggle('hidden', this.configured);
+    if (!this.configured) { chip.textContent = 'Server not hosted'; chip.className = 'net-chip offline'; }
     $('lb-backrow').classList.toggle('hidden', !!r);
     $('lb-veh').textContent = `${VNAME(prof.vehicle)} · ${PNAME(prof.paint)} — stock specs online (fair play)`;
     const nameEl = $('lb-name') as HTMLInputElement; if (document.activeElement !== nameEl) nameEl.value = prof.name;

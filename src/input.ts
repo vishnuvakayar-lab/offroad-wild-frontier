@@ -13,6 +13,11 @@ export type TiltState = 'off' | 'pending' | 'granted' | 'denied' | 'unsupported'
 export class Input {
   private keys = new Set<string>();
   private touch = { left: false, right: false, gas: false, brake: false, hand: false };
+  /** local split-screen: P1 = WASD + Space (+ the normal touch controls), P2 = arrow keys + Right Shift / Enter (+ the P2 touch set) */
+  split = false;
+  p2touch = { left: false, right: false, gas: false, brake: false, hand: false };
+  private p2Steer = 0; p2Gas = 0; p2Brake = 0;
+  override2: DriveInput | null = null; // tests
   private zones = new Map<string, 'L' | 'R'>();
   private steerSmooth = 0;
   /** progressive pedal values (0..1) */
@@ -62,7 +67,7 @@ export class Input {
     window.addEventListener('blur', () => { this.keys.clear(); this.clearTouch(); });
   }
 
-  clearTouch() { for (const k of Object.keys(this.touch) as (keyof typeof this.touch)[]) this.touch[k] = false; this.zones.clear(); }
+  clearTouch() { for (const k of Object.keys(this.touch) as (keyof typeof this.touch)[]) { this.touch[k] = false; this.p2touch[k] = false; } this.zones.clear(); }
 
   /**
    * Bind a multi-touch-safe hold button. iOS Safari: native touchstart/touchend/touchcancel listeners ({passive:false},
@@ -71,9 +76,9 @@ export class Input {
    * (which iOS can fire for a held finger) never releases a button that a finger is still holding; touchend with no finger
    * left on the button clears it completely, so nothing can stay stuck.
    */
-  bindHold(el: HTMLElement, key: keyof Input['touch']) {
+  bindHold(el: HTMLElement, key: keyof Input['touch'], target: Input['touch'] = this.touch) {
     const active = new Set<string>();
-    const set = () => { this.touch[key] = active.size > 0; el.classList.toggle('active', active.size > 0); };
+    const set = () => { target[key] = active.size > 0; el.classList.toggle('active', active.size > 0); };
     const opt = { passive: false } as AddEventListenerOptions;
     el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); for (const t of e.changedTouches) active.add('t' + t.identifier); set(); }, opt);
     const tEnd = (e: TouchEvent) => { e.preventDefault(); for (const t of e.changedTouches) active.delete('t' + t.identifier); if (e.targetTouches.length === 0) active.clear(); set(); };
@@ -158,8 +163,9 @@ export class Input {
     if (this.override) return this.override;
     const k = this.keys, t = this.touch;
     const zv = [...this.zones.values()], zl = zv.includes('L'), zr = zv.includes('R');
-    const kUp = k.has('KeyW') || k.has('ArrowUp'), kDown = k.has('KeyS') || k.has('ArrowDown');
-    const kLeft = k.has('KeyA') || k.has('ArrowLeft'), kRight = k.has('KeyD') || k.has('ArrowRight');
+    const ar = !this.split; // in split-screen the arrow keys belong to player 2
+    const kUp = k.has('KeyW') || (ar && k.has('ArrowUp')), kDown = k.has('KeyS') || (ar && k.has('ArrowDown'));
+    const kLeft = k.has('KeyA') || (ar && k.has('ArrowLeft')), kRight = k.has('KeyD') || (ar && k.has('ArrowRight'));
     let thr = kUp ? 1 : 0, brk = kDown ? 1 : 0, left = kLeft, right = kRight, analog: number | null = null;
     // self-centring wheel when released (also when the wheel UI is hidden)
     if (!this.wheelHeld && this.wheelDeg !== 0) {
@@ -192,5 +198,19 @@ export class Input {
     const rate = analog !== null ? 10 : target === 0 ? 6 : 3.5;
     this.steerSmooth += Math.max(-rate * dt, Math.min(rate * dt, target - this.steerSmooth));
     return { throttle: thr, brake: brk, steer: this.steerSmooth, handbrake: k.has('Space') || t.hand };
+  }
+
+  /** Player 2 (split-screen): arrow keys / P2 touch buttons; progressive touch pedals like player 1; brake wins. */
+  readP2(dt: number): DriveInput {
+    if (this.override2) return this.override2;
+    const k = this.keys, t = this.p2touch;
+    this.p2Gas = t.gas ? Math.min(1, Math.max(PEDAL.gas0, this.p2Gas + dt / PEDAL.gasRamp)) : 0;
+    this.p2Brake = t.brake ? Math.min(1, Math.max(PEDAL.brake0, this.p2Brake + dt / PEDAL.brakeRamp)) : 0;
+    let thr = Math.max(k.has('ArrowUp') ? 1 : 0, this.p2Gas), brk = Math.max(k.has('ArrowDown') ? 1 : 0, this.p2Brake);
+    if (brk > 0.05) thr = 0;
+    const target = ((k.has('ArrowLeft') || t.left) ? 1 : 0) - ((k.has('ArrowRight') || t.right) ? 1 : 0);
+    const rate = target === 0 ? 6 : 3.5;
+    this.p2Steer += Math.max(-rate * dt, Math.min(rate * dt, target - this.p2Steer));
+    return { throttle: thr, brake: brk, steer: this.p2Steer, handbrake: k.has('ShiftRight') || k.has('Enter') || k.has('NumpadEnter') || t.hand };
   }
 }

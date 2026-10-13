@@ -47,6 +47,7 @@
       <button id="btn-settings" class="btn">Settings</button>
       <button id="btn-garage" class="btn">Garage <em id="menu-vehicle"></em></button>
       <button id="btn-online" class="btn">Online Multiplayer</button>
+      <button id="btn-split" class="btn">2 Players · Split-screen</button>
       <p class="hint desktop-only">W/↑ throttle · S/↓ brake/reverse · A D/← → steer · Space handbrake · Q gear (A/D/N/R/P) · 1 2 3 = 2H 4H 4L · R reset (to checkpoint in missions) · H tow hook · T weather · M mute · Esc pause · drag to look</p>
       <p class="hint touch-only">◀ ▶ steer (bottom-left) · hold GAS to drive, BRAKE / REV to brake or reverse (bottom-right) · ↻ Reset · drive chip (A · 4H) for P R N D and 2H / 4H / 4L · Settings: halves, tilt or wheel + pedals</p>
     </section>
@@ -60,6 +61,7 @@
         </div>
       </div>
       <div class="hud-right">
+        <button id="btn-cam" class="round" aria-label="In-car view" title="In-car view (C)">🎥</button>
         <button id="btn-weather" class="round" aria-label="Change weather" title="Weather (T)">☀</button>
         <button id="btn-mute" class="round" aria-label="Mute" title="Mute (M)">🔊</button>
         <button id="btn-pause" class="round" aria-label="Pause">❚❚</button>
@@ -95,6 +97,13 @@
         <button class="tpill" id="ck-hb" aria-label="Handbrake">HB</button>
       </div>
     </div>
+    <div id="p2ctl" class="p2ctl" aria-label="Player 2 controls">
+      <div class="p2-steer"><button class="sbtn" id="p2-l" aria-label="Player 2 steer left">◀</button><button class="sbtn" id="p2-r" aria-label="Player 2 steer right">▶</button></div>
+      <button class="tpill" id="p2-rec" aria-label="Player 2 reset">↻ P2</button>
+      <div class="p2-pedals"><button id="p2-brake" class="pedal brake" aria-label="Player 2 brake / reverse"><span>BRAKE<br>/ REV</span></button><button id="p2-gas" class="pedal gas" aria-label="Player 2 accelerator"><span>GAS</span></button></div>
+    </div>
+    <div id="p2hud" class="p2hud"><b>P2</b> <span id="p2-speed">0</span> km/h <small>arrows · RShift HB · / reset</small></div>
+    <div id="p1tag" class="p1tag"><b>P1</b> <small>WASD · Space HB · R reset</small></div>
     <div id="drv" class="drv hidden">
       <button id="drv-chip" class="drv-chip" aria-label="Transmission and transfer case" aria-expanded="false"><b id="drv-gear">A</b><span id="drv-mode">4H</span></button>
       <div id="drv-pop" class="drv-pop hidden">
@@ -138,6 +147,7 @@
 
     <section id="lobby" class="panel lobby hidden" aria-label="Online multiplayer">
       <header class="m-head"><h2>Online multiplayer</h2><span id="net-status" class="net-chip offline">Offline</span></header>
+      <p id="lb-nohost" class="lb-nohost hidden" role="status">⚠ <b>Online server not hosted yet.</b> Online rooms will work once the game server is deployed (or open this page with <code>?server=wss://your-server/ws</code>). For now, use <b>Local split-screen</b> to play 2 players on one device.</p>
       <div id="lb-setup" class="lb-setup">
         <label class="group-label" for="lb-name">Driver name</label>
         <input id="lb-name" class="lb-input" maxlength="16" autocomplete="off" spellcheck="false" />
@@ -241,7 +251,7 @@
       <div class="row cam"><span>Distance</span><input type="range" id="rng-camdist" min="0.75" max="1.45" step="0.05" aria-label="Camera distance" /></div>
       <div class="row cam"><span>Height</span><input type="range" id="rng-camheight" min="0.6" max="1.6" step="0.05" aria-label="Camera height" /></div>
       <label class="row"><input type="checkbox" id="chk-shake" /> Camera shake on rough terrain</label>
-      <p class="note">Build 0.7.1 · rework in progress</p>
+      <p class="note">Build 0.7.2 · rework in progress</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>
