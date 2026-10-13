@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const U = 'https://vishnuvakayar-lab.github.io/offroad-wild-frontier/preview/';
+const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+await p.goto(U + '?noopening'); await p.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 180000 });
+const r = { build: (await p.textContent('body')).match(/Build [0-9.]+/)?.[0], vehicles: await p.evaluate(() => window.__game.vehicles.join(',')), split: await p.isVisible('#btn-split') };
+await p.click('#btn-online'); await p.waitForTimeout(600); await p.click('[data-quick="convoy"]'); await p.waitForTimeout(800);
+r.nohost = await p.isVisible('#lb-nohost'); r.chip = await p.textContent('#net-status'); r.err = await p.textContent('#lb-err');
+await p.screenshot({ path: 'screenshots/v072/live-online-not-hosted.png' });
+await p.click('#lb-back'); await p.click('#btn-split'); await p.waitForTimeout(2500); r.splitOn = await p.evaluate(() => window.__game.split.on);
+await p.screenshot({ path: 'screenshots/v072/live-split.png' });
+r.errs = errs; console.log(JSON.stringify(r, null, 1)); await b.close();
