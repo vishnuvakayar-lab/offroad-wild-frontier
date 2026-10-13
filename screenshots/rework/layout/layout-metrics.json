@@ -78,7 +78,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 19.6
+    "moved": 17.2
    }
   },
   "pause": {
@@ -98,6 +98,321 @@
    "clipped": [],
    "w": 375,
    "h": 414
+  },
+  "close": {
+   "resume": {
+    "phase": "playing",
+    "pause": false
+   },
+   "settingsClose": {
+    "phase": "playing",
+    "drawer": false,
+    "pause": false
+   },
+   "stacked": false
+  }
+ },
+ "iphone-se-landscape": {
+  "menu": {
+   "visible": true,
+   "cover": 0.4024379060469765,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 293,
+   "h": 343
+  },
+  "garage": {
+   "visible": true,
+   "cover": 0.42564292853573216,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 307,
+   "h": 347
+  },
+  "career": {
+   "visible": true,
+   "cover": 0.46266666666666667,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 334,
+   "h": 347
+  },
+  "modes": {
+   "visible": true,
+   "cover": 0.456,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 334,
+   "h": 342
+  },
+  "lobby": {
+   "visible": true,
+   "cover": 0.4811568590704648,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 347,
+   "h": 347
+  },
+  "settings": {
+   "visible": true,
+   "cover": 0.5097451274362819,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 375
+  },
+  "controls": {
+   "setting": "buttons",
+   "scheme": "buttons",
+   "zones": false,
+   "wheel": false,
+   "steer": true,
+   "gas": true,
+   "brake": true,
+   "rec": true,
+   "drv": true,
+   "cover": 0.12778985507246376,
+   "off": [],
+   "overlaps": [],
+   "drive": {
+    "steer": 1,
+    "throttle": 1,
+    "moved": 18.9
+   }
+  },
+  "pause": {
+   "visible": true,
+   "cover": 0.4029985007496252,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 320,
+   "h": 315
+  },
+  "pause-settings": {
+   "visible": true,
+   "cover": 0.5097451274362819,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 375
+  },
+  "close": {
+   "resume": {
+    "phase": "playing",
+    "pause": false
+   },
+   "settingsClose": {
+    "phase": "playing",
+    "drawer": false,
+    "pause": false
+   },
+   "stacked": false
+  }
+ },
+ "iphone-13-portrait": {
+  "menu": {
+   "visible": true,
+   "cover": 0.5818301699781261,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 366,
+   "h": 523
+  },
+  "garage": {
+   "visible": true,
+   "cover": 0.531265190181067,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 370,
+   "h": 473
+  },
+  "career": {
+   "visible": true,
+   "cover": 0.5692202310426541,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 370,
+   "h": 506
+  },
+  "modes": {
+   "visible": true,
+   "cover": 0.5080109217401871,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 370,
+   "h": 452
+  },
+  "lobby": {
+   "visible": true,
+   "cover": 0.5350589379025398,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 370,
+   "h": 476
+  },
+  "settings": {
+   "visible": true,
+   "cover": 0.6199829680094787,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 390,
+   "h": 523
+  },
+  "controls": {
+   "setting": "buttons",
+   "scheme": "buttons",
+   "zones": false,
+   "wheel": false,
+   "steer": true,
+   "gas": true,
+   "brake": true,
+   "rec": true,
+   "drv": true,
+   "cover": 0.09740988425082027,
+   "off": [],
+   "overlaps": [],
+   "drive": {
+    "steer": 1,
+    "throttle": 1,
+    "moved": 16.2
+   }
+  },
+  "pause": {
+   "visible": true,
+   "cover": 0.2985781990521327,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 312,
+   "h": 315
+  },
+  "pause-settings": {
+   "visible": true,
+   "cover": 0.6199829680094787,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 390,
+   "h": 523
+  },
+  "close": {
+   "resume": {
+    "phase": "playing",
+    "pause": false
+   },
+   "settingsClose": {
+    "phase": "playing",
+    "drawer": false,
+    "pause": false
+   },
+   "stacked": false
+  }
+ },
+ "iphone-13-landscape": {
+  "menu": {
+   "visible": true,
+   "cover": 0.3589135982500911,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 330,
+   "h": 358
+  },
+  "garage": {
+   "visible": true,
+   "cover": 0.37392149714424594,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 362
+  },
+  "career": {
+   "visible": true,
+   "cover": 0.4179122615141572,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 380,
+   "h": 362
+  },
+  "modes": {
+   "visible": true,
+   "cover": 0.37866083363713693,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 380,
+   "h": 328
+  },
+  "lobby": {
+   "visible": true,
+   "cover": 0.42167942641876294,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 400,
+   "h": 347
+  },
+  "settings": {
+   "visible": true,
+   "cover": 0.4028436018957346,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 390
+  },
+  "controls": {
+   "setting": "buttons",
+   "scheme": "buttons",
+   "zones": false,
+   "wheel": false,
+   "steer": true,
+   "gas": true,
+   "brake": true,
+   "rec": true,
+   "drv": true,
+   "cover": 0.0971060806294811,
+   "off": [],
+   "overlaps": [],
+   "drive": {
+    "steer": 1,
+    "throttle": 1,
+    "moved": 17.1
+   }
+  },
+  "pause": {
+   "visible": true,
+   "cover": 0.3062340503098797,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 320,
+   "h": 315
+  },
+  "pause-settings": {
+   "visible": true,
+   "cover": 0.4028436018957346,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 390
   },
   "close": {
    "resume": {
@@ -183,7 +498,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.9
+    "moved": 16.4
    }
   },
   "pause": {
@@ -288,7 +603,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.3
+    "moved": 15.1
    }
   },
   "pause": {
@@ -325,12 +640,12 @@
  "ipad-portrait": {
   "menu": {
    "visible": true,
-   "cover": 0.2217397265140554,
+   "cover": 0.24309507738218272,
    "inside": true,
    "hOverflow": false,
    "clipped": [],
    "w": 344,
-   "h": 623
+   "h": 683
   },
   "garage": {
    "visible": true,
@@ -393,7 +708,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.2
+    "moved": 15.9
    }
   },
   "pause": {
@@ -430,21 +745,21 @@
  "ipad-landscape": {
   "menu": {
    "visible": true,
-   "cover": 0.23178999586606036,
+   "cover": 0.25411326994625877,
    "inside": true,
    "hOverflow": false,
    "clipped": [],
    "w": 360,
-   "h": 623
+   "h": 683
   },
   "garage": {
    "visible": true,
-   "cover": 0.2589525630425796,
+   "cover": 0.2738760851591567,
    "inside": true,
    "hOverflow": false,
    "clipped": [],
    "w": 380,
-   "h": 659
+   "h": 697
   },
   "career": {
    "visible": true,
@@ -498,7 +813,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 14.4
+    "moved": 16.2
    }
   },
   "pause": {
@@ -518,6 +833,103 @@
    "clipped": [],
    "w": 340,
    "h": 820
+  },
+  "close": {
+   "resume": {
+    "phase": "playing",
+    "pause": false
+   },
+   "settingsClose": {
+    "phase": "playing",
+    "drawer": false,
+    "pause": false
+   },
+   "stacked": false
+  }
+ },
+ "desktop": {
+  "menu": {
+   "visible": true,
+   "cover": 0.266796875,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 360,
+   "h": 683
+  },
+  "garage": {
+   "visible": true,
+   "cover": 0.28532986111111114,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 380,
+   "h": 692
+  },
+  "career": {
+   "visible": true,
+   "cover": 0.31536458333333334,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 420,
+   "h": 692
+  },
+  "modes": {
+   "visible": true,
+   "cover": 0.21325276692708334,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 420,
+   "h": 468
+  },
+  "lobby": {
+   "visible": true,
+   "cover": 0.21966145833333334,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 420,
+   "h": 482
+  },
+  "settings": {
+   "visible": true,
+   "cover": 0.265625,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 720
+  },
+  "controls": {
+   "setting": "wheel",
+   "scheme": "wheel",
+   "zones": false,
+   "wheel": false,
+   "steer": false,
+   "gas": false,
+   "brake": false,
+   "rec": false,
+   "drv": true
+  },
+  "pause": {
+   "visible": true,
+   "cover": 0.109375,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 320,
+   "h": 315
+  },
+  "pause-settings": {
+   "visible": true,
+   "cover": 0.265625,
+   "inside": true,
+   "hOverflow": false,
+   "clipped": [],
+   "w": 340,
+   "h": 720
   },
   "close": {
    "resume": {

@@ -1,65 +1,115 @@
 {
   "high": {
     "scout": {
-      "draws": 26,
-      "tris": 25796,
+      "draws": 28,
+      "tris": 28680,
       "lod": 1
     },
     "voyager": {
-      "draws": 26,
-      "tris": 26030,
+      "draws": 28,
+      "tris": 28914,
       "lod": 1
     },
     "sahara": {
-      "draws": 23,
-      "tris": 24456,
+      "draws": 27,
+      "tris": 27340,
       "lod": 1
     },
     "pickup": {
-      "draws": 24,
-      "tris": 23856,
+      "draws": 27,
+      "tris": 26740,
       "lod": 1
     },
     "rally": {
-      "draws": 23,
-      "tris": 20884,
+      "draws": 26,
+      "tris": 23768,
       "lod": 1
     },
     "recovery": {
-      "draws": 25,
-      "tris": 28990,
+      "draws": 28,
+      "tris": 31874,
+      "lod": 1
+    },
+    "van": {
+      "draws": 28,
+      "tris": 28614,
+      "lod": 1
+    },
+    "ltv": {
+      "draws": 31,
+      "tris": 26590,
+      "lod": 1
+    },
+    "patrol": {
+      "draws": 30,
+      "tris": 30968,
+      "lod": 1
+    },
+    "cargo6": {
+      "draws": 31,
+      "tris": 28742,
+      "lod": 1
+    },
+    "mrap": {
+      "draws": 30,
+      "tris": 27772,
       "lod": 1
     }
   },
   "low": {
     "scout": {
-      "draws": 21,
-      "tris": 3484,
+      "draws": 23,
+      "tris": 4164,
       "lod": 0
     },
     "voyager": {
-      "draws": 21,
-      "tris": 3598,
+      "draws": 23,
+      "tris": 4278,
       "lod": 0
     },
     "sahara": {
-      "draws": 17,
-      "tris": 3484,
+      "draws": 21,
+      "tris": 4164,
       "lod": 0
     },
     "pickup": {
-      "draws": 18,
-      "tris": 3512,
+      "draws": 21,
+      "tris": 4192,
       "lod": 0
     },
     "rally": {
-      "draws": 18,
-      "tris": 3340,
+      "draws": 21,
+      "tris": 4020,
       "lod": 0
     },
     "recovery": {
-      "draws": 20,
-      "tris": 3350,
+      "draws": 23,
+      "tris": 4030,
+      "lod": 0
+    },
+    "van": {
+      "draws": 23,
+      "tris": 4122,
+      "lod": 0
+    },
+    "ltv": {
+      "draws": 23,
+      "tris": 4346,
+      "lod": 0
+    },
+    "patrol": {
+      "draws": 22,
+      "tris": 4052,
+      "lod": 0
+    },
+    "cargo6": {
+      "draws": 24,
+      "tris": 4290,
+      "lod": 0
+    },
+    "mrap": {
+      "draws": 22,
+      "tris": 3392,
       "lod": 0
     }
   },
@@ -116,6 +166,51 @@
       "steerRear": 0,
       "damperStretch": 0.07930081005366157,
       "linkMove": 0.07204470038414001,
+      "instances": 10
+    },
+    "van": {
+      "hubTravel": 0.15185797214508057,
+      "spin": true,
+      "steerFront": 0.2962379946878736,
+      "steerRear": 0,
+      "damperStretch": 0.08175530761939354,
+      "linkMove": 0.09142297506332397,
+      "instances": 10
+    },
+    "ltv": {
+      "hubTravel": 0.25112634897232056,
+      "spin": true,
+      "steerFront": 0.32546566666792703,
+      "steerRear": 0,
+      "damperStretch": 0.14343932386323816,
+      "linkMove": 0.1970236897468567,
+      "instances": 10
+    },
+    "patrol": {
+      "hubTravel": 0.1343567967414856,
+      "spin": true,
+      "steerFront": 0.28880231773389653,
+      "steerRear": 0,
+      "damperStretch": 0.07974916326176668,
+      "linkMove": 0.08089101314544678,
+      "instances": 10
+    },
+    "cargo6": {
+      "hubTravel": 0.11712819337844849,
+      "spin": true,
+      "steerFront": 0.27638320311053866,
+      "steerRear": 0,
+      "damperStretch": 0.05584855177518455,
+      "linkMove": 0.0633748208909628,
+      "instances": 10
+    },
+    "mrap": {
+      "hubTravel": 0.09266650676727295,
+      "spin": true,
+      "steerFront": 0.2712857823222651,
+      "steerRear": 0,
+      "damperStretch": 0.05321530122237672,
+      "linkMove": 0.05071717796576505,
       "instances": 10
     }
   },
