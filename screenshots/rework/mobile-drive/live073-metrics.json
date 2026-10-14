@@ -1,0 +1,258 @@
+{
+ "live073 webkit iPhone 13 Pro Max": {
+  "build": "Build 0.7.3",
+  "js": "index-g12TLyNm.js",
+  "afterSkip": "menu",
+  "playPhase": "playing",
+  "toPlayingMs": 122,
+  "gl": {
+   "ok": true,
+   "lostOverlay": false
+  },
+  "controls": {
+   "setting": "wheel",
+   "scheme": "wheel",
+   "touchActive": true,
+   "W": 428,
+   "H": 746,
+   "R": {
+    "wheel": {
+     "vis": true,
+     "l": 16,
+     "t": 586,
+     "r": 160,
+     "b": 730,
+     "w": 144,
+     "h": 144
+    },
+    "pd-gas": {
+     "vis": true,
+     "l": 322,
+     "t": 604,
+     "r": 414,
+     "b": 732,
+     "w": 92,
+     "h": 128
+    },
+    "pd-brake": {
+     "vis": true,
+     "l": 232,
+     "t": 640,
+     "r": 312,
+     "b": 732,
+     "w": 80,
+     "h": 92
+    },
+    "ck-rec": {
+     "vis": true,
+     "l": 297.46875,
+     "t": 558,
+     "r": 364,
+     "b": 594,
+     "w": 66.53125,
+     "h": 36
+    },
+    "ck-hb": {
+     "vis": true,
+     "l": 370,
+     "t": 558,
+     "r": 414,
+     "b": 594,
+     "w": 44,
+     "h": 36
+    }
+   },
+   "sa": [
+    "0px",
+    "0px",
+    "0px",
+    "0px"
+   ]
+  },
+  "safeArea": {
+   "ins": {
+    "t": 47,
+    "b": 34,
+    "l": 0,
+    "r": 0
+   },
+   "bad": [],
+   "ov": []
+  },
+  "touchEvents": "Event with touch lists (no Touch constructor in desktop WebKit)",
+  "gas": {
+   "hitTarget": "SPAN",
+   "moved": 24.1,
+   "kmh": 60.7,
+   "throttle": 1
+  },
+  "wheelSmallRight": {
+   "hit": "wheel",
+   "deg": 45,
+   "value": -0.072,
+   "steer": -0.072,
+   "throttle": 1,
+   "angle3dDeg": 45,
+   "dyawDeg": -9.9
+  },
+  "wheelBigRight": {
+   "hit": "wheel",
+   "deg": 300,
+   "value": -0.656,
+   "steer": -0.656,
+   "throttle": 1,
+   "angle3dDeg": 300,
+   "dyawDeg": -58.8
+  },
+  "selfCentre": {
+   "deg": 0,
+   "steer": 0,
+   "angle3d": 0
+  },
+  "wheelLeft": {
+   "hit": "wheel",
+   "deg": -200,
+   "value": 0.427,
+   "steer": 0.427,
+   "throttle": 1,
+   "angle3dDeg": -200,
+   "dyawDeg": 51.6
+  },
+  "brake": {
+   "hit": "SPAN",
+   "fromKmh": -0.1,
+   "toKmh": -18
+  },
+  "reverse": {
+   "kmh": -29.6
+  }
+ },
+ "live073 webkit iPhone 13 Pro Max landscape": {
+  "build": "Build 0.7.3",
+  "js": "index-g12TLyNm.js",
+  "afterSkip": "menu",
+  "playPhase": "playing",
+  "toPlayingMs": 116,
+  "gl": {
+   "ok": true,
+   "lostOverlay": false
+  },
+  "controls": {
+   "setting": "wheel",
+   "scheme": "wheel",
+   "touchActive": true,
+   "W": 832,
+   "H": 380,
+   "R": {
+    "wheel": {
+     "vis": true,
+     "l": 16,
+     "t": 214,
+     "r": 166,
+     "b": 364,
+     "w": 150,
+     "h": 150
+    },
+    "pd-gas": {
+     "vis": true,
+     "l": 732,
+     "t": 258,
+     "r": 818,
+     "b": 366,
+     "w": 86,
+     "h": 108
+    },
+    "pd-brake": {
+     "vis": true,
+     "l": 648,
+     "t": 286,
+     "r": 722,
+     "b": 366,
+     "w": 74,
+     "h": 80
+    },
+    "ck-rec": {
+     "vis": true,
+     "l": 701.46875,
+     "t": 214,
+     "r": 768,
+     "b": 250,
+     "w": 66.53125,
+     "h": 36
+    },
+    "ck-hb": {
+     "vis": true,
+     "l": 774,
+     "t": 214,
+     "r": 818,
+     "b": 250,
+     "w": 44,
+     "h": 36
+    }
+   },
+   "sa": [
+    "0px",
+    "0px",
+    "0px",
+    "0px"
+   ]
+  },
+  "safeArea": {
+   "ins": {
+    "t": 0,
+    "b": 21,
+    "l": 47,
+    "r": 47
+   },
+   "bad": [],
+   "ov": []
+  },
+  "touchEvents": "Event with touch lists (no Touch constructor in desktop WebKit)",
+  "gas": {
+   "hitTarget": "SPAN",
+   "moved": 24.3,
+   "kmh": 60.8,
+   "throttle": 1
+  },
+  "wheelSmallRight": {
+   "hit": "wheel",
+   "deg": 45,
+   "value": -0.072,
+   "steer": -0.072,
+   "throttle": 1,
+   "angle3dDeg": 45,
+   "dyawDeg": -10.6
+  },
+  "wheelBigRight": {
+   "hit": "wheel",
+   "deg": 300,
+   "value": -0.656,
+   "steer": -0.656,
+   "throttle": 1,
+   "angle3dDeg": 300,
+   "dyawDeg": -59.5
+  },
+  "selfCentre": {
+   "deg": 0,
+   "steer": 0,
+   "angle3d": 0
+  },
+  "wheelLeft": {
+   "hit": "wheel",
+   "deg": -200,
+   "value": 0.427,
+   "steer": 0.427,
+   "throttle": 1,
+   "angle3dDeg": -200,
+   "dyawDeg": 56.2
+  },
+  "brake": {
+   "hit": "SPAN",
+   "fromKmh": 3,
+   "toKmh": -9.6
+  },
+  "reverse": {
+   "kmh": -26.4
+  }
+ }
+}
