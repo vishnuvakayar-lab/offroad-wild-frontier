@@ -12,7 +12,7 @@ const ped = (page) => page.evaluate(() => window.__game.pedals());
 const pose = (page) => page.evaluate(() => window.__game.pose());
 const ptr = (page, sel, type, id, dx = 0, dy = 0) => page.evaluate(([sel, type, id, dx, dy]) => {
   const el = document.querySelector(sel); const r = el.getBoundingClientRect();
-  el.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: 'touch', bubbles: true, cancelable: true, clientX: r.left + r.width / 2 + dx, clientY: r.top + r.height / 2 + dy }));
+  el.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: sel === '#wheel' ? 'pen' : 'touch', bubbles: true, cancelable: true, clientX: r.left + r.width / 2 + dx, clientY: r.top + r.height / 2 + dy }));
 }, [sel, type, id, dx, dy]);
 const frames = (page, n) => page.evaluate(async (n) => { for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r)); }, n);
 const rect = (page, ids) => page.evaluate((ids) => Object.fromEntries(ids.map((id) => { const e = document.getElementById(id) ?? document.querySelector(id); const r = e.getBoundingClientRect(); return [id, { x: r.left, y: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, vis: e.offsetParent !== null || getComputedStyle(e).position === 'fixed' }]; })), ids);
@@ -87,14 +87,14 @@ export async function runDrive({ openPage, ok }) {
     await ptr(page, '#pd-gas', 'pointerdown', 31);
     const wr = (await rect(page, ['wheel'])).wheel; const rr = wr.w / 2 - 8;
     await ptr(page, '#wheel', 'pointerdown', 32, 0, -rr); // grab the top of the rim
-    for (let k = 1; k <= 6; k++) { const a = (-90 + k * 15) * Math.PI / 180; await ptr(page, '#wheel', 'pointermove', 32, Math.cos(a) * rr, Math.sin(a) * rr); } // turn clockwise 90 deg
+    for (let k = 1; k <= 18; k++) { const a = (-90 + k * 15) * Math.PI / 180; await ptr(page, '#wheel', 'pointermove', 32, Math.cos(a) * rr, Math.sin(a) * rr); } // turn clockwise 270 deg (0.7.3 lock ±450°)
     await frames(page, 4);
     const wIn = await inp(page), wPed = await ped(page), q0 = await pose(page);
     await sleep(2500);
     const q1 = await pose(page);
     let dy = q1.yaw - q0.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     await page.screenshot({ path: SH + 'drive-multitouch-wheel.png' });
-    ok('drive multitouch: wheel turned 90 deg clockwise while holding GAS -> steers right and accelerates, car turns right', wPed.wheelDeg > 80 && wIn.steer < -0.4 && wIn.throttle > 0.5 && dy < -0.15 && Math.hypot(q1.x - q0.x, q1.z - q0.z) > 3,
+    ok('drive multitouch: wheel turned 270 deg clockwise while holding GAS -> steers right and accelerates, car turns right', wPed.wheelDeg > 250 && wIn.steer < -0.4 && wIn.throttle > 0.5 && dy < -0.15 && Math.hypot(q1.x - q0.x, q1.z - q0.z) > 3,
       `wheel ${wPed.wheelDeg.toFixed(0)} deg -> steer ${wIn.steer.toFixed(2)}, throttle ${wIn.throttle.toFixed(2)}; yaw ${(dy * 180 / Math.PI).toFixed(0)} deg, moved ${Math.hypot(q1.x - q0.x, q1.z - q0.z).toFixed(1)} m`);
     await ptr(page, '#wheel', 'pointerup', 32); await ptr(page, '#pd-gas', 'pointerup', 31);
     await sleep(700); await frames(page, 2);

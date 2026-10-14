@@ -62,6 +62,7 @@
    "w": 375,
    "h": 414
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -78,7 +79,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 17.2
+    "moved": 17.6
    }
   },
   "pause": {
@@ -167,6 +168,7 @@
    "w": 340,
    "h": 375
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -183,7 +185,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 18.9
+    "moved": 15.9
    }
   },
   "pause": {
@@ -272,6 +274,7 @@
    "w": 390,
    "h": 523
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -288,7 +291,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.2
+    "moved": 18.2
    }
   },
   "pause": {
@@ -377,6 +380,7 @@
    "w": 340,
    "h": 390
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -393,7 +397,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 17.1
+    "moved": 12.9
    }
   },
   "pause": {
@@ -482,6 +486,7 @@
    "w": 430,
    "h": 578
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -498,7 +503,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.4
+    "moved": 15.9
    }
   },
   "pause": {
@@ -587,6 +592,7 @@
    "w": 340,
    "h": 430
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -603,7 +609,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 15.1
+    "moved": 14
    }
   },
   "pause": {
@@ -692,6 +698,7 @@
    "w": 340,
    "h": 1180
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -708,7 +715,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 15.9
+    "moved": 14
    }
   },
   "pause": {
@@ -797,6 +804,7 @@
    "w": 340,
    "h": 820
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "buttons",
    "scheme": "buttons",
@@ -813,7 +821,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.2
+    "moved": 16.4
    }
   },
   "pause": {
@@ -902,6 +910,7 @@
    "w": 340,
    "h": 720
   },
+  "defaultSetting": "wheel",
   "controls": {
    "setting": "wheel",
    "scheme": "wheel",

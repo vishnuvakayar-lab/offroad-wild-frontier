@@ -1,15 +1,15 @@
 {
   "note": "headless Chrome + SwiftShader (CPU software GL); not representative of real GPUs",
   "weatherHigh": {
-    "clear": 10.819317399429558,
-    "sunset": 10.819317399429558,
-    "fog": 10.819317399429558,
-    "rain": 10.000000000000002,
-    "night": 10.000000000000002
+    "clear": 10.81931739942948,
+    "sunset": 10.81825334382373,
+    "fog": 11.428571428571587,
+    "rain": 10.820381664371373,
+    "night": 12.000369242130656
   },
   "presetsClearMud": {
-    "low": 11.95284452432374,
-    "medium": 10.409658699714704,
+    "low": 13.161681432420664,
+    "medium": 10.000000000000002,
     "high": 10.000000000000002
   }
 }

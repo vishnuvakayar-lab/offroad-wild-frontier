@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 5530 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 5579 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -12,7 +12,7 @@
   {
     "name": "desktop: menu panel does not cover whole game",
     "pass": true,
-    "detail": "covers 24% of viewport"
+    "detail": "covers 27% of viewport"
   },
   {
     "name": "audio: AudioContext created and running after first click",
@@ -22,7 +22,7 @@
   {
     "name": "desktop: settings drawer partial",
     "pass": true,
-    "detail": "covers 0%"
+    "detail": "covers 27%"
   },
   {
     "name": "desktop: graphics preset switch works",
@@ -30,24 +30,24 @@
     "detail": "preset=medium"
   },
   {
-    "name": "intro: Play starts the intro and Skip ends it",
+    "name": "Free Roam: Play is drivable at once (no fly-over intro blocking input)",
     "pass": true,
-    "detail": "phase after Play=intro, skip->playing in 602 ms"
+    "detail": "phase playing 380 ms after the click"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.1 Hz set, 903 rpm -> throttle: 161.5 Hz measured / 142.8 Hz set, 4283 rpm (gear 3)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 900 rpm -> throttle: 150.7 Hz measured / 152.2 Hz set, 4567 rpm (gear 2)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 7.74 m, speed 40.5 km/h (render-paced)"
+    "detail": "moved 3.45 m, speed 28.1 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 48.3 deg"
+    "detail": "heading change 37.4 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -72,7 +72,7 @@
   {
     "name": "holding brake at standstill reverses",
     "pass": true,
-    "detail": "-25.2 km/h"
+    "detail": "-25.3 km/h"
   },
   {
     "name": "vehicle stays upright through tests",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "28 track decals in 5 s"
+    "detail": "29 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.2 fps, Low preset 14.6 fps"
+    "detail": "High preset 10.0 fps, Low preset 14.8 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 5094 ms"
+    "detail": "load 4704 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -107,12 +107,12 @@
   {
     "name": "mobile-portrait-390x844: settings drawer partial",
     "pass": true,
-    "detail": "covers 0%"
+    "detail": "covers 62%"
   },
   {
-    "name": "mobile-portrait-390x844: intro plays and tap on Skip ends it",
+    "name": "mobile-portrait-390x844: Free Roam tap -> drivable at once with the default steering wheel + GAS",
     "pass": true,
-    "detail": "intro -> playing"
+    "detail": "phase playing, controls wheel, touchActive true"
   },
   {
     "name": "mobile-portrait-390x844: audio running after tap",
@@ -122,12 +122,12 @@
   {
     "name": "mobile-portrait-390x844: touch controls visible, >=48px, on-screen",
     "pass": true,
-    "detail": "sb-l:64x64 sb-r:64x64 pd-brake:64x74 pd-gas:56x104"
+    "detail": "sb-l:68x68 sb-r:68x68 pd-brake:70x86 pd-gas:82x120"
   },
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 11.36 m, heading change 72.7 deg, airborne samples 0/6"
+    "detail": "moved 12.01 m, heading change 65.6 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
@@ -147,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 6518 ms"
+    "detail": "load 5367 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -157,12 +157,12 @@
   {
     "name": "mobile-landscape-844x390: settings drawer partial",
     "pass": true,
-    "detail": "covers 0%"
+    "detail": "covers 40%"
   },
   {
-    "name": "mobile-landscape-844x390: intro plays and tap on Skip ends it",
+    "name": "mobile-landscape-844x390: Free Roam tap -> drivable at once with the default steering wheel + GAS",
     "pass": true,
-    "detail": "intro -> playing"
+    "detail": "phase playing, controls wheel, touchActive true"
   },
   {
     "name": "mobile-landscape-844x390: audio running after tap",
@@ -172,17 +172,17 @@
   {
     "name": "mobile-landscape-844x390: touch controls visible, >=48px, on-screen",
     "pass": true,
-    "detail": "sb-l:64x64 sb-r:64x64 pd-brake:64x66 pd-gas:56x92"
+    "detail": "sb-l:70x70 sb-r:70x70 pd-brake:74x80 pd-gas:86x108"
   },
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 8.25 m, heading change 55.4 deg, airborne samples 0/6"
+    "detail": "moved 13.37 m, heading change 64.5 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "11.5 fps @ preset medium"
+    "detail": "11.6 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,27 +197,27 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 14 / mud 537 / sand 376; slip dirt 0.05 / mud 0.47 / sand 0.21"
+    "detail": "dirt 18 / mud 512 / sand 392; slip dirt 0.00 / mud 0.42 / sand 0.20"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "t=7.50 s, wheels in water=true, peak splash particles 216, chassis y in puddle 0.62 vs water level -0.10"
+    "detail": "t=7.35 s, wheels in water=true, peak splash particles 218, chassis y in puddle 0.62 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "140 ribbon segments"
+    "detail": "144 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
     "pass": true,
-    "detail": "63.5 deg at rest -> 68.2 deg at speed"
+    "detail": "63.5 deg at rest -> 68.7 deg at speed"
   },
   {
     "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
     "pass": true,
-    "detail": "camera 2.39 m behind car (normal 7.4 m), cam x 9.78 vs tree x 9.04, 3.03 m above ground"
+    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.03 m above ground"
   },
   {
     "name": "weather: HUD quick toggle and T key cycle presets",
@@ -227,42 +227,42 @@
   {
     "name": "weather: clear loads without console errors",
     "pass": true,
-    "detail": "11.6 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: sunset loads without console errors",
     "pass": true,
-    "detail": "11.6 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "11.4 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
     "pass": true,
-    "detail": "12.4 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "12.0 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "12.2 fps, 83 draw calls, 134596 tris, particles {\"mud\":106,\"dust\":0,\"splash\":0,\"spawned\":3924}"
+    "detail": "13.2 fps, 85 draw calls, 135264 tris, particles {\"mud\":97,\"dust\":0,\"splash\":0,\"spawned\":3854}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.8 fps, 180 draw calls, 243586 tris, particles {\"mud\":195,\"dust\":0,\"splash\":0,\"spawned\":4188}"
+    "detail": "10.0 fps, 185 draw calls, 250448 tris, particles {\"mud\":190,\"dust\":0,\"splash\":0,\"spawned\":4095}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 197 draw calls, 284886 tris, particles {\"mud\":265,\"dust\":0,\"splash\":0,\"spawned\":4531}"
+    "detail": "10.0 fps, 201 draw calls, 290610 tris, particles {\"mud\":251,\"dust\":0,\"splash\":0,\"spawned\":4404}"
   },
   {
     "name": "AA toggled without page reload",
@@ -335,14 +335,64 @@
     "detail": "90 m, turned 89°, min up 0.94, final up 1.00, airborne 8% of samples, ended on sand"
   },
   {
+    "name": "vehicle van: spawns upright",
+    "pass": true,
+    "detail": "up 1.000, body 1.05 m above ground"
+  },
+  {
+    "name": "vehicle van: stays upright through scripted drive (bumps + turn)",
+    "pass": true,
+    "detail": "92 m, turned 93°, min up 0.93, final up 1.00, airborne 12% of samples, ended on sand"
+  },
+  {
+    "name": "vehicle ltv: spawns upright",
+    "pass": true,
+    "detail": "up 1.000, body 1.01 m above ground"
+  },
+  {
+    "name": "vehicle ltv: stays upright through scripted drive (bumps + turn)",
+    "pass": true,
+    "detail": "114 m, turned 113°, min up 0.92, final up 1.00, airborne 18% of samples, ended on sand"
+  },
+  {
+    "name": "vehicle patrol: spawns upright",
+    "pass": true,
+    "detail": "up 1.000, body 1.09 m above ground"
+  },
+  {
+    "name": "vehicle patrol: stays upright through scripted drive (bumps + turn)",
+    "pass": true,
+    "detail": "93 m, turned 94°, min up 0.93, final up 1.00, airborne 13% of samples, ended on sand"
+  },
+  {
+    "name": "vehicle cargo6: spawns upright",
+    "pass": true,
+    "detail": "up 1.000, body 1.04 m above ground"
+  },
+  {
+    "name": "vehicle cargo6: stays upright through scripted drive (bumps + turn)",
+    "pass": true,
+    "detail": "84 m, turned 94°, min up 0.93, final up 0.96, airborne 6% of samples, ended on sand"
+  },
+  {
+    "name": "vehicle mrap: spawns upright",
+    "pass": true,
+    "detail": "up 1.000, body 0.98 m above ground"
+  },
+  {
+    "name": "vehicle mrap: stays upright through scripted drive (bumps + turn)",
+    "pass": true,
+    "detail": "83 m, turned 88°, min up 0.93, final up 0.97, airborne 5% of samples, ended on sand"
+  },
+  {
     "name": "vehicles: performance differs (0-60, top speed, turn rate, mud)",
     "pass": true,
-    "detail": "0-60 1.55-3.8s, top 76-128 km/h, turn 36.6-52.5 deg/s, mud 22.8-34.8 km/h; every pair differs"
+    "detail": "0-60 1.55-4.65s, top 70-128 km/h, turn 36.6-52.5 deg/s, mud 22.8-37.5 km/h; every pair differs"
   },
   {
     "name": "vehicles: character matches class",
     "pass": true,
-    "detail": "rally quickest/fastest but worst in mud; recovery truck slowest"
+    "detail": "rally quickest/fastest but worst in mud; a heavy truck (recovery / 6x6 / MRAP) slowest"
   },
   {
     "name": "steering lighter at speed without losing stability",
@@ -352,12 +402,12 @@
   {
     "name": "garage desktop: panel leaves the showcase visible",
     "pass": true,
-    "detail": "panel covers 27% of 1280x720"
+    "detail": "panel covers 29% of 1280x720"
   },
   {
     "name": "garage: cycles through all vehicles",
     "pass": true,
-    "detail": "scout, voyager, sahara, pickup, rally, recovery"
+    "detail": "scout, voyager, sahara, pickup, rally, recovery, van, ltv, patrol, cargo6, mrap"
   },
   {
     "name": "garage: selection + colour persist across reload and are used in Free Roam",
@@ -367,7 +417,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 13.1 -> 54.9; clear 98.5 vs 98.5 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 0.0 -> 57.8; clear 98.9 vs 98.9 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -397,77 +447,127 @@
   {
     "name": "paint colour applies to body panels only",
     "pass": true,
-    "detail": "changed: static:paint/paint (1236 tris); 25 other meshes (tyres, rims, glass, trim, lamps, suspension) unchanged"
+    "detail": "changed: static:paint/paint (1236 tris); 27 other meshes (tyres, rims, glass, trim, lamps, suspension) unchanged"
   },
   {
     "name": "model scout: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 22.8 cm, front steer range 0.32 rad, damper length range 12.2 cm, axle/arm motion 16.8 cm, 10 instanced parts; High: 26 draws / 25796 tris"
+    "detail": "hub travel 22.8 cm, front steer range 0.32 rad, damper length range 12.2 cm, axle/arm motion 16.8 cm, 10 instanced parts; High: 28 draws / 28680 tris"
   },
   {
     "name": "model voyager: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 23.0 cm, front steer range 0.30 rad, damper length range 10.3 cm, axle/arm motion 15.8 cm, 10 instanced parts; High: 26 draws / 26030 tris"
+    "detail": "hub travel 23.0 cm, front steer range 0.30 rad, damper length range 10.3 cm, axle/arm motion 15.8 cm, 10 instanced parts; High: 28 draws / 28914 tris"
   },
   {
     "name": "model sahara: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 23.3 cm, front steer range 0.41 rad, damper length range 12.0 cm, axle/arm motion 12.3 cm, 12 instanced parts; High: 23 draws / 24456 tris"
+    "detail": "hub travel 23.3 cm, front steer range 0.41 rad, damper length range 12.0 cm, axle/arm motion 12.3 cm, 12 instanced parts; High: 27 draws / 27340 tris"
   },
   {
     "name": "model pickup: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 19.3 cm, front steer range 0.28 rad, damper length range 10.0 cm, axle/arm motion 13.0 cm, 10 instanced parts; High: 24 draws / 23856 tris"
+    "detail": "hub travel 19.3 cm, front steer range 0.28 rad, damper length range 10.0 cm, axle/arm motion 13.0 cm, 10 instanced parts; High: 27 draws / 26740 tris"
   },
   {
     "name": "model rally: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 20.9 cm, front steer range 0.34 rad, damper length range 16.3 cm, axle/arm motion 14.9 cm, 12 instanced parts; High: 23 draws / 20884 tris"
+    "detail": "hub travel 20.9 cm, front steer range 0.34 rad, damper length range 16.3 cm, axle/arm motion 14.9 cm, 12 instanced parts; High: 26 draws / 23768 tris"
   },
   {
     "name": "model recovery: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 12.0 cm, front steer range 0.28 rad, damper length range 7.9 cm, axle/arm motion 7.2 cm, 10 instanced parts; High: 25 draws / 28990 tris"
+    "detail": "hub travel 12.0 cm, front steer range 0.28 rad, damper length range 7.9 cm, axle/arm motion 7.2 cm, 10 instanced parts; High: 28 draws / 31874 tris"
+  },
+  {
+    "name": "model van: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 15.2 cm, front steer range 0.30 rad, damper length range 8.2 cm, axle/arm motion 9.1 cm, 10 instanced parts; High: 28 draws / 28614 tris"
+  },
+  {
+    "name": "model ltv: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 25.1 cm, front steer range 0.33 rad, damper length range 14.3 cm, axle/arm motion 19.7 cm, 10 instanced parts; High: 31 draws / 26590 tris"
+  },
+  {
+    "name": "model patrol: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 13.4 cm, front steer range 0.29 rad, damper length range 8.0 cm, axle/arm motion 8.1 cm, 10 instanced parts; High: 30 draws / 30968 tris"
+  },
+  {
+    "name": "model cargo6: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 11.7 cm, front steer range 0.28 rad, damper length range 5.6 cm, axle/arm motion 6.3 cm, 10 instanced parts; High: 31 draws / 28742 tris"
+  },
+  {
+    "name": "model mrap: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 9.3 cm, front steer range 0.27 rad, damper length range 5.3 cm, axle/arm motion 5.1 cm, 10 instanced parts; High: 30 draws / 27772 tris"
   },
   {
     "name": "model scout: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
-    "detail": "High/Medium: 26 draws, 25796 tris; Low: 21 draws, 3484 tris"
+    "detail": "High/Medium: 28 draws, 28680 tris; Low: 23 draws, 4164 tris"
   },
   {
     "name": "model voyager: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
-    "detail": "High/Medium: 26 draws, 26030 tris; Low: 21 draws, 3598 tris"
+    "detail": "High/Medium: 28 draws, 28914 tris; Low: 23 draws, 4278 tris"
   },
   {
     "name": "model sahara: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
-    "detail": "High/Medium: 23 draws, 24456 tris; Low: 17 draws, 3484 tris"
+    "detail": "High/Medium: 27 draws, 27340 tris; Low: 21 draws, 4164 tris"
   },
   {
     "name": "model pickup: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
-    "detail": "High/Medium: 24 draws, 23856 tris; Low: 18 draws, 3512 tris"
+    "detail": "High/Medium: 27 draws, 26740 tris; Low: 21 draws, 4192 tris"
   },
   {
     "name": "model rally: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
-    "detail": "High/Medium: 23 draws, 20884 tris; Low: 18 draws, 3340 tris"
+    "detail": "High/Medium: 26 draws, 23768 tris; Low: 21 draws, 4020 tris"
   },
   {
     "name": "model recovery: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
-    "detail": "High/Medium: 25 draws, 28990 tris; Low: 20 draws, 3350 tris"
+    "detail": "High/Medium: 28 draws, 31874 tris; Low: 23 draws, 4030 tris"
+  },
+  {
+    "name": "model van: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 28 draws, 28614 tris; Low: 23 draws, 4122 tris"
+  },
+  {
+    "name": "model ltv: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 31 draws, 26590 tris; Low: 23 draws, 4346 tris"
+  },
+  {
+    "name": "model patrol: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 30 draws, 30968 tris; Low: 22 draws, 4052 tris"
+  },
+  {
+    "name": "model cargo6: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 31 draws, 28742 tris; Low: 24 draws, 4290 tris"
+  },
+  {
+    "name": "model mrap: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 30 draws, 27772 tris; Low: 22 draws, 3392 tris"
   },
   {
     "name": "Low preset swaps to simplified model live (no reload)",
     "pass": true,
-    "detail": "lod=0 for all six after switching preset; scout at switch time y=0.99"
+    "detail": "lod=0 for all six after switching preset; scout at switch time y=1.41"
   },
   {
     "name": "mud builds up on the body in the mud basin (cosmetic)",
     "pass": true,
-    "detail": "dirt level 0.45 after ~6 s in mud"
+    "detail": "dirt level 0.44 after ~6 s in mud"
   },
   {
     "name": "phase5b desktop: no console errors",
@@ -477,7 +577,7 @@
   {
     "name": "phase5b portrait: garage renders detailed model (Medium preset on touch)",
     "pass": true,
-    "detail": "scout: 26 draws, 25796 tris; errors 0"
+    "detail": "scout: 28 draws, 28680 tris; errors 0"
   },
   {
     "name": "p6 save: empty storage -> v2 defaults (Scout only, 0 cr)",
@@ -657,7 +757,7 @@
   {
     "name": "p6 portrait: mode select fits, mission HUD inside viewport, small, clear of touch controls",
     "pass": true,
-    "detail": "modes 51%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true"
+    "detail": "modes 51%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true, start button visible true, mhud rect 42,104,348,220 in 390x844"
   },
   {
     "name": "p6 portrait: no console errors",
@@ -667,7 +767,7 @@
   {
     "name": "p6 landscape: mode select fits, mission HUD inside viewport, small, clear of touch controls",
     "pass": true,
-    "detail": "modes 38%, HUD opaque panels 7.2% (bounding box incl. message 422x114 px = 14.6%) at y 10, touch overlap false, winch on-screen true, hook tap attached true"
+    "detail": "modes 38%, HUD opaque panels 7.2% (bounding box incl. message 422x114 px = 14.6%) at y 10, touch overlap false, winch on-screen true, hook tap attached true, start button visible true, mhud rect 211,10,633,124 in 844x390"
   },
   {
     "name": "p6 landscape: no console errors",
@@ -762,7 +862,7 @@
   {
     "name": "p6b rock: own dust + gravel sound while driving on rock",
     "pass": true,
-    "detail": "real-time 1.5 s on rock: dust particles 51, gravel crunch level 0.104 (audio running)"
+    "detail": "real-time 1.5 s on rock: dust particles 52, gravel crunch level 0.105 (audio running)"
   },
   {
     "name": "p6b tow: stuck 4x4 at the zone edge does not count; well inside + 1 s hold does",
@@ -776,8 +876,8 @@
   },
   {
     "name": "p6b supply run: nightfall tied to the time limit",
-    "pass": false,
-    "detail": "limit 120 s: t=12 s dusk 0.00 exp 1.05 | t=60 s dusk 0.00 exp 1.05 | t=108 s dusk 0.95 exp 0.45"
+    "pass": true,
+    "detail": "limit 120 s: t=12 s dusk 0.00 exp 1.05 | t=60 s dusk 0.27 exp 0.88 | t=108 s dusk 0.95 exp 0.45"
   },
   {
     "name": "p6b presets: scree detail low < medium < high (low = 0)",
@@ -790,7 +890,7 @@
     "detail": ""
   },
   {
-    "name": "rework controls: mobile default = cockpit wheel + pedals (auto-throttle preset on for the optional tilt mode)",
+    "name": "rework controls: mobile default = steering wheel + GAS + BRAKE/REV (0.7.3; auto-throttle preset only applies to the optional tilt mode)",
     "pass": true,
     "detail": "{\"setting\":\"wheel\",\"scheme\":\"wheel\",\"auto\":true,\"tiltState\":\"off\",\"tiltEvents\":0,\"tilt\":0,\"touchActive\":false,\"fallback\":false}"
   },
@@ -801,8 +901,8 @@
   },
   {
     "name": "rework tilt: iOS requestPermission called once from the Start tap and granted; tilt mode = pedals + Centre, no wheel",
-    "pass": false,
-    "detail": "asked 1, state granted, {\"pedals\":true,\"wheel\":false,\"cal\":false,\"zones\":false}"
+    "pass": true,
+    "detail": "asked 1, state granted, {\"pedals\":true,\"wheel\":false,\"cal\":true,\"zones\":false}"
   },
   {
     "name": "rework tilt: tilting left steers left; auto-throttle accelerates with no touch",
@@ -812,7 +912,7 @@
   {
     "name": "rework tilt: real-time drive (auto-throttle + tilt) moves and turns the car left",
     "pass": true,
-    "detail": "moved 12.4 m, yaw 67 deg, speed 44 km/h"
+    "detail": "moved 14.5 m, yaw 77 deg, speed 46 km/h"
   },
   {
     "name": "rework tilt: ⟲ Centre recalibrates; BRAKE pedal overrides auto-throttle",
@@ -832,7 +932,7 @@
   {
     "name": "rework touch halves: left half steers left while driving forward; both halves brake then reverse; release = drive on",
     "pass": true,
-    "detail": "left: steer 0.41 thr 1, yaw 49 deg; both: brake 1, speed after 3.5 s -20.7 km/h; released thr 1"
+    "detail": "left: steer 0.76 thr 1, yaw 74 deg; both: brake 1, speed after 3.5 s -16.6 km/h; released thr 1"
   },
   {
     "name": "rework tilt fallback (denied): no console errors",
@@ -851,8 +951,8 @@
   },
   {
     "name": "rework landscape: roll steers left (orientation-aware) and controls/HUD fit on screen",
-    "pass": false,
-    "detail": "screen angle 90, tilt 0.00, steer 0.00, fit true,true,true,true,true,true,true"
+    "pass": true,
+    "detail": "screen angle 90, tilt 0.58, steer 0.58, fit true,true,true,true,true,true,true"
   },
   {
     "name": "rework landscape: no console errors",
@@ -892,7 +992,7 @@
   {
     "name": "rework presets: Low drops ground detail + grass, High has the most vegetation (FPS on SwiftShader CPU renderer)",
     "pass": true,
-    "detail": "low: 10.8 fps, 89 draws, 166k tris, 945 plants | medium: 10.3 fps, 164 draws, 301k tris, 5845 plants | high: 10.8 fps, 172 draws, 346k tris, 11540 plants"
+    "detail": "low: 12.3 fps, 94 draws, 168k tris, 945 plants | medium: 12.9 fps, 170 draws, 307k tris, 5845 plants | high: 10 fps, 178 draws, 352k tris, 11540 plants"
   },
   {
     "name": "rework robustness: WebGL context loss shows a reload overlay and pauses; overlay clears on restore",
@@ -907,7 +1007,7 @@
   {
     "name": "drive opening: plays on launch, title card, 4x4 drives into the scene, tap skips to the live 3D menu",
     "pass": true,
-    "detail": "phase at load opening, title shown true, car moved 42.7 m by t=6.5 s, after tap: {\"phase\":\"menu\",\"reveal\":true,\"menu\":true}"
+    "detail": "phase at load opening, title shown true, car moved 42.5 m by t=6.5 s, after tap: {\"phase\":\"menu\",\"reveal\":true,\"menu\":true}"
   },
   {
     "name": "drive opening: no console errors",
@@ -915,14 +1015,14 @@
     "detail": ""
   },
   {
-    "name": "drive cockpit: default scheme = wheel + pedals; wheel bottom-left, pedals bottom-right, drive chip lower centre; all on-screen, no overlaps, small footprint",
+    "name": "drive cockpit (0.7.3 mobile default: steering wheel + GAS): wheel bottom-left, pedals bottom-right, drive chip lower centre; all on-screen, no overlaps, small footprint",
     "pass": true,
-    "detail": "scheme wheel, in view true, overlaps [], controls cover 8.0% of the screen, wheel 118 px at x 14"
+    "detail": "mobile default wheel, in view true, overlaps [], controls cover 12.4% of the screen, wheel 150 px at x 16"
   },
   {
     "name": "drive pedals: throttle is progressive (ramps up while held), release = 0",
     "pass": true,
-    "detail": "ramp 0ms:0.00 75ms:0.30 90ms:0.33 661ms:0.53 868ms:0.73 1066ms:0.93 1260ms:1.00 1474ms:1.00 2363ms:1.00, after release gas 0, throttle 0"
+    "detail": "ramp 0ms:0.00 120ms:0.30 307ms:0.50 476ms:0.70 656ms:0.90 828ms:1.00 997ms:1.00 1184ms:1.00 2048ms:1.00, after release gas 0, throttle 0"
   },
   {
     "name": "drive pedals: brake works on its own and always wins (throttle cut while both are pressed)",
@@ -931,8 +1031,8 @@
   },
   {
     "name": "drive multitouch: wheel turned 90 deg clockwise while holding GAS -> steers right and accelerates, car turns right",
-    "pass": true,
-    "detail": "wheel 90 deg -> steer -0.75, throttle 0.93; yaw -33 deg, moved 4.5 m"
+    "pass": false,
+    "detail": "wheel 0 deg -> steer 0.00, throttle 0.93; yaw 0 deg, moved 7.2 m"
   },
   {
     "name": "drive wheel: self-centres after release",
@@ -952,7 +1052,7 @@
   {
     "name": "drive recover: Recover pill resets the vehicle and play continues",
     "pass": true,
-    "detail": "{\"phase\":\"playing\",\"up\":0.9999838204185945}"
+    "detail": "{\"phase\":\"playing\",\"up\":0.999983820009339}"
   },
   {
     "name": "drive schemes: ◀ button steers (buttons mode shows buttons, hides wheel); halves = zones + auto-forward; tilt (stubbed sensor) steers with pedals shown",
@@ -1021,6 +1121,191 @@
   },
   {
     "name": "drive physics: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout keyboard (simulated visualViewport, iPhone SE): lobby panel moves above the on-screen keyboard and the focused name field stays visible",
+    "pass": true,
+    "detail": "{\"kbClass\":true,\"panelBottom\":399,\"inputBottom\":126,\"top\":8,\"limit\":407,\"restored\":true}"
+  },
+  {
+    "name": "layout iphone-se-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 12.8%; off [] overlaps []; steer 1.00 thr 1.00, moved 17.6 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout iphone-se-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout iphone-se-portrait (375x667): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 58%, garage 53%, career 57%, modes 57%, lobby 59%, settings 62%, pause 38%, pause-settings 62%"
+  },
+  {
+    "name": "layout iphone-se-portrait: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout iphone-se-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 12.8%; off [] overlaps []; steer 1.00 thr 1.00, moved 15.9 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout iphone-se-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout iphone-se-landscape (667x375): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 40%, garage 43%, career 46%, modes 46%, lobby 48%, settings 51%, pause 40%, pause-settings 51%"
+  },
+  {
+    "name": "layout iphone-se-landscape: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout iphone-13-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.7%; off [] overlaps []; steer 1.00 thr 1.00, moved 18.2 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout iphone-13-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout iphone-13-portrait (390x844): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 58%, garage 53%, career 57%, modes 51%, lobby 54%, settings 62%, pause 30%, pause-settings 62%"
+  },
+  {
+    "name": "layout iphone-13-portrait: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout iphone-13-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.7%; off [] overlaps []; steer 1.00 thr 1.00, moved 12.9 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout iphone-13-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout iphone-13-landscape (844x390): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 36%, garage 37%, career 42%, modes 38%, lobby 42%, settings 40%, pause 31%, pause-settings 40%"
+  },
+  {
+    "name": "layout iphone-13-landscape: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout iphone-promax-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.5%; off [] overlaps []; steer 1.00 thr 1.00, moved 15.9 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout iphone-promax-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout iphone-promax-portrait (430x932): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 59%, garage 53%, career 57%, modes 46%, lobby 48%, settings 62%, pause 25%, pause-settings 62%"
+  },
+  {
+    "name": "layout iphone-promax-portrait: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout iphone-promax-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 8.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 14 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout iphone-promax-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout iphone-promax-landscape (932x430): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 33%, garage 34%, career 38%, modes 31%, lobby 35%, settings 36%, pause 25%, pause-settings 36%"
+  },
+  {
+    "name": "layout iphone-promax-landscape: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout ipad-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 4.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 14 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout ipad-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout ipad-portrait (820x1180): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 24%, garage 25%, career 43%, modes 18%, lobby 19%, settings 41%, pause 10%, pause-settings 41%"
+  },
+  {
+    "name": "layout ipad-portrait: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout ipad-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
+    "pass": true,
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 4.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 16.4 m in >= 1.5 s + 25 frames"
+  },
+  {
+    "name": "layout ipad-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout ipad-landscape (1180x820): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 25%, garage 27%, career 34%, modes 20%, lobby 21%, settings 29%, pause 10%, pause-settings 29%"
+  },
+  {
+    "name": "layout ipad-landscape: no console errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "layout desktop: desktop shows no touch controls (keyboard driving)",
+    "pass": true,
+    "detail": "{\"setting\":\"wheel\",\"scheme\":\"wheel\",\"zones\":false,\"wheel\":false,\"steer\":false,\"gas\":false,\"brake\":false,\"rec\":false,\"drv\":true}"
+  },
+  {
+    "name": "layout desktop: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
+    "pass": true,
+    "detail": "{\"resume\":{\"phase\":\"playing\",\"pause\":false},\"settingsClose\":{\"phase\":\"playing\",\"drawer\":false,\"pause\":false},\"stacked\":false}"
+  },
+  {
+    "name": "layout desktop (1280x720): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
+    "pass": true,
+    "detail": "menu 27%, garage 29%, career 32%, modes 21%, lobby 22%, settings 27%, pause 11%, pause-settings 27%"
+  },
+  {
+    "name": "layout desktop: no console errors",
     "pass": true,
     "detail": ""
   }

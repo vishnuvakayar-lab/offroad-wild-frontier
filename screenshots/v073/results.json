@@ -1,0 +1,172 @@
+[
+ {
+  "n": "build label 0.7.3",
+  "p": true,
+  "d": ""
+ },
+ {
+  "n": "vehicle list has van, ltv, patrol, cargo6, mrap + the 6 originals",
+  "p": true,
+  "d": "scout,voyager,sahara,pickup,rally,recovery,van,ltv,patrol,cargo6,mrap"
+ },
+ {
+  "n": "garage shows scout",
+  "p": true,
+  "d": "{\"draws\":28,\"tris\":28680,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows voyager",
+  "p": true,
+  "d": "{\"draws\":28,\"tris\":28914,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows sahara",
+  "p": true,
+  "d": "{\"draws\":27,\"tris\":27340,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows pickup",
+  "p": true,
+  "d": "{\"draws\":27,\"tris\":26740,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows rally",
+  "p": true,
+  "d": "{\"draws\":26,\"tris\":23768,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows recovery",
+  "p": true,
+  "d": "{\"draws\":28,\"tris\":31874,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows van",
+  "p": true,
+  "d": "{\"draws\":28,\"tris\":28614,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows ltv",
+  "p": true,
+  "d": "{\"draws\":31,\"tris\":26590,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows patrol",
+  "p": true,
+  "d": "{\"draws\":30,\"tris\":30968,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows cargo6",
+  "p": true,
+  "d": "{\"draws\":31,\"tris\":28742,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows mrap",
+  "p": true,
+  "d": "{\"draws\":30,\"tris\":27772,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "scout drives (W key) and stays upright",
+  "p": true,
+  "d": "26 km/h after 4 s, up 1.00"
+ },
+ {
+  "n": "van drives (W key) and stays upright",
+  "p": true,
+  "d": "22 km/h after 4 s, up 1.00"
+ },
+ {
+  "n": "ltv drives (W key) and stays upright",
+  "p": true,
+  "d": "34 km/h after 4 s, up 1.00"
+ },
+ {
+  "n": "patrol drives (W key) and stays upright",
+  "p": true,
+  "d": "22 km/h after 4 s, up 1.00"
+ },
+ {
+  "n": "cargo6 drives (W key) and stays upright",
+  "p": true,
+  "d": "15 km/h after 4 s, up 1.00"
+ },
+ {
+  "n": "mrap drives (W key) and stays upright",
+  "p": true,
+  "d": "17 km/h after 4 s, up 1.00"
+ },
+ {
+  "n": "scout: C key -> driver view; 3D steering wheel rotates with steering (left/right opposite)",
+  "p": true,
+  "d": "mode cockpit, angle rest 0.00 left -7.80 right 7.80 rad"
+ },
+ {
+  "n": "scout: C -> left mirror view (image flipped)",
+  "p": true,
+  "d": "[\"mirror\",true]"
+ },
+ {
+  "n": "scout: 🎥 button -> 360° orbit; mouse drag rotates around the vehicle",
+  "p": true,
+  "d": "moved 11.6 m"
+ },
+ {
+  "n": "scout: button cycles back to chase",
+  "p": true,
+  "d": ""
+ },
+ {
+  "n": "mrap: C key -> driver view; 3D steering wheel rotates with steering (left/right opposite)",
+  "p": true,
+  "d": "mode cockpit, angle rest 0.00 left -6.30 right 6.30 rad"
+ },
+ {
+  "n": "mrap: C -> left mirror view (image flipped)",
+  "p": true,
+  "d": "[\"mirror\",true]"
+ },
+ {
+  "n": "mrap: 🎥 button -> 360° orbit; mouse drag rotates around the vehicle",
+  "p": true,
+  "d": "moved 11.6 m"
+ },
+ {
+  "n": "mrap: button cycles back to chase",
+  "p": true,
+  "d": ""
+ },
+ {
+  "n": "split-screen: arrow keys drive P2 only",
+  "p": true,
+  "d": "P2 moved 111.9 m, P1 0.0 m"
+ },
+ {
+  "n": "split-screen: WASD drives P1 only",
+  "p": true,
+  "d": "P1 moved 65.8 m; P1 input throttle 1, P2 input throttle 0"
+ },
+ {
+  "n": "leaving to menu ends split-screen",
+  "p": true,
+  "d": ""
+ },
+ {
+  "n": "touch split-screen: P1 wheel+pedals (bottom) + smaller P2 wheel+pedals (above the divider) visible",
+  "p": true,
+  "d": "[[\"p2-wheel\",true,86],[\"p2-gas\",true,104],[\"p2-brake\",true,118],[\"wheel\",true,244],[\"pd-gas\",true,258],[\"pd-brake\",true,286]]"
+ },
+ {
+  "n": "touch split-screen: holding P2 GAS drives P2",
+  "p": true,
+  "d": "P2 moved 3.7 m"
+ },
+ {
+  "n": "touch split-screen: P2 steering wheel drag steers P2 right and its 3D wheel mirrors it",
+  "p": true,
+  "d": "P2 wheel 120°, 3D 120°, P2 steer -0.24"
+ },
+ {
+  "n": "no page errors",
+  "p": true,
+  "d": ""
+ }
+]

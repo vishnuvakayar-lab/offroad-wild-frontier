@@ -1,6 +1,6 @@
 {
  "l1": {
-  "bot": 16.83333333333366,
+  "bot": 16.816666666666993,
   "gates": 13,
   "targets": {
    "gold": 20.5,
@@ -10,17 +10,17 @@
  },
  "presets": {
   "low": {
-   "fps": 11.4,
+   "fps": 12.3,
    "draws": 94,
-   "tris": 167628,
+   "tris": 167632,
    "inst": 945,
    "vis": 709,
    "detail": false
   },
   "medium": {
-   "fps": 11.3,
+   "fps": 12.9,
    "draws": 170,
-   "tris": 306512,
+   "tris": 306516,
    "inst": 5845,
    "vis": 3266,
    "detail": true
@@ -28,7 +28,7 @@
   "high": {
    "fps": 10,
    "draws": 178,
-   "tris": 351514,
+   "tris": 351518,
    "inst": 11540,
    "vis": 7622,
    "detail": true
