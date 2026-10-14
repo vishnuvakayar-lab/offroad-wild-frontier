@@ -398,3 +398,4 @@ canvas.mirrored { transform: scaleX(-1); }
 body.split.touch #p2ctl { top: calc(50% - 104px); height: 96px; }
 body.split.touch #cockpit[data-sc="wheel"] .wheel { width: 120px; height: 120px; }
 .wheel .w-turn { position: absolute; inset: 0; will-change: transform; pointer-events: none; }
+@media (orientation: portrait) { #cockpit[data-sc="wheel"] .wheel { width: 144px; height: 144px; } .drv { bottom: calc(196px + var(--sab)); } }
