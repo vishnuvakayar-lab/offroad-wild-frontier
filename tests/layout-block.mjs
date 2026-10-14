@@ -79,6 +79,8 @@ export async function runLayout({ openPage, ok }) {
     // free roam: default controls, then pause -> resume and pause -> settings -> close must both land in a playable game at once
     await tap(page, '#btn-play', touch); await page.evaluate(() => window.__game.skipIntro?.());
     await page.waitForFunction(() => window.__game.phase === 'playing'); await frames(page);
+    m.defaultSetting = await page.evaluate(() => window.__game.controls().setting);
+    if (touch) { await page.evaluate(() => window.__game.setControls('buttons', false)); await frames(page); } // 0.7.3: default is the wheel (tested in mobile-drive); the optional ◀ ▶ layout is checked here
     const ui = await page.evaluate(() => { const v = (id) => document.getElementById(id).getClientRects().length > 0; return { setting: window.__game.controls().setting, scheme: window.__game.controls().scheme, zones: v('tzones'), wheel: v('wheel'), steer: v('sb-l') && v('sb-r'), gas: v('pd-gas'), brake: v('pd-brake'), rec: v('ck-rec'), drv: v('drv-chip') }; });
     m.controls = ui;
     if (touch) {

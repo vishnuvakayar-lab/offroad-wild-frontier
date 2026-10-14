@@ -29,10 +29,21 @@ const touchInit = (page) => page.evaluate(() => {
     return tgt.dispatchEvent(e); };
   window.__touch = {
     down(id, x, y) { const tgt = document.elementFromPoint(x, y); const t = mk(id, tgt, x, y); act.set(id, { t, tgt }); fire('touchstart', t, tgt); return tgt.id || tgt.tagName; },
+    move(id, x, y) { const a = act.get(id); if (!a) return; a.t = mk(id, a.tgt, x, y); act.set(id, a); fire('touchmove', a.t, a.tgt); },
     up(id) { const a = act.get(id); if (!a) return; act.delete(id); fire('touchend', a.t, a.tgt); },
   };
 });
 const down = async (page, id, sel) => { const [x, y] = await center(page, sel); return page.evaluate(([id, x, y]) => window.__touch.down(id, x, y), [id, x, y]); };
+/** real rotational drag on the on-screen wheel: finger goes down on the rim at 12 o'clock and moves along the arc by `deg` (+ = clockwise) */
+const wheelDrag = async (page, id, deg, sel = '#wheel') => {
+  const g = await page.evaluate((sel) => { const r = document.querySelector(sel).getBoundingClientRect(); return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, R: r.width * 0.4 }; }, sel);
+  const pt = (a) => [g.cx + Math.cos(a * Math.PI / 180) * g.R, g.cy + Math.sin(a * Math.PI / 180) * g.R];
+  const [x0, y0] = pt(-90); const hit = await page.evaluate(([id, x, y]) => window.__touch.down(id, x, y), [id, x0, y0]);
+  const n = Math.max(6, Math.ceil(Math.abs(deg) / 10));
+  for (let i = 1; i <= n; i++) { const [x, y] = pt(-90 + deg * i / n); await page.evaluate(([id, x, y]) => window.__touch.move(id, x, y), [id, x, y]); }
+  return hit;
+};
+const wheelUI = (page) => page.evaluate(() => ({ ...window.__game.wheelUI(), angle3d: window.__game.wheelAngle() }));
 const up = (page, id) => page.evaluate((id) => window.__touch.up(id), id);
 const pose = (page) => page.evaluate(() => window.__game.pose());
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -65,7 +76,7 @@ for (const spec of which) {
   const gl = await page.evaluate(() => { const c = document.getElementById('game'); const g = c.getContext('webgl2') || c.getContext('webgl'); return { ok: !!g && !g.isContextLost(), lostOverlay: !document.getElementById('gl-lost').classList.contains('hidden') }; });
   m.gl = gl;
   const ctl = await page.evaluate(() => { const c = window.__game.controls(); const W = innerWidth, H = innerHeight; const cs = getComputedStyle(document.documentElement);
-    const ids = ['sb-l', 'sb-r', 'pd-gas', 'pd-brake', 'ck-rec'];
+    const ids = ['wheel', 'pd-gas', 'pd-brake', 'ck-rec', 'ck-hb'];
     const R = Object.fromEntries(ids.map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return [id, { vis: r.width > 0 && r.height > 0, l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }]; }));
     return { setting: c.setting, scheme: c.scheme, touchActive: c.touchActive, W, H, R, sa: ['--sat', '--sab', '--sal', '--sar'].map((v) => cs.getPropertyValue(v).trim()) }; });
   m.controls = ctl;
@@ -74,15 +85,16 @@ for (const spec of which) {
     const inside = Object.values(ctl.R).every((r) => r.vis && r.l >= 0 && r.t >= 0 && r.r <= ctl.W && r.b <= ctl.H);
     const land = ctl.W > ctl.H;
     const R = ctl.R;
-    ok(`${L}: default controls = ◀ ▶ bottom-left, big GAS + BRAKE/REV bottom-right, Reset; visible and inside the screen / safe area`,
-      ctl.setting === 'buttons' && ctl.touchActive && inside && R['sb-l'].r < ctl.W / 2 && R['pd-gas'].l > ctl.W / 2 && R['sb-l'].b > ctl.H * (land ? 0.55 : 0.7) && R['pd-gas'].w >= 80 && R['pd-gas'].h >= 100 && R['sb-l'].w >= 64,
-      `setting ${ctl.setting}, touchActive ${ctl.touchActive}, inside ${inside}, GAS ${Math.round(R['pd-gas'].w)}x${Math.round(R['pd-gas'].h)} px, ◀ ${Math.round(R['sb-l'].w)} px, safe-area vars ${ctl.sa.join('/')}`);
+    const arrowsHidden = await page.evaluate(() => document.getElementById('steer-btns').getBoundingClientRect().width === 0);
+    ok(`${L}: default controls = large steering wheel bottom-left (no ◀ ▶ arrows), big GAS + BRAKE/REV + Reset + HB on the right; visible and inside the screen`,
+      ctl.setting === 'wheel' && ctl.touchActive && inside && arrowsHidden && R['wheel'].r < ctl.W / 2 && R['pd-gas'].l > ctl.W / 2 && R['wheel'].b > ctl.H * (land ? 0.55 : 0.7) && R['pd-gas'].w >= 80 && R['pd-gas'].h >= 100 && R['wheel'].w >= 140,
+      `setting ${ctl.setting}, touchActive ${ctl.touchActive}, inside ${inside}, arrows hidden ${arrowsHidden}, wheel ${Math.round(R['wheel'].w)} px, GAS ${Math.round(R['pd-gas'].w)}x${Math.round(R['pd-gas'].h)} px, safe-area vars ${ctl.sa.join('/')}`);
     // safe areas: emulators report 0 insets, so simulate iPhone notch/home-indicator insets through the same CSS variables env() feeds
     const sa = await page.evaluate(async () => { const land = innerWidth > innerHeight, ins = land ? { t: 0, b: 21, l: 47, r: 47 } : { t: 47, b: 34, l: 0, r: 0 };
       const st = document.documentElement.style; st.setProperty('--sat', ins.t + 'px'); st.setProperty('--sab', ins.b + 'px'); st.setProperty('--sal', ins.l + 'px'); st.setProperty('--sar', ins.r + 'px');
       await new Promise((r) => requestAnimationFrame(r));
-      const bad = ['sb-l', 'sb-r', 'pd-gas', 'pd-brake', 'ck-rec', 'btn-pause', 'hud-speed'].filter((id) => { const q = document.getElementById(id).getBoundingClientRect(); return q.left < ins.l - 0.5 || q.right > innerWidth - ins.r + 0.5 || q.top < ins.t - 0.5 || q.bottom > innerHeight - ins.b + 0.5; });
-      const ov = []; const ids = ['sb-l', 'sb-r', 'pd-gas', 'pd-brake', 'ck-rec', 'ck-hb', 'drv-chip']; const R = ids.map((id) => document.getElementById(id).getBoundingClientRect());
+      const bad = ['wheel', 'pd-gas', 'pd-brake', 'ck-rec', 'btn-pause', 'hud-speed'].filter((id) => { const q = document.getElementById(id).getBoundingClientRect(); return q.left < ins.l - 0.5 || q.right > innerWidth - ins.r + 0.5 || q.top < ins.t - 0.5 || q.bottom > innerHeight - ins.b + 0.5; });
+      const ov = []; const ids = ['wheel', 'pd-gas', 'pd-brake', 'ck-rec', 'ck-hb', 'drv-chip']; const R = ids.map((id) => document.getElementById(id).getBoundingClientRect());
       for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) { const a = R[i], b = R[j]; if (a.width && b.width && !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top)) ov.push(ids[i] + '/' + ids[j]); }
       return { ins, bad, ov }; });
     m.safeArea = sa;
@@ -102,14 +114,34 @@ for (const spec of which) {
   // each turn starts from the same open stretch (after the 2.5 s GAS run the car can be near rocks/trees), GAS still held
   const restart = async () => { await page.evaluate(() => window.__game.teleport(6, -6, Math.atan2(45, -29))); await hold(page, 1200, 15); };
   await restart();
+  if (desk) {
   const a0 = await pose(page); const lHit = await press('KeyA', '#sb-l', 2); await hold(page, 1200, 20); const inL = await page.evaluate(() => window.__game.readInput()); const a1 = await pose(page); await release('KeyA', 2);
   await restart();
   const b0 = await pose(page); const rHit = await press('KeyD', '#sb-r', 3); await hold(page, 1200, 20); const inR = await page.evaluate(() => window.__game.readInput()); const b1 = await pose(page); await release('KeyD', 3);
-  m.left = { hit: lHit, dyawDeg: +(wrap(a1.yaw - a0.yaw) * 180 / Math.PI).toFixed(1), steer: +inL.steer.toFixed(2), throttle: +inL.throttle.toFixed(2) };
-  m.right = { hit: rHit, dyawDeg: +(wrap(b1.yaw - b0.yaw) * 180 / Math.PI).toFixed(1), steer: +inR.steer.toFixed(2), throttle: +inR.throttle.toFixed(2) };
-  ok(`${L}: LEFT and RIGHT turn the car in opposite directions while GAS is held (multi-touch steer + gas)`,
-    m.left.dyawDeg > 3 && m.right.dyawDeg < -3 && m.left.steer > 0.5 && m.right.steer < -0.5 && m.left.throttle > 0.5 && m.right.throttle > 0.5,
-    `left: yaw ${m.left.dyawDeg}° steer ${m.left.steer} thr ${m.left.throttle} (target ${lHit}); right: yaw ${m.right.dyawDeg}° steer ${m.right.steer} thr ${m.right.throttle} (target ${rHit})`);
+  m.left = { dyawDeg: +(wrap(a1.yaw - a0.yaw) * 180 / Math.PI).toFixed(1), steer: +inL.steer.toFixed(2) }; m.right = { dyawDeg: +(wrap(b1.yaw - b0.yaw) * 180 / Math.PI).toFixed(1), steer: +inR.steer.toFixed(2) };
+  ok(`${L}: A / D keys turn the car in opposite directions while W is held`, m.left.dyawDeg > 3 && m.right.dyawDeg < -3, JSON.stringify([m.left, m.right]));
+  } else {
+  // proportional: small (45°) vs big (300°) clockwise drag of the wheel, GAS (finger 1) still held = multi-touch
+  const turn = async (id, deg) => { await restart(); const y0 = await pose(page); const hit = await wheelDrag(page, id, deg); await hold(page, 1200, 20);
+    const inp = await page.evaluate(() => window.__game.state().input); const w = await wheelUI(page); const y1 = await pose(page);
+    return { hit, deg: +w.deg.toFixed(1), value: +w.value.toFixed(3), steer: +inp.steer.toFixed(3), throttle: +inp.throttle.toFixed(2), angle3dDeg: +(w.angle3d * 180 / Math.PI).toFixed(1), dyawDeg: +(wrap(y1.yaw - y0.yaw) * 180 / Math.PI).toFixed(1) }; };
+  const sR = await turn(2, 45); await up(page, 2); await hold(page, 1000, 15);
+  const bR = await turn(3, 300);
+  m.wheelSmallRight = sR; m.wheelBigRight = bR;
+  ok(`${L}: rotational wheel drag steers proportionally (45° drag turns less than 300°), right = negative steer`,
+    sR.steer < -0.02 && bR.steer < sR.steer - 0.3 && Math.abs(sR.steer) < 0.25 && bR.dyawDeg < -3, `45°: wheel ${sR.deg}° steer ${sR.steer} yaw ${sR.dyawDeg}° | 300°: wheel ${bR.deg}° steer ${bR.steer} yaw ${bR.dyawDeg}° (target ${sR.hit})`);
+  ok(`${L}: 3D cockpit wheel mirrors the on-screen wheel exactly`, Math.abs(sR.angle3dDeg - sR.deg) < 0.5 && Math.abs(bR.angle3dDeg - bR.deg) < 0.5, `screen ${sR.deg}° / 3D ${sR.angle3dDeg}°; screen ${bR.deg}° / 3D ${bR.angle3dDeg}°`);
+  ok(`${L}: GAS held together with the wheel (multi-touch)`, sR.throttle > 0.5 && bR.throttle > 0.5, `throttle ${sR.throttle} / ${bR.throttle}`);
+  // self-centre
+  await up(page, 3); await hold(page, 1200, 20); const c = await wheelUI(page); const inC = await page.evaluate(() => window.__game.state().input);
+  m.selfCentre = { deg: c.deg, steer: +inC.steer.toFixed(3), angle3d: c.angle3d };
+  ok(`${L}: released wheel self-centres (screen + 3D wheel back to 0, steering ~0)`, c.deg === 0 && Math.abs(inC.steer) < 0.05 && Math.abs(c.angle3d) < 0.01, JSON.stringify(m.selfCentre));
+  const lL = await turn(4, -200);
+  m.wheelLeft = lL;
+  ok(`${L}: counter-clockwise drag steers left (opposite direction)`, lL.steer > 0.3 && lL.dyawDeg > 3, `wheel ${lL.deg}° steer ${lL.steer} yaw ${lL.dyawDeg}°`);
+  await page.screenshot({ path: `${OUT}${fileTag}-wheel-left.png` });
+  await up(page, 4);
+  }
   await release('KeyW', 1);
   // BRAKE from speed
   await press('KeyW', '#pd-gas', 4); await hold(page, 1500, 20); await release('KeyW', 4);

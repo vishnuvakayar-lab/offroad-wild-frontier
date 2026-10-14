@@ -3,7 +3,7 @@
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 const APP = process.env.URL || 'http://127.0.0.1:4173/';
-const OUT = new URL('../screenshots/v072/', import.meta.url).pathname; fs.mkdirSync(OUT, { recursive: true });
+const OUT = new URL('../screenshots/v073/', import.meta.url).pathname; fs.mkdirSync(OUT, { recursive: true });
 const CH = { executablePath: '/usr/bin/google-chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] };
 const res = []; const ok = (n, p, d = '') => { res.push({ n, p, d }); console.log(`${p ? 'PASS' : 'FAIL'}  ${n}  ${d}`); };
 const frames = (page, n) => page.evaluate(async (n) => { for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r)); }, n);
@@ -18,7 +18,7 @@ const errors = [];
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   await boot(page);
-  ok('build label 0.7.2', /Build 0\.7\.2/.test(await page.textContent('body')));
+  ok('build label 0.7.3', /Build 0\.7\.3/.test(await page.textContent('body')));
   // vehicles in garage
   const ids = await page.evaluate(() => window.__game.vehicles);
   ok('vehicle list has van, ltv, patrol, cargo6, mrap + the 6 originals', ['scout','voyager','sahara','pickup','rally','recovery','van','ltv','patrol','cargo6','mrap'].every((i) => ids.includes(i)), ids.join(','));
@@ -95,8 +95,8 @@ const errors = [];
   const page = await ctx.newPage(); page.on('pageerror', (e) => errors.push(e.message));
   await boot(page);
   await page.click('#btn-split'); await page.waitForFunction(() => window.__game.phase === 'playing'); await frames(page, 20);
-  const vis = await page.evaluate(() => ['p2-l', 'p2-r', 'p2-gas', 'p2-brake', 'sb-l', 'sb-r', 'pd-gas', 'pd-brake'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return [id, r.width > 0 && r.top >= 0 && r.bottom <= innerHeight, Math.round(r.top)]; }));
-  ok('touch split-screen: P1 set (bottom) + P2 set (above the divider) visible', vis.every((v) => v[1]), JSON.stringify(vis));
+  const vis = await page.evaluate(() => ['p2-wheel', 'p2-gas', 'p2-brake', 'wheel', 'pd-gas', 'pd-brake'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return [id, r.width > 0 && r.top >= 0 && r.bottom <= innerHeight, Math.round(r.top)]; }));
+  ok('touch split-screen: P1 wheel+pedals (bottom) + smaller P2 wheel+pedals (above the divider) visible', vis.every((v) => v[1]), JSON.stringify(vis));
   const p2a = await page.evaluate(() => window.__game.split.p2());
   const b = await page.locator('#p2-gas').boundingBox();
   const cdp = await ctx.newCDPSession(page);
@@ -105,6 +105,17 @@ const errors = [];
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   const p2b = await page.evaluate(() => window.__game.split.p2());
   ok('touch split-screen: holding P2 GAS drives P2', Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z) > 3, `P2 moved ${Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z).toFixed(1)} m`);
+  { // P2 wheel: real rotational drag (CDP touch) 120° clockwise
+    const w = await page.locator('#p2-wheel').boundingBox(); const cx = w.x + w.width / 2, cy = w.y + w.height / 2, R = w.width * 0.4;
+    const pt = (a) => ({ x: cx + Math.cos(a * Math.PI / 180) * R, y: cy + Math.sin(a * Math.PI / 180) * R, id: 7 });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt(-90)] });
+    for (let i = 1; i <= 12; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [pt(-90 + i * 10)] });
+    await frames(page, 30);
+    const u = await page.evaluate(() => window.__game.wheelUI()); const q = await page.evaluate(() => window.__game.split.p2());
+    await page.screenshot({ path: OUT + 'split-touch-p2-wheel.png' });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    ok('touch split-screen: P2 steering wheel drag steers P2 right and its 3D wheel mirrors it', u.p2deg > 100 && q.input.steer < -0.15 && Math.abs(u.p2angle * 180 / Math.PI - u.p2deg) < 0.5, `P2 wheel ${u.p2deg.toFixed(0)}°, 3D ${(u.p2angle * 180 / Math.PI).toFixed(0)}°, P2 steer ${q.input.steer.toFixed(2)}`);
+  }
   await page.screenshot({ path: OUT + 'split-touch-iphone13promax-landscape.png' });
   // P1 touch still works in single-player
   await page.evaluate(() => window.__game.split.stop());

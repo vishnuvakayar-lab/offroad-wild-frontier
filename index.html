@@ -85,7 +85,7 @@
       <button id="btn-oskip" class="skip">Skip ▸</button>
     </div>
     <div id="cockpit" class="hidden" aria-label="Driving controls">
-      <div id="wheel" class="wheel" role="slider" aria-label="Steering wheel" aria-valuemin="-1" aria-valuemax="1"><div class="w-rim"><i class="sp a"></i><i class="sp b"></i><i class="sp c"></i><b class="hub"></b><span class="w-mark"></span></div></div>
+      <div id="wheel" class="wheel" role="slider" aria-label="Steering wheel" aria-valuemin="-1" aria-valuemax="1"><div class="w-turn"><div class="w-rim"></div><div class="w-spokes"><i class="sp a"></i><i class="sp b"></i><i class="sp c"></i><b class="hub"></b><span class="w-mark"></span></div></div></div>
       <div id="steer-btns" class="steer-btns"><button class="sbtn" id="sb-l" aria-label="Steer left">◀</button><button class="sbtn" id="sb-r" aria-label="Steer right">▶</button></div>
       <div id="pedals" class="pedals">
         <button id="pd-brake" class="pedal brake" aria-label="Brake / reverse"><span>BRAKE<br>/ REV</span><i class="fill"></i></button>
@@ -98,7 +98,7 @@
       </div>
     </div>
     <div id="p2ctl" class="p2ctl" aria-label="Player 2 controls">
-      <div class="p2-steer"><button class="sbtn" id="p2-l" aria-label="Player 2 steer left">◀</button><button class="sbtn" id="p2-r" aria-label="Player 2 steer right">▶</button></div>
+      <div id="p2-wheel" class="wheel p2" role="slider" aria-label="Player 2 steering wheel" aria-valuemin="-1" aria-valuemax="1"><div class="w-turn"><div class="w-rim"></div><div class="w-spokes"><i class="sp a"></i><i class="sp b"></i><i class="sp c"></i><b class="hub"></b><span class="w-mark"></span></div></div></div>
       <button class="tpill" id="p2-rec" aria-label="Player 2 reset">↻ P2</button>
       <div class="p2-pedals"><button id="p2-brake" class="pedal brake" aria-label="Player 2 brake / reverse"><span>BRAKE<br>/ REV</span></button><button id="p2-gas" class="pedal gas" aria-label="Player 2 accelerator"><span>GAS</span></button></div>
     </div>
@@ -236,7 +236,7 @@
       <div class="row vol"><input type="range" id="rng-volume" min="0" max="1" step="0.05" aria-label="Volume" /><label><input type="checkbox" id="chk-mute" /> Mute</label></div>
       <label class="group-label">Mobile controls</label>
       <div class="seg" id="seg-ctrl">
-        <button data-v="buttons">◀▶ Buttons</button><button data-v="halves">✋ Halves</button><button data-v="tilt">📱 Tilt</button><button data-v="wheel">🛞 Wheel</button>
+        <button data-v="wheel">🛞 Wheel (default)</button><button data-v="buttons">◀▶ Buttons</button><button data-v="halves">✋ Halves</button><button data-v="tilt">📱 Tilt</button>
       </div>
       <div class="row cam" id="row-wsens"><span>Wheel</span><input type="range" id="rng-wsens" min="0.6" max="1.6" step="0.05" aria-label="Steering wheel sensitivity" /></div>
       <label class="row"><input type="checkbox" id="chk-auto" /> Auto-throttle (drive forward automatically)</label>
@@ -251,7 +251,7 @@
       <div class="row cam"><span>Distance</span><input type="range" id="rng-camdist" min="0.75" max="1.45" step="0.05" aria-label="Camera distance" /></div>
       <div class="row cam"><span>Height</span><input type="range" id="rng-camheight" min="0.6" max="1.6" step="0.05" aria-label="Camera height" /></div>
       <label class="row"><input type="checkbox" id="chk-shake" /> Camera shake on rough terrain</label>
-      <p class="note">Build 0.7.2 · rework in progress</p>
+      <p class="note">Build 0.7.3 · rework in progress</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>

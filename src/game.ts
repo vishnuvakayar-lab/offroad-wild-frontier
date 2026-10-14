@@ -234,7 +234,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $('tp-cal').addEventListener('pointerdown', (e) => { e.stopPropagation(); input.calibrateTilt(); toast('Tilt centred'); });
   // cockpit HUD: wheel, steering buttons, pedals, pills
   input.wheelSens = settings.wheelSens;
-  const wheelRim = $('wheel').querySelector<HTMLElement>('.w-rim')!;
+  const wheelRim = $('wheel').querySelector<HTMLElement>('.w-turn')!;
   input.onWheel = (deg) => { wheelRim.style.transform = `rotate(${deg.toFixed(1)}deg)`; };
   input.bindWheel($('wheel'));
   input.bindHold($('sb-l'), 'left'); input.bindHold($('sb-r'), 'right');
@@ -317,8 +317,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     show('tp-cal', sc === 'tilt');
     document.querySelectorAll('#seg-ctrl button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === settings.controls));
     $<HTMLInputElement>('chk-auto').checked = settings.autoThrottle;
-    $('ctrl-note').textContent = settings.controls === 'wheel' ? 'Drag the wheel (bottom-left) to steer - it centres itself when released. Pedals (bottom-right): GAS and BRAKE are progressive; brake at a standstill reverses in AUTO.'
-      : settings.controls === 'buttons' ? 'Default: hold ◀ / ▶ (bottom-left) to steer and GAS (bottom-right) to drive; BRAKE / REV brakes, keep holding at a standstill to reverse. Steer and GAS work together (multi-touch).'
+    $('ctrl-note').textContent = settings.controls === 'wheel' ? 'Default: turn the steering wheel (bottom-left) by dragging your finger around it - up to 1¼ turns each way, it centres itself when released. Pedals (bottom-right): GAS and BRAKE are progressive; brake at a standstill reverses in AUTO.'
+      : settings.controls === 'buttons' ? 'Optional: hold ◀ / ▶ (bottom-left) to steer and GAS (bottom-right) to drive; BRAKE / REV brakes, keep holding at a standstill to reverse. Steer and GAS work together (multi-touch).'
       : settings.controls === 'tilt' ? `Tilt the phone like a steering wheel; pedals bottom-right${settings.autoThrottle ? ' (auto-throttle on: GAS is automatic, BRAKE overrides)' : ''}. Motion access: ${input.tiltState}${tiltFallback ? ' (using touch halves)' : ''}.`
       : settings.controls === 'halves' ? 'Default: hold the left or right half of the screen to steer. The car drives forward by itself; hold both halves or ■ Brake/Rev to brake, keep holding at a standstill to reverse.'
       : '';
@@ -766,7 +766,10 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   }
   $('btn-split').onclick = () => startSplit();
   $('p2-rec').onclick = () => { if (!car2) return; const t = car2.body.translation(), f = car2.forward(); car2.reset(t.x, heightAt(t.x, t.z) + car2.spawnLift, t.z, Math.atan2(f.x, f.z)); };
-  for (const [id, key] of [['p2-l', 'left'], ['p2-r', 'right'], ['p2-gas', 'gas'], ['p2-brake', 'brake']] as const) input.bindHold($(id), key, input.p2touch);
+  const p2Rim = $('p2-wheel').querySelector<HTMLElement>('.w-turn')!;
+  input.onWheel2 = (deg) => { p2Rim.style.transform = `rotate(${deg.toFixed(1)}deg)`; };
+  input.bindWheel($('p2-wheel'), input.p2wheel, (d) => input.onWheel2(d));
+  for (const [id, key] of [['p2-gas', 'gas'], ['p2-brake', 'brake']] as const) input.bindHold($(id), key, input.p2touch);
   /** split layout: side by side on wide desktop screens, stacked (P2 on top, facing the top controls) on touch / portrait */
   const splitStacked = () => touchOn() || window.innerWidth < window.innerHeight;
   function chase2(dt: number) {
@@ -1093,6 +1096,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       while (acc >= STEP && n < 8) { physStep(drive); acc -= STEP; n++; } // up to 8 fixed steps per frame keeps real-time speed down to ~7.5 fps
       if (n === 8) acc = 0;
     }
+    { const wh = input.touchActive && input.scheme === 'wheel'; car.wheelDegOverride = wh ? input.wheelDeg : null; if (car2) car2.wheelDegOverride = input.touchActive ? input.p2wheel.wheelDeg : null; }
     car.sync(); if (car2) car2.sync();
     { // collision / hard-landing sounds from sudden velocity changes (ignores teleports/resets: impactCool)
       const v = car.body.linvel();
@@ -1280,6 +1284,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       p2: () => { if (!car2) return null; const t = car2.body.translation(); return { x: t.x, y: t.y, z: t.z, speed: car2.forwardSpeed(), steer: car2.steer, input: drive2, p1input: lastInput }; } },
     cam: (m: CamMode) => setCamMode(m), get camMode() { return camMode; }, orbit: (yaw: number, pitch = 0.35) => { orbitYaw = yaw; orbitPitch = pitch; orbitIdle = 0; },
     wheelAngle: () => car.steeringWheel?.rotation.z ?? null,
+    wheelUI: () => ({ deg: input.wheelDeg, held: input.wheelHeld, value: input.wheelValue, steer: lastInput.steer, p2deg: input.p2wheel.wheelDeg, p2angle: car2?.steeringWheel?.rotation.z ?? null }),
     camOverride: (c: [[number, number, number], [number, number, number]] | null) => { camOverride = c; },
     /** screenshot hook: fixed world-space camera (null = normal camera) */
     camWorld: (c: [[number, number, number], [number, number, number]] | null) => { camWorld = c; },

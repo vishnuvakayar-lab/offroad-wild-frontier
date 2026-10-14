@@ -176,7 +176,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   await page.tap('#btn-close-drawer'); await page.waitForTimeout(400);
   await page.tap('#btn-play'); await page.waitForTimeout(400);
   const iph = await page.evaluate(() => window.__game.phase), iset = await page.evaluate(() => window.__game.controls());
-  ok(`${label}: Free Roam tap -> drivable at once with the default ◀ ▶ + GAS buttons`, iph === 'playing' && iset.setting === 'buttons' && iset.touchActive, `phase ${iph}, controls ${iset.setting}, touchActive ${iset.touchActive}`);
+  ok(`${label}: Free Roam tap -> drivable at once with the default steering wheel + GAS`, iph === 'playing' && iset.setting === 'wheel' && iset.touchActive, `phase ${iph}, controls ${iset.setting}, touchActive ${iset.touchActive}`);
   await page.evaluate(() => window.__game.setControls('buttons', false)); // ◀ ▶ buttons + pedals (default wheel + pedals, tilt and halves are tested in drive-block / rework-block)
   const au = (await st(page)).audio.state;
   ok(`${label}: audio running after tap`, au === 'running', `state=${au}`);

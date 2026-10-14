@@ -35,7 +35,7 @@ export async function runRework({ openPage, ok, area }) {
   {
     const { ctx, page, errors } = await openPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, userAgent: IPHONE_UA }, 'rework-portrait');
     const c0 = await ctl(page);
-    ok('rework controls: mobile default = ◀ ▶ buttons + GAS + BRAKE/REV (auto-throttle preset only applies to the optional tilt mode)', c0.setting === 'buttons' && c0.auto === true, JSON.stringify(c0));
+    ok('rework controls: mobile default = steering wheel + GAS + BRAKE/REV (0.7.3; auto-throttle preset only applies to the optional tilt mode)', c0.setting === 'wheel' && c0.auto === true, JSON.stringify(c0));
     await page.tap('#btn-levels'); await page.waitForTimeout(500);
     const cards = await page.$$eval('#lv-list .lv-card', (cs) => cs.map((c) => ({ n: +c.dataset.n, st: c.querySelector('.st').className.split(' ')[1], locked: c.classList.contains('locked'), start: !!c.querySelector('[data-level]') })));
     const cnt = (s) => cards.filter((c) => c.st === s).length;

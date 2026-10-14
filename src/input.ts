@@ -10,6 +10,8 @@ export type ControlScheme = 'wheel' | 'buttons' | 'tilt' | 'halves';
 export const PEDAL = { gas0: 0.3, gasRamp: 0.5, brake0: 0.4, brakeRamp: 0.25 }; // initial value on press, seconds to reach 1
 export type TiltState = 'off' | 'pending' | 'granted' | 'denied' | 'unsupported' | 'no-data';
 
+export interface WheelState { wheelDeg: number; wheelHeld: boolean; wheelLock: number; wheelSens: number; }
+
 export class Input {
   private keys = new Set<string>();
   private touch = { left: false, right: false, gas: false, brake: false, hand: false };
@@ -17,6 +19,8 @@ export class Input {
   split = false;
   p2touch = { left: false, right: false, gas: false, brake: false, hand: false };
   private p2Steer = 0; p2Gas = 0; p2Brake = 0;
+  p2wheel: WheelState = { wheelDeg: 0, wheelHeld: false, wheelLock: 450, wheelSens: 1 };
+  onWheel2: (deg: number) => void = () => {};
   override2: DriveInput | null = null; // tests
   private zones = new Map<string, 'L' | 'R'>();
   private steerSmooth = 0;
@@ -24,7 +28,7 @@ export class Input {
   gasV = 0; brakeV = 0;
   // ---- virtual steering wheel ----
   wheelDeg = 0;             // current wheel rotation (deg, + = clockwise = steer right)
-  wheelLock = 120;          // wheel degrees for full lock at sensitivity 1
+  wheelLock = 450;          // wheel degrees for full lock at sensitivity 1 (matches the 3D cockpit wheel)
   wheelSens = 1;            // Settings: 0.6 .. 1.6
   wheelHeld = false;
   onWheel: (deg: number) => void = () => {};
@@ -113,26 +117,51 @@ export class Input {
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
-  /** Virtual steering wheel: drag around the centre to turn (continuous, multi-touch safe); releases self-centre in read(). */
-  bindWheel(el: HTMLElement) {
-    let id: number | null = null, lastA = 0;
-    const ang = (e: PointerEvent) => { const r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
+  /** Virtual steering wheel: drag the finger AROUND the wheel centre; the change of finger angle turns the wheel (accumulates,
+   *  so you can wind past 180°) up to the lock (±450° at sensitivity 1). iOS Safari: native touchstart/touchmove/touchend with
+   *  {passive:false} + preventDefault (no scroll / zoom / callout), tracked by touch identifier so the GAS finger never disturbs it.
+   *  Pointer events are used only for mouse / pen (touch pointers are ignored to avoid double input). Self-centres in read(). */
+  bindWheel(el: HTMLElement, st: WheelState = this, onTurn: (deg: number) => void = (d) => this.onWheel(d)) {
+    let tid: number | null = null, pid: number | null = null, lastA = 0;
+    const ang = (x: number, y: number) => { const r = el.getBoundingClientRect(); return Math.atan2(y - (r.top + r.height / 2), x - (r.left + r.width / 2)) * 180 / Math.PI; };
+    const start = (x: number, y: number) => { lastA = ang(x, y); st.wheelHeld = true; el.classList.add('active'); };
+    const move = (x: number, y: number) => {
+      const r = el.getBoundingClientRect(), dx = x - (r.left + r.width / 2), dy = y - (r.top + r.height / 2);
+      if (dx * dx + dy * dy < (r.width * 0.08) ** 2) return; // too close to the centre: angle is unstable
+      const a = ang(x, y); let d = a - lastA; d = ((d + 540) % 360) - 180; lastA = a;
+      const lim = st.wheelLock / st.wheelSens;
+      st.wheelDeg = Math.max(-lim, Math.min(lim, st.wheelDeg + d)); onTurn(st.wheelDeg);
+    };
+    const end = () => { st.wheelHeld = false; el.classList.remove('active'); };
+    const opt = { passive: false } as AddEventListenerOptions;
+    el.addEventListener('touchstart', (e) => {
+      e.preventDefault(); e.stopPropagation(); if (tid !== null) return;
+      const t = e.changedTouches[0]; tid = t.identifier; start(t.clientX, t.clientY);
+    }, opt);
+    el.addEventListener('touchmove', (e) => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === tid) move(t.clientX, t.clientY); }, opt);
+    const tEnd = (e: TouchEvent) => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === tid) { tid = null; end(); } if (e.targetTouches.length === 0 && tid !== null && ![...e.touches].some((t) => t.identifier === tid)) { tid = null; end(); } };
+    el.addEventListener('touchend', tEnd, opt); el.addEventListener('touchcancel', tEnd, opt);
     el.addEventListener('pointerdown', (e) => {
-      e.preventDefault(); e.stopPropagation(); if (id !== null) return;
-      id = e.pointerId; lastA = ang(e); this.wheelHeld = true; el.classList.add('active');
-      try { el.setPointerCapture(e.pointerId); } catch { /* */ }
+      if (e.pointerType === 'touch') return; e.preventDefault(); e.stopPropagation(); if (pid !== null) return;
+      pid = e.pointerId; start(e.clientX, e.clientY); try { el.setPointerCapture(e.pointerId); } catch { /* */ }
     });
-    el.addEventListener('pointermove', (e) => {
-      if (e.pointerId !== id) return;
-      const a = ang(e); let d = a - lastA; d = ((d + 540) % 360) - 180; lastA = a;
-      const lim = this.wheelLock / this.wheelSens;
-      this.wheelDeg = Math.max(-lim, Math.min(lim, this.wheelDeg + d)); this.onWheel(this.wheelDeg);
-    });
-    const up = (e: PointerEvent) => { if (e.pointerId !== id) return; id = null; this.wheelHeld = false; el.classList.remove('active'); };
+    el.addEventListener('pointermove', (e) => { if (e.pointerId === pid) move(e.clientX, e.clientY); });
+    const up = (e: PointerEvent) => { if (e.pointerId !== pid) return; pid = null; end(); };
     for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) el.addEventListener(ev, up);
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }
-  get wheelValue() { return Math.max(-1, Math.min(1, -this.wheelDeg / (this.wheelLock / this.wheelSens))); } // + = steer left
+  /** + = steer left; small deadzone around centre, then proportional */
+  static wheelOut(st: WheelState) {
+    const v = -st.wheelDeg / (st.wheelLock / st.wheelSens), dz = 0.03;
+    return Math.abs(v) < dz ? 0 : Math.max(-1, Math.min(1, (v - Math.sign(v) * dz) / (1 - dz)));
+  }
+  get wheelValue() { return Input.wheelOut(this); }
+  /** smooth self-centring when released: fast far from centre, gentle near it */
+  static recentre(st: WheelState, dt: number, onTurn: (d: number) => void) {
+    if (st.wheelHeld || st.wheelDeg === 0) return;
+    const back = Math.max(240 * dt, Math.abs(st.wheelDeg) * 7 * dt);
+    st.wheelDeg = Math.abs(st.wheelDeg) <= back ? 0 : st.wheelDeg - Math.sign(st.wheelDeg) * back; onTurn(st.wheelDeg);
+  }
 
   /** Must be called from inside a user gesture (tap/click): iOS Safari 13+ only grants motion access that way. */
   requestTilt(): Promise<TiltState> {
@@ -168,9 +197,7 @@ export class Input {
     const kLeft = k.has('KeyA') || (ar && k.has('ArrowLeft')), kRight = k.has('KeyD') || (ar && k.has('ArrowRight'));
     let thr = kUp ? 1 : 0, brk = kDown ? 1 : 0, left = kLeft, right = kRight, analog: number | null = null;
     // self-centring wheel when released (also when the wheel UI is hidden)
-    if (!this.wheelHeld && this.wheelDeg !== 0) {
-      const back = 420 * dt; this.wheelDeg = Math.abs(this.wheelDeg) <= back ? 0 : this.wheelDeg - Math.sign(this.wheelDeg) * back; this.onWheel(this.wheelDeg);
-    }
+    Input.recentre(this, dt, (d) => this.onWheel(d));
     if (this.touchActive) {
       const pedals = this.scheme !== 'halves';
       if (pedals) { // progressive pedals: start value on press, ramp to 1 while held, instant release
@@ -208,8 +235,11 @@ export class Input {
     this.p2Brake = t.brake ? Math.min(1, Math.max(PEDAL.brake0, this.p2Brake + dt / PEDAL.brakeRamp)) : 0;
     let thr = Math.max(k.has('ArrowUp') ? 1 : 0, this.p2Gas), brk = Math.max(k.has('ArrowDown') ? 1 : 0, this.p2Brake);
     if (brk > 0.05) thr = 0;
-    const target = ((k.has('ArrowLeft') || t.left) ? 1 : 0) - ((k.has('ArrowRight') || t.right) ? 1 : 0);
-    const rate = target === 0 ? 6 : 3.5;
+    Input.recentre(this.p2wheel, dt, (d) => this.onWheel2(d));
+    const kb = ((k.has('ArrowLeft') || t.left) ? 1 : 0) - ((k.has('ArrowRight') || t.right) ? 1 : 0);
+    const analog = kb === 0 && this.touchActive;
+    const target = analog ? Input.wheelOut(this.p2wheel) : kb;
+    const rate = analog ? 10 : target === 0 ? 6 : 3.5;
     this.p2Steer += Math.max(-rate * dt, Math.min(rate * dt, target - this.p2Steer));
     return { throttle: thr, brake: brk, steer: this.p2Steer, handbrake: k.has('ShiftRight') || k.has('Enter') || k.has('NumpadEnter') || t.hand };
   }

@@ -40,6 +40,8 @@ export class Vehicle {
   steer = 0;
   /** cockpit: steering wheel (rotates with steering), driver eye point in vehicle space */
   steeringWheel: THREE.Group | null = null;
+  /** on-screen wheel angle (deg, + = clockwise = right) mirrored 1:1 by the 3D wheel; null = follow the road-wheel angle */
+  wheelDegOverride: number | null = null;
   eye = new THREE.Vector3(0.36, 1, 0);
   private glassMat: THREE.MeshStandardMaterial | null = null;
   surfaces: (Surface | null)[] = [null, null, null, null];
@@ -615,7 +617,7 @@ export class Vehicle {
       } else this.tracks.lift(i);
     }
     this.syncSuspension();
-    if (this.steeringWheel) this.steeringWheel.rotation.z = -Vehicle.wheelTurn(this.steer);
+    if (this.steeringWheel) this.steeringWheel.rotation.z = this.wheelDegOverride !== null ? this.wheelDegOverride * Math.PI / 180 : -Vehicle.wheelTurn(this.steer);
     this.dirtU.value = this.dirt;
   }
 

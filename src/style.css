@@ -370,3 +370,31 @@ body.split #btn-cam { display: none; }
 canvas.mirrored { transform: scaleX(-1); }
 @media (max-width: 400px) { #hud .hud-right { gap: 4px; } #hud .hud-right .round { width: 38px; height: 38px; } #hud .hud-left { gap: 4px; } }
 @media (max-width: 400px) { #hud .hud-right { flex-wrap: wrap; justify-content: flex-end; max-width: 84px; } }
+
+/* ---- 0.7.3: realistic on-screen steering wheel (default mobile control), logo-free ---- */
+#cockpit[data-sc="wheel"] .wheel, .wheel.p2 { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#cockpit[data-sc="wheel"] .wheel { width: 172px; height: 172px; left: calc(16px + var(--sal)); bottom: calc(16px + var(--sab)); }
+.wheel .w-rim { border: 0; background:
+  radial-gradient(circle, transparent 0 58%, #161617 58.5% 61%, transparent 61.5%),
+  repeating-conic-gradient(from 0deg, #2b2a28 0 4deg, #1d1c1b 4deg 8deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 63%, #000 63.5% 100%); mask: radial-gradient(circle, transparent 0 63%, #000 63.5% 100%);
+  box-shadow: 0 6px 18px rgba(0,0,0,.45); will-change: transform; }
+.wheel .w-rim::before { content: ''; position: absolute; inset: 3%; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.14) inset, 0 -3px 6px rgba(255,255,255,.12) inset; }
+.wheel .w-spokes { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+.wheel .w-spokes .sp { position: absolute; left: 50%; top: 50%; width: 40%; height: 13%; margin-top: -6.5%; transform-origin: 0 50%;
+  background: linear-gradient(#5d6066, #34363a 55%, #24262a); border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.wheel .w-spokes .sp.a { transform: rotate(180deg); } .wheel .w-spokes .sp.b { transform: rotate(0deg); } .wheel .w-spokes .sp.c { transform: rotate(90deg); width: 38%; }
+.wheel .w-spokes .hub { position: absolute; left: 50%; top: 50%; width: 36%; height: 36%; margin: -18% 0 0 -18%; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #4a4c50, #222326 70%); box-shadow: 0 0 0 3px #3a3c40, 0 2px 6px rgba(0,0,0,.6); }
+.wheel .w-spokes .w-mark { position: absolute; left: 50%; top: 0; width: 6%; height: 7%; margin-left: -3%; background: var(--amber); border-radius: 2px; }
+.wheel.active .w-rim { filter: brightness(1.25); }
+@media (orientation: portrait) { #cockpit[data-sc="wheel"] .wheel { width: 156px; height: 156px; } }
+@media (max-height: 430px) and (orientation: landscape) { #cockpit[data-sc="wheel"] .wheel { width: 150px; height: 150px; } }
+#cockpit[data-sc="wheel"] .pedal.gas { width: 92px; height: 128px; font-size: 16px; background: rgba(40,130,50,.55); border: 2px solid rgba(160,255,170,.6); }
+#cockpit[data-sc="wheel"] .pedal.brake { width: 80px; height: 92px; font-size: 12px; background: rgba(150,30,30,.55); border: 2px solid rgba(255,160,150,.55); line-height: 1.15; }
+#cockpit[data-sc="wheel"] .ck-pills { bottom: calc(152px + var(--sab)); }
+@media (max-height: 430px) and (orientation: landscape) { #cockpit[data-sc="wheel"] .pedal.gas { width: 86px; height: 108px; } #cockpit[data-sc="wheel"] .pedal.brake { width: 74px; height: 80px; } #cockpit[data-sc="wheel"] .ck-pills { bottom: calc(130px + var(--sab)); } }
+#p2ctl .wheel.p2 { position: absolute; left: calc(14px + var(--sal)); bottom: 0; width: 96px; height: 96px; pointer-events: auto; }
+body.split.touch #p2ctl { top: calc(50% - 104px); height: 96px; }
+body.split.touch #cockpit[data-sc="wheel"] .wheel { width: 120px; height: 120px; }
+.wheel .w-turn { position: absolute; inset: 0; will-change: transform; pointer-events: none; }
