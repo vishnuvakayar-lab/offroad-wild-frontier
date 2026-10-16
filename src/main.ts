@@ -13,7 +13,25 @@ let tip = 0;
 const tipTimer = setInterval(() => { tip = (tip + 1) % TIPS.length; $('load-tip').textContent = TIPS[tip]; }, 2600);
 (window as any).__boot = { t0: performance.now() };
 
+/** capability check before downloading ~5 MB: WebGL (2 or 1) and WebAssembly are required */
+function missingFeatures() {
+  const miss: string[] = [];
+  try { const c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) miss.push('WebGL'); } catch { miss.push('WebGL'); }
+  if (typeof WebAssembly !== 'object' || typeof WebAssembly.instantiate !== 'function') miss.push('WebAssembly');
+  return miss;
+}
+// PWA: service worker scoped to this folder (e.g. /preview/), never the site root
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && !/[?&]nosw/.test(location.search)) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch((e) => console.warn('service worker not registered', e));
+}
+
 async function start() {
+  const miss = missingFeatures();
+  if (miss.length) {
+    clearInterval(tipTimer); setLoad(100, '');
+    $('load-text').innerHTML = `<b>This browser can't run the game:</b> ${miss.join(' and ')} ${miss.length > 1 ? 'are' : 'is'} missing or disabled.<br>Try an up-to-date Chrome, Edge, Firefox or Safari, and enable hardware acceleration.`;
+    (window as any).__boot.missing = miss; return;
+  }
   setLoad(8, 'Downloading game…');
   const rapierP = import('@dimforge/rapier3d-compat');
   const gameP = import('./game');

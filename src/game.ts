@@ -5,7 +5,7 @@ import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES, 
 import { Vehicle, SURFACE_PARAMS, LOW_RANGE, type DriveInput, type GearSel, type Transfer } from './vehicle';
 import { TrackMarks } from './tracks';
 import { VEHICLES, PAINTS, vehicleById, stats, CATEGORIES } from './vehicles';
-import { Input } from './input';
+import { Input, PAD, ACTION_LABEL, type Action } from './input';
 import { GameAudio } from './audio';
 import { Particles, Rain } from './particles';
 import { WEATHER, WEATHER_ORDER, makeStars, type WeatherId } from './weather';
@@ -820,6 +820,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // Pro Chase / Far Chase (spring-follow position + heading, distance from the vehicle size), Cockpit (3D wheel), Hood,
   // Bumper, Cinematic (trackside tracking shots), Wheel View, Left Mirror, 360° Orbit. Every switch blends smoothly (no snap);
   // internal views ride on the sprung body (suspension / pitch / roll); look-around by dragging the empty screen; Look Back.
+  let padLookBack: (v: boolean) => void = () => {};
   type CamMode = 'pro' | 'far' | 'cockpit' | 'hood' | 'bumper' | 'cinematic' | 'wheel' | 'mirror' | 'orbit';
   const CAM_MODES: CamMode[] = ['pro', 'far', 'cockpit', 'hood', 'bumper', 'cinematic', 'wheel', 'mirror', 'orbit'];
   const CAM_LABEL: Record<CamMode, string> = { pro: 'Pro Chase', far: 'Far Chase', cockpit: 'Cockpit', hood: 'Hood', bumper: 'Bumper', cinematic: 'Cinematic', wheel: 'Wheel View', mirror: 'Left Mirror', orbit: '360° Orbit' };
@@ -856,8 +857,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     for (const ev of ['touchend', 'touchcancel'] as const) lb.addEventListener(ev, (e) => { e.preventDefault(); on(false); }, { passive: false });
     lb.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch') on(true); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave'] as const) lb.addEventListener(ev, (e) => { if ((e as PointerEvent).pointerType !== 'touch') on(false); });
-    window.addEventListener('keydown', (e) => { if (e.code === 'KeyB' && phase === 'playing') on(true); });
-    window.addEventListener('keyup', (e) => { if (e.code === 'KeyB') on(false); });
+    window.addEventListener('keydown', (e) => { if (input.isBound('lookback', e.code) && phase === 'playing') on(true); });
+    window.addEventListener('keyup', (e) => { if (input.isBound('lookback', e.code)) on(false); });
+    padLookBack = (v) => { if (v !== lookBack) on(v); };
     window.addEventListener('blur', () => on(false));
     document.addEventListener('visibilitychange', () => { if (document.hidden) on(false); });
   }
@@ -915,6 +917,51 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camera.updateProjectionMatrix();
   }
   setCamMode(camMode, true); setProfile(settings.profile ?? 'pro', true); blendFrom.t = 1;
+  // ---------- configurable key bindings + gamepad settings ----------
+  const keyName = (c: string) => c.replace(/^Key/, '').replace(/^Digit/, '').replace('Arrow', '').replace('Space', 'Space').replace('Escape', 'Esc');
+  function renderBindings() {
+    $('bind-list').innerHTML = (Object.keys(ACTION_LABEL) as Action[]).map((a) => `<div class="bind-row"><span>${ACTION_LABEL[a]}</span><button class="btn small" data-bind="${a}">${input.bindings[a].map(keyName).join(' / ')}</button></div>`).join('');
+    $('bind-list').querySelectorAll<HTMLElement>('[data-bind]').forEach((b) => b.onclick = () => {
+      const a = b.dataset.bind as Action; b.textContent = 'Press a key…';
+      input.capture = (code) => { if (code !== 'Escape') { for (const o of Object.keys(input.bindings) as Action[]) if (o !== a && input.bindings[o].includes(code)) input.setBinding(o, input.bindings[o].filter((c) => c !== code)); input.setBinding(a, [code]); } renderBindings(); };
+    });
+  }
+  renderBindings();
+  $('bind-reset').onclick = (e) => { e.preventDefault(); input.resetBindings(); renderBindings(); };
+  { const dz = $<HTMLInputElement>('rng-pdz'), ps = $<HTMLInputElement>('rng-psens'), P = (() => { try { return JSON.parse(localStorage.getItem('owf.pad') || '{}'); } catch { return {}; } })();
+    input.padDeadzone = P.dz ?? 0.12; input.padSens = P.sens ?? 1; dz.value = String(input.padDeadzone); ps.value = String(input.padSens);
+    const save = () => { input.padDeadzone = +dz.value; input.padSens = +ps.value; localStorage.setItem('owf.pad', JSON.stringify({ dz: input.padDeadzone, sens: input.padSens })); };
+    dz.oninput = save; ps.oninput = save;
+    window.addEventListener('gamepadconnected', (e) => { $('pad-status').textContent = (e as GamepadEvent).gamepad.id.slice(0, 40); toast('🎮 Gamepad connected'); });
+    window.addEventListener('gamepaddisconnected', () => { $('pad-status').textContent = 'none connected'; toast('🎮 Gamepad disconnected'); });
+  }
+  // pause when the window loses focus (not online: online cars keep driving on the server)
+  window.addEventListener('blur', () => { if (phase === 'playing' && !online.inRoom && !(window as any).__noAutoPause) setPhase('paused'); });
+  // ---------- gamepad: in-game actions + menu navigation ----------
+  input.onPadAction = (a) => {
+    if (phase !== 'playing') return;
+    if (a === 'camera' && !split) cycleCam(); else if (a === 'camreset' && !split) resetCam(); else if (a === 'reset') input.onReset(); else if (a === 'pause') input.onPause();
+  };
+  let padNavT = 0;
+  /** menus / drawers / pause card: D-pad or left stick moves the focus over visible buttons, A presses, B goes back */
+  function padMenu(dt: number) {
+    if (!input.pollPad()) return;
+    const ui = phase !== 'playing';
+    if (!ui) { padLookBack(input.padHeld(PAD.RB)); return; }
+    const scope = document.querySelector<HTMLElement>('#drawer:not(.hidden), #pause:not(.hidden), #results:not(.hidden), #garage:not(.hidden), #lobby:not(.hidden), #modes:not(.hidden), #levels:not(.hidden), #menu:not(.hidden)');
+    if (!scope) return;
+    const btns = [...scope.querySelectorAll<HTMLElement>('button:not([disabled]), input, select')].filter((b) => b.getClientRects().length > 0);
+    if (!btns.length) return;
+    const cur = btns.indexOf(document.activeElement as HTMLElement);
+    padNavT -= dt;
+    const ay = input.padAxis(1), ax = input.padAxis(0);
+    let step = 0;
+    if (input.padPressed(PAD.DOWN) || input.padPressed(PAD.RIGHT)) step = 1; else if (input.padPressed(PAD.UP) || input.padPressed(PAD.LEFT)) step = -1;
+    else if (padNavT <= 0 && (Math.abs(ay) > 0.6 || Math.abs(ax) > 0.6)) { step = (ay || ax) > 0 ? 1 : -1; padNavT = 0.22; }
+    if (step) { const n = btns[(cur < 0 ? (step > 0 ? -1 : 0) : cur) + step < 0 ? btns.length - 1 : ((cur < 0 ? (step > 0 ? -1 : 0) : cur) + step) % btns.length]; n.focus(); n.classList.add('pad-focus'); btns.forEach((b) => b !== n && b.classList.remove('pad-focus')); }
+    if (input.padPressed(PAD.A) && cur >= 0) btns[cur].click();
+    if (input.padPressed(PAD.B) || input.padPressed(PAD.START)) input.onPause();
+  }
   /** smooth switch: blend from the pose at the moment of switching to the live pose of the new view */
   function applyBlend(dt: number) {
     if (blendFrom.t >= 1) return;
@@ -964,8 +1011,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (code === 'KeyG' && online.inRoom) { $('btn-wp').click(); return true; }
     if (code === 'KeyM') { toggleMute(); return true; }
     if (code === 'Slash' && split && car2) { const t = car2.body.translation(), f = car2.forward(); car2.reset(t.x, heightAt(t.x, t.z) + car2.spawnLift, t.z, Math.atan2(f.x, f.z)); return true; }
-    if (code === 'KeyC' && !split) { cycleCam(); return true; }
-    if (code === 'KeyV' && !split) { resetCam(); return true; }
+    if (input.isBound('camera', code) && !split) { cycleCam(); return true; }
+    if (input.isBound('camreset', code) && !split) { resetCam(); return true; }
     return false;
   };
   input.onReset = () => {
@@ -1179,6 +1226,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     fpsFrames++; fpsT += dt;
     if (fpsT >= 1) { fps = fpsFrames / fpsT; fpsHistory.push(fps); if (fpsHistory.length > 120) fpsHistory.shift(); fpsFrames = 0; fpsT = 0; $('hud-fps').textContent = fps.toFixed(0) + ' fps'; }
 
+    padMenu(dt);
     if (online.inRoom) { // server-authoritative: predict own car, send inputs (see online.ts)
       const drive = phase === 'playing' ? input.read(dt) : IDLE; lastInput = drive;
       online.frame(rawDt, drive);
@@ -1197,7 +1245,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const v = car.body.linvel();
       if (impactPrev && phase !== 'paused' && impactCool <= 0) {
         const dv = Math.hypot(v.x - impactPrev.x, (v.y - impactPrev.y) * 0.6, v.z - impactPrev.z);
-        if (dv > 3.2) { audio.impact((dv - 3.2) / 6); impactCool = 0.25; shakeKick = Math.min(1, shakeKick + (dv - 3.2) / 5); }
+        if (dv > 3.2) { audio.impact((dv - 3.2) / 6); impactCool = 0.25; shakeKick = Math.min(1, shakeKick + (dv - 3.2) / 5); if (input.lastDevice === 'pad') input.rumble((dv - 3.2) / 5); }
       }
       impactCool -= dt; impactPrev = { x: v.x, y: v.y, z: v.z };
     }
@@ -1386,6 +1434,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       p2: () => { if (!car2) return null; const t = car2.body.translation(); return { x: t.x, y: t.y, z: t.z, speed: car2.forwardSpeed(), steer: car2.steer, input: drive2, p1input: lastInput }; } },
     profile: (id: ProfileId) => setProfile(id, true), get profileId() { return car.profile.id; }, profileIds: PROFILE_ORDER,
     cam: (m: CamMode) => setCamMode(m), get camMode() { return camMode; }, camModes: CAM_MODES, resetCam: () => resetCam(), lookBack: (v: boolean) => { lookBack = v; },
+    input: { get last() { return input.lastDevice; }, get pad() { return { index: input.padIndex, name: input.padName }; }, bindings: () => JSON.parse(JSON.stringify(input.bindings)), setBinding: (a: Action, c: string[]) => input.setBinding(a, c), resetBindings: () => input.resetBindings() },
     camInfo: () => { const p = camera.position; const g = heightAt(p.x, p.z); const t = car.body.translation(); return { mode: camMode, x: p.x, y: p.y, z: p.z, aboveGround: p.y - g, distToCar: p.distanceTo(new THREE.Vector3(t.x, t.y, t.z)), fov: camera.fov, blend: blendFrom.t, lookBackK }; }, orbit: (yaw: number, pitch = 0.35) => { orbitYaw = yaw; orbitPitch = pitch; orbitIdle = 0; },
     wheelAngle: () => car.steeringWheel?.rotation.z ?? null,
     wheelUI: () => ({ deg: input.wheelDeg, held: input.wheelHeld, value: input.wheelValue, steer: lastInput.steer, p2deg: input.p2wheel.wheelDeg, p2angle: car2?.steeringWheel?.rotation.z ?? null }),

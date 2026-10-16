@@ -413,3 +413,13 @@ body.split.touch #cockpit[data-sc="wheel"] .wheel { width: 120px; height: 120px;
 #btn-lookback.active { background: rgba(242,169,59,.6); }
 body.split .selbar, body.split #btn-lookback, body.split #btn-camreset { display: none; }
 @media (orientation: portrait) { .selbar { top: calc(108px + var(--sat)); max-width: 240px; } }
+.bind-list { display: grid; gap: 4px; margin-bottom: 8px; } .bind-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.bind-row .btn { min-width: 96px; }
+.pad-focus, button:focus-visible { outline: 3px solid var(--amber) !important; outline-offset: 2px; }
+/* tablets (iPad / Android tablets): bigger touch controls, panels stay cards */
+@media (min-width: 768px) and (min-height: 700px) and (pointer: coarse) {
+  #cockpit[data-sc="wheel"] .wheel { width: 210px; height: 210px; }
+  #cockpit[data-sc="wheel"] .pedal.gas { width: 110px; height: 150px; } #cockpit[data-sc="wheel"] .pedal.brake { width: 96px; height: 110px; }
+  #cockpit[data-sc="wheel"] .ck-pills { bottom: calc(176px + var(--sab)); }
+}
+html, body { overscroll-behavior: none; touch-action: none; }

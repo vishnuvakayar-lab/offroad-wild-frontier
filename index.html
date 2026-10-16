@@ -259,6 +259,11 @@
       <label class="group-label">Camera</label>
       <div class="row cam"><span>Distance</span><input type="range" id="rng-camdist" min="0.75" max="1.45" step="0.05" aria-label="Camera distance" /></div>
       <div class="row cam"><span>Height</span><input type="range" id="rng-camheight" min="0.6" max="1.6" step="0.05" aria-label="Camera height" /></div>
+      <label class="group-label">Keyboard bindings <button id="bind-reset" class="btn small">Defaults</button></label>
+      <div id="bind-list" class="bind-list"></div>
+      <label class="group-label">Gamepad <span id="pad-status" class="note">none connected</span></label>
+      <div class="row cam"><span>Dead zone</span><input type="range" id="rng-pdz" min="0.04" max="0.35" step="0.01" aria-label="Gamepad dead zone" /></div>
+      <div class="row cam"><span>Sensitivity</span><input type="range" id="rng-psens" min="0.6" max="1.6" step="0.05" aria-label="Gamepad steering sensitivity" /></div>
       <label class="group-label">Camera shake / feedback</label>
       <div class="seg" id="seg-shake"><button data-v="off">Off</button><button data-v="low">Low</button><button data-v="medium">Medium</button><button data-v="high">High</button></div>
       <p class="note">Build 0.8.0 · rework in progress</p>

@@ -10,6 +10,15 @@ export type ControlScheme = 'wheel' | 'buttons' | 'tilt' | 'halves';
 export const PEDAL = { gas0: 0.3, gasRamp: 0.5, brake0: 0.4, brakeRamp: 0.25 }; // initial value on press, seconds to reach 1
 export type TiltState = 'off' | 'pending' | 'granted' | 'denied' | 'unsupported' | 'no-data';
 
+export type Action = 'up' | 'down' | 'left' | 'right' | 'hand' | 'camera' | 'reset' | 'lookback' | 'camreset' | 'pause';
+export const ACTION_LABEL: Record<Action, string> = { up: 'Accelerate', down: 'Brake / reverse', left: 'Steer left', right: 'Steer right', hand: 'Handbrake', camera: 'Next camera', reset: 'Reset vehicle', lookback: 'Look back (hold)', camreset: 'Reset camera', pause: 'Pause' };
+export const DEFAULT_BINDINGS: Record<Action, string[]> = { up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'], hand: ['Space'], camera: ['KeyC'], reset: ['KeyR'], lookback: ['KeyB'], camreset: ['KeyV'], pause: ['Escape', 'KeyP'] };
+const BIND_KEY = 'owf.bindings.v1';
+export type Device = 'keys' | 'touch' | 'pad';
+/** Gamepad (standard mapping): left stick X = steer, RT = gas, LT = brake/reverse, A = handbrake, Y = camera, X = reset,
+ *  RB = look back (hold), Back/View = reset camera, Start/Menu = pause. Menus: D-pad / stick to move, A = select, B = back. */
+export const PAD = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
+
 export interface WheelState { wheelDeg: number; wheelHeld: boolean; wheelLock: number; wheelSens: number; }
 
 export class Input {
@@ -36,6 +45,20 @@ export class Input {
   onPause: () => void = () => {};
   onReset: () => void = () => {};
   onKey: (code: string) => boolean = () => false; // return true to swallow the key
+  /** configurable key bindings (Settings > Controls), persisted */
+  bindings: Record<Action, string[]> = Input.loadBindings();
+  static loadBindings(): Record<Action, string[]> { try { return { ...DEFAULT_BINDINGS, ...JSON.parse(localStorage.getItem(BIND_KEY) || '{}') }; } catch { return { ...DEFAULT_BINDINGS }; } }
+  setBinding(a: Action, codes: string[]) { this.bindings[a] = codes; try { localStorage.setItem(BIND_KEY, JSON.stringify(this.bindings)); } catch { /* */ } }
+  resetBindings() { this.bindings = { ...DEFAULT_BINDINGS }; try { localStorage.removeItem(BIND_KEY); } catch { /* */ } }
+  isBound(a: Action, code: string) { return this.bindings[a].includes(code); }
+  /** while set, the next key press is captured for rebinding instead of driving */
+  capture: ((code: string) => void) | null = null;
+  /** most recently active input device: only that device drives (no summing / conflicts) */
+  lastDevice: Device = 'keys';
+  // ---- gamepad ----
+  padDeadzone = 0.12; padSens = 1; padIndex = -1; padName = '';
+  private padPrev: boolean[] = []; private padNow: boolean[] = []; private padAxes: number[] = []; private padVals: number[] = [];
+  onPadAction: (a: Action) => void = () => {};
   /** touch-scheme settings (set by the game from Settings) */
   scheme: ControlScheme = 'halves';
   autoThrottle = false;
@@ -61,9 +84,11 @@ export class Input {
 
   constructor() {
     window.addEventListener('keydown', (e) => {
+      if (this.capture) { e.preventDefault(); const c = this.capture; this.capture = null; c(e.code); return; }
+      this.lastDevice = 'keys';
       if (!e.repeat && this.onKey(e.code)) { e.preventDefault(); return; }
-      if (e.code === 'Escape' || e.code === 'KeyP') { this.onPause(); return; }
-      if (e.code === 'KeyR' && !e.repeat) this.onReset();
+      if (this.isBound('pause', e.code)) { this.onPause(); return; }
+      if (this.isBound('reset', e.code) && !e.repeat) this.onReset();
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
       this.keys.add(e.code);
     });
@@ -85,7 +110,7 @@ export class Input {
    */
   bindHold(el: HTMLElement, key: keyof Input['touch'], target: Input['touch'] = this.touch) {
     const active = new Set<string>();
-    const set = () => { target[key] = active.size > 0; el.classList.toggle('active', active.size > 0); };
+    const set = () => { target[key] = active.size > 0; el.classList.toggle('active', active.size > 0); if (active.size) this.lastDevice = 'touch'; };
     this.releasers.push(() => { active.clear(); set(); });
     const opt = { passive: false } as AddEventListenerOptions;
     el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); for (const t of e.changedTouches) active.add('t' + t.identifier); set(); }, opt);
@@ -102,7 +127,7 @@ export class Input {
 
   /** Full-screen touch layer for the tilt / halves schemes: each finger counts for the half it went down on (touch + pointer, as bindHold). */
   bindZones(el: HTMLElement, onChange: (l: boolean, r: boolean) => void) {
-    const emit = () => { const v = [...this.zones.values()]; onChange(v.includes('L'), v.includes('R')); };
+    const emit = () => { const v = [...this.zones.values()]; if (v.length) this.lastDevice = 'touch'; onChange(v.includes('L'), v.includes('R')); };
     const side = (x: number) => { const r = el.getBoundingClientRect(); return x - r.left < r.width / 2 ? 'L' : 'R'; };
     const opt = { passive: false } as AddEventListenerOptions;
     el.addEventListener('touchstart', (e) => { if ((e.target as HTMLElement).closest('button')) return; e.preventDefault(); for (const t of e.changedTouches) this.zones.set('t' + t.identifier, side(t.clientX)); emit(); }, opt);
@@ -128,7 +153,7 @@ export class Input {
   bindWheel(el: HTMLElement, st: WheelState = this, onTurn: (deg: number) => void = (d) => this.onWheel(d)) {
     let tid: number | null = null, pid: number | null = null, lastA = 0;
     const ang = (x: number, y: number) => { const r = el.getBoundingClientRect(); return Math.atan2(y - (r.top + r.height / 2), x - (r.left + r.width / 2)) * 180 / Math.PI; };
-    const start = (x: number, y: number) => { lastA = ang(x, y); st.wheelHeld = true; el.classList.add('active'); };
+    const start = (x: number, y: number) => { lastA = ang(x, y); st.wheelHeld = true; el.classList.add('active'); this.lastDevice = 'touch'; };
     const move = (x: number, y: number) => {
       const r = el.getBoundingClientRect(), dx = x - (r.left + r.width / 2), dy = y - (r.top + r.height / 2);
       if (dx * dx + dy * dy < (r.width * 0.08) ** 2) return; // too close to the centre: angle is unstable
@@ -193,43 +218,72 @@ export class Input {
     return Math.max(-1, Math.min(1, (d - Math.sign(d) * dz) / (this.tiltRange - dz)));
   }
 
+  /** Poll the Gamepad API (standard mapping). Returns true if a pad is connected. Edge-triggered actions go to onPadAction. */
+  pollPad(): boolean {
+    const pads = (navigator.getGamepads?.() ?? []) as (Gamepad | null)[];
+    let gp: Gamepad | null = null;
+    for (const p of pads) if (p && p.connected && (p.mapping === 'standard' || !gp)) { gp = p; if (p.mapping === 'standard') break; }
+    if (!gp) { this.padIndex = -1; this.padName = ''; return false; }
+    this.padIndex = gp.index; this.padName = gp.id;
+    this.padPrev = this.padNow; this.padNow = gp.buttons.map((b) => b.pressed || b.value > 0.5); this.padVals = gp.buttons.map((b) => b.value);
+    this.padAxes = gp.axes.slice();
+    const dz = this.padDeadzone, active = this.padNow.some(Boolean) || this.padAxes.some((a) => Math.abs(a) > dz + 0.1);
+    if (active) this.lastDevice = 'pad';
+    return true;
+  }
+  /** pad button went down this poll */
+  padPressed(i: number) { return !!this.padNow[i] && !this.padPrev[i]; }
+  padHeld(i: number) { return !!this.padNow[i]; }
+  padAxis(i: number) { const v = this.padAxes[i] ?? 0, dz = this.padDeadzone; return Math.abs(v) < dz ? 0 : Math.sign(v) * Math.min(1, ((Math.abs(v) - dz) / (1 - dz)) * this.padSens); }
+  /** rumble via vibrationActuator where supported (Chrome / Edge / Android); silently ignored elsewhere */
+  rumble(strength: number, ms = 120) {
+    if (this.padIndex < 0) return; const gp = navigator.getGamepads?.()[this.padIndex] as any;
+    try { gp?.vibrationActuator?.playEffect?.('dual-rumble', { duration: ms, strongMagnitude: Math.min(1, strength), weakMagnitude: Math.min(1, strength * 0.6) }); } catch { /* unsupported */ }
+  }
+  private held(a: Action, noArrows: boolean) { return this.bindings[a].some((c) => this.keys.has(c) && !(noArrows && c.startsWith('Arrow'))); }
+
   read(dt: number): DriveInput {
     if (this.override) return this.override;
-    const k = this.keys, t = this.touch;
+    const t = this.touch;
+    if (this.pollPad()) for (const [b, a] of [[PAD.Y, 'camera'], [PAD.X, 'reset'], [PAD.BACK, 'camreset'], [PAD.START, 'pause']] as const) if (this.padPressed(b)) this.onPadAction(a);
     const zv = [...this.zones.values()], zl = zv.includes('L'), zr = zv.includes('R');
-    const ar = !this.split; // in split-screen the arrow keys belong to player 2
-    const kUp = k.has('KeyW') || (ar && k.has('ArrowUp')), kDown = k.has('KeyS') || (ar && k.has('ArrowDown'));
-    const kLeft = k.has('KeyA') || (ar && k.has('ArrowLeft')), kRight = k.has('KeyD') || (ar && k.has('ArrowRight'));
-    let thr = kUp ? 1 : 0, brk = kDown ? 1 : 0, left = kLeft, right = kRight, analog: number | null = null;
+    const na = this.split; // in split-screen the arrow keys belong to player 2
+    const dev = this.lastDevice;
+    let thr = 0, brk = 0, left = false, right = false, analog: number | null = null, hand = false;
     // self-centring wheel when released (also when the wheel UI is hidden)
     Input.recentre(this, dt, (d) => this.onWheel(d));
-    if (this.touchActive) {
-      const pedals = this.scheme !== 'halves';
-      if (pedals) { // progressive pedals: start value on press, ramp to 1 while held, instant release
-        this.gasV = t.gas ? Math.min(1, Math.max(PEDAL.gas0, this.gasV + dt / PEDAL.gasRamp)) : 0;
-        this.brakeV = t.brake ? Math.min(1, Math.max(PEDAL.brake0, this.brakeV + dt / PEDAL.brakeRamp)) : 0;
-        thr = Math.max(thr, this.gasV); brk = Math.max(brk, this.brakeV);
-      }
+    // progressive touch pedals keep their ramp state whatever device is active
+    this.gasV = this.touchActive && t.gas ? Math.min(1, Math.max(PEDAL.gas0, this.gasV + dt / PEDAL.gasRamp)) : 0;
+    this.brakeV = this.touchActive && t.brake ? Math.min(1, Math.max(PEDAL.brake0, this.brakeV + dt / PEDAL.brakeRamp)) : 0;
+    if (dev === 'pad' && this.padIndex >= 0) {
+      analog = -this.padAxis(0); // stick right = steer right (negative)
+      thr = Math.max(this.padVals[PAD.RT] ?? 0, this.padAxis(1) < -0.5 ? 1 : 0); brk = Math.max(this.padVals[PAD.LT] ?? 0, this.padAxis(1) > 0.5 ? 1 : 0);
+      if (thr < 0.05) thr = 0; if (brk < 0.05) brk = 0;
+      hand = this.padHeld(PAD.A);
+      if (this.padHeld(PAD.LEFT)) { analog = null; left = true; } if (this.padHeld(PAD.RIGHT)) { analog = null; right = true; }
+    } else if (dev === 'touch' && this.touchActive) {
+      hand = t.hand;
+      if (this.scheme !== 'halves') { thr = this.gasV; brk = this.brakeV; }
       if (this.scheme === 'halves') {
-        const both = zl && zr;
-        left ||= zl && !zr; right ||= zr && !zl;
+        const both = zl && zr; left = zl && !zr; right = zr && !zl;
         if (both || t.brake) brk = 1;
         if (brk === 0) thr = 1; // drives forward by itself
-      } else if (this.scheme === 'wheel') {
-        if (!kLeft && !kRight) analog = this.wheelValue;
-      } else if (this.scheme === 'buttons') {
-        left ||= t.left; right ||= t.right;
-      } else { // tilt
-        if (!kLeft && !kRight) analog = this.tiltValue;
+      } else if (this.scheme === 'wheel') analog = this.wheelValue;
+      else if (this.scheme === 'buttons') { left = t.left; right = t.right; }
+      else { // tilt
+        analog = this.tiltValue;
         if (zr) thr = Math.max(thr, 1); if (zl) brk = Math.max(brk, 1);
         if (this.autoThrottle && brk === 0) thr = Math.max(thr, 1);
       }
+    } else { // keyboard (also the fallback when the active device has nothing connected)
+      thr = this.held('up', na) ? 1 : 0; brk = this.held('down', na) ? 1 : 0; left = this.held('left', na); right = this.held('right', na); hand = this.held('hand', false);
+      if (this.touchActive && this.scheme === 'wheel' && this.wheelDeg !== 0) analog = this.wheelValue; // wheel still turning back
     }
     if (brk > 0.05) thr = 0; // brake wins: never full throttle and brake together
     const target = analog ?? ((left ? 1 : 0) - (right ? 1 : 0)); // +1 = steer left
     const rate = analog !== null ? 10 : target === 0 ? 6 : 3.5;
     this.steerSmooth += Math.max(-rate * dt, Math.min(rate * dt, target - this.steerSmooth));
-    return { throttle: thr, brake: brk, steer: this.steerSmooth, handbrake: k.has('Space') || t.hand };
+    return { throttle: thr, brake: brk, steer: this.steerSmooth, handbrake: hand };
   }
 
   /** Player 2 (split-screen): arrow keys / P2 touch buttons; progressive touch pedals like player 1; brake wins. */
