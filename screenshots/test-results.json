@@ -2,7 +2,7 @@
   {
     "name": "desktop: game loads to main menu",
     "pass": true,
-    "detail": "load 5579 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    "detail": "load 5079 ms, renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
   },
   {
     "name": "audio: no AudioContext before any user gesture",
@@ -32,22 +32,22 @@
   {
     "name": "Free Roam: Play is drivable at once (no fly-over intro blocking input)",
     "pass": true,
-    "detail": "phase playing 380 ms after the click"
+    "detail": "phase playing 810 ms after the click"
   },
   {
     "name": "audio: engine pitch rises with throttle (FFT of engine bus)",
     "pass": true,
-    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 900 rpm -> throttle: 150.7 Hz measured / 152.2 Hz set, 4567 rpm (gear 2)"
+    "detail": "idle: 32.3 Hz measured / 30.0 Hz set, 901 rpm -> throttle: 150.7 Hz measured / 165.3 Hz set, 4958 rpm (gear 2)"
   },
   {
     "name": "desktop: W key drives vehicle forward (real-time)",
     "pass": true,
-    "detail": "moved 3.45 m, speed 28.1 km/h (render-paced)"
+    "detail": "moved 2.59 m, speed 15.0 km/h (render-paced)"
   },
   {
     "name": "desktop: A key steers (heading changes)",
     "pass": true,
-    "detail": "heading change 37.4 deg"
+    "detail": "heading change 41.1 deg"
   },
   {
     "name": "desktop: Esc pauses; pause panel is partial",
@@ -62,17 +62,17 @@
   {
     "name": "traction: ground > sand > mud (speed after 3 s full throttle)",
     "pass": true,
-    "detail": "ground 64.9 / sand 50.5 / mud 33.2 km/h"
+    "detail": "ground 29.1 / sand 21.7 / mud 16.3 km/h"
   },
   {
-    "name": "brakes decelerate strongly (>= 7 m/s^2)",
+    "name": "brakes decelerate firmly (>= 4.5 m/s^2 incl. pedal ramp; 0.8.1 realistic brakes)",
     "pass": true,
-    "detail": "from 65.4 to 7.7 km/h in 1.5 s = 10.7 m/s^2 (1.09 g), 15.0 m"
+    "detail": "from 27.0 to 0.9 km/h in 1.5 s = 4.8 m/s^2 (0.49 g), 5.5 m"
   },
   {
     "name": "holding brake at standstill reverses",
     "pass": true,
-    "detail": "-25.3 km/h"
+    "detail": "-8.2 km/h"
   },
   {
     "name": "vehicle stays upright through tests",
@@ -82,12 +82,12 @@
   {
     "name": "tyre tracks laid while driving in mud (real-time)",
     "pass": true,
-    "detail": "29 track decals in 5 s"
+    "detail": "16 track decals in 5 s"
   },
   {
     "name": "FPS measured (desktop, SwiftShader software GL)",
     "pass": true,
-    "detail": "High preset 10.0 fps, Low preset 14.8 fps"
+    "detail": "High preset 10.0 fps, Low preset 14.6 fps"
   },
   {
     "name": "desktop: no console errors",
@@ -97,7 +97,7 @@
   {
     "name": "mobile-portrait-390x844: loads to menu",
     "pass": true,
-    "detail": "load 4704 ms"
+    "detail": "load 4581 ms"
   },
   {
     "name": "mobile-portrait-390x844: menu panel partial",
@@ -127,12 +127,12 @@
   {
     "name": "mobile-portrait-390x844: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 12.01 m, heading change 65.6 deg, airborne samples 0/6"
+    "detail": "moved 5.30 m, heading change 46.3 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-portrait-390x844: FPS (SwiftShader)",
     "pass": true,
-    "detail": "10.8 fps @ preset medium"
+    "detail": "12.4 fps @ preset medium"
   },
   {
     "name": "mobile-portrait-390x844: rotation -> canvas resizes to new viewport",
@@ -147,7 +147,7 @@
   {
     "name": "mobile-landscape-844x390: loads to menu",
     "pass": true,
-    "detail": "load 5367 ms"
+    "detail": "load 4923 ms"
   },
   {
     "name": "mobile-landscape-844x390: menu panel partial",
@@ -177,12 +177,12 @@
   {
     "name": "mobile-landscape-844x390: touch GAS + steer drives and turns",
     "pass": true,
-    "detail": "moved 13.37 m, heading change 64.5 deg, airborne samples 0/6"
+    "detail": "moved 6.81 m, heading change 57.0 deg, airborne samples 0/6"
   },
   {
     "name": "mobile-landscape-844x390: FPS (SwiftShader)",
     "pass": true,
-    "detail": "11.6 fps @ preset medium"
+    "detail": "11.2 fps @ preset medium"
   },
   {
     "name": "mobile-landscape-844x390: rotation -> canvas resizes to new viewport",
@@ -197,27 +197,27 @@
   {
     "name": "particles: mud and sand emit more than dirt under full throttle",
     "pass": true,
-    "detail": "dirt 18 / mud 512 / sand 392; slip dirt 0.00 / mud 0.42 / sand 0.20"
+    "detail": "dirt 0 / mud 96 / sand 68; slip dirt 0.00 / mud 0.03 / sand 0.00"
   },
   {
     "name": "puddles: vehicle drives through a deep puddle and it splashes",
     "pass": true,
-    "detail": "t=7.35 s, wheels in water=true, peak splash particles 218, chassis y in puddle 0.62 vs water level -0.10"
+    "detail": "t=9.75 s, wheels in water=true, peak splash particles 96, chassis y in puddle 0.83 vs water level -0.10"
   },
   {
     "name": "tracks: continuous ribbon segments laid",
     "pass": true,
-    "detail": "144 ribbon segments"
+    "detail": "108 ribbon segments"
   },
   {
     "name": "camera: FOV widens with speed",
     "pass": true,
-    "detail": "63.5 deg at rest -> 68.7 deg at speed"
+    "detail": "63.0 deg at rest -> 65.3 deg at speed"
   },
   {
     "name": "camera: pulled in front of an obstacle behind the vehicle (no clipping through tree)",
     "pass": true,
-    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.03 m above ground"
+    "detail": "camera 2.41 m behind car (normal 7.4 m), cam x 9.77 vs tree x 9.04, 3.02 m above ground"
   },
   {
     "name": "weather: HUD quick toggle and T key cycle presets",
@@ -227,7 +227,7 @@
   {
     "name": "weather: clear loads without console errors",
     "pass": true,
-    "detail": "10.8 fps (High)"
+    "detail": "12.4 fps (High)"
   },
   {
     "name": "weather: sunset loads without console errors",
@@ -237,7 +237,7 @@
   {
     "name": "weather: fog loads without console errors",
     "pass": true,
-    "detail": "11.4 fps (High)"
+    "detail": "10.8 fps (High)"
   },
   {
     "name": "weather: rain loads without console errors",
@@ -247,22 +247,22 @@
   {
     "name": "weather: night loads without console errors",
     "pass": true,
-    "detail": "12.0 fps (High)"
+    "detail": "11.6 fps (High)"
   },
   {
     "name": "preset low: renders after switch, AA=false",
     "pass": true,
-    "detail": "13.2 fps, 85 draw calls, 135264 tris, particles {\"mud\":97,\"dust\":0,\"splash\":0,\"spawned\":3854}"
+    "detail": "14.1 fps, 93 draw calls, 145543 tris, particles {\"mud\":29,\"dust\":0,\"splash\":0,\"spawned\":992}"
   },
   {
     "name": "preset medium: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 185 draw calls, 250448 tris, particles {\"mud\":190,\"dust\":0,\"splash\":0,\"spawned\":4095}"
+    "detail": "10.4 fps, 185 draw calls, 254056 tris, particles {\"mud\":31,\"dust\":0,\"splash\":0,\"spawned\":1049}"
   },
   {
     "name": "preset high: renders after switch, AA=true",
     "pass": true,
-    "detail": "10.0 fps, 201 draw calls, 290610 tris, particles {\"mud\":251,\"dust\":0,\"splash\":0,\"spawned\":4404}"
+    "detail": "10.0 fps, 199 draw calls, 293272 tris, particles {\"mud\":45,\"dust\":0,\"splash\":0,\"spawned\":1109}"
   },
   {
     "name": "AA toggled without page reload",
@@ -282,7 +282,17 @@
   {
     "name": "vehicle scout: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "111 m, turned 111°, min up 0.93, final up 1.00, airborne 16% of samples, ended on sand"
+    "detail": "55 m, turned 103°, min up 0.93, final up 0.98, airborne 0% of samples, ended on sand"
+  },
+  {
+    "name": "vehicle f110: spawns upright",
+    "pass": true,
+    "detail": "up 1.000, body 1.09 m above ground"
+  },
+  {
+    "name": "vehicle f110: stays upright through scripted drive (bumps + turn)",
+    "pass": true,
+    "detail": "52 m, turned 95°, min up 0.93, final up 0.99, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle voyager: spawns upright",
@@ -292,7 +302,7 @@
   {
     "name": "vehicle voyager: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "105 m, turned 107°, min up 0.92, final up 1.00, airborne 13% of samples, ended on sand"
+    "detail": "52 m, turned 93°, min up 0.94, final up 0.99, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle sahara: spawns upright",
@@ -302,7 +312,7 @@
   {
     "name": "vehicle sahara: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "118 m, turned 114°, min up 0.93, final up 1.00, airborne 19% of samples, ended on sand"
+    "detail": "55 m, turned 108°, min up 0.94, final up 0.98, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle pickup: spawns upright",
@@ -312,7 +322,7 @@
   {
     "name": "vehicle pickup: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "100 m, turned 105°, min up 0.93, final up 1.00, airborne 11% of samples, ended on sand"
+    "detail": "53 m, turned 78°, min up 0.94, final up 0.99, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle rally: spawns upright",
@@ -322,7 +332,7 @@
   {
     "name": "vehicle rally: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "129 m, turned 116°, min up 0.93, final up 1.00, airborne 21% of samples, ended on sand"
+    "detail": "64 m, turned 111°, min up 0.94, final up 0.97, airborne 2% of samples, ended on sand"
   },
   {
     "name": "vehicle recovery: spawns upright",
@@ -332,7 +342,7 @@
   {
     "name": "vehicle recovery: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "90 m, turned 89°, min up 0.94, final up 1.00, airborne 8% of samples, ended on sand"
+    "detail": "50 m, turned 58°, min up 0.94, final up 0.99, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle van: spawns upright",
@@ -342,7 +352,7 @@
   {
     "name": "vehicle van: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "92 m, turned 93°, min up 0.93, final up 1.00, airborne 12% of samples, ended on sand"
+    "detail": "48 m, turned 80°, min up 0.94, final up 1.00, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle ltv: spawns upright",
@@ -352,7 +362,7 @@
   {
     "name": "vehicle ltv: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "114 m, turned 113°, min up 0.92, final up 1.00, airborne 18% of samples, ended on sand"
+    "detail": "59 m, turned 104°, min up 0.93, final up 0.98, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle patrol: spawns upright",
@@ -362,7 +372,7 @@
   {
     "name": "vehicle patrol: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "93 m, turned 94°, min up 0.93, final up 1.00, airborne 13% of samples, ended on sand"
+    "detail": "49 m, turned 75°, min up 0.94, final up 0.99, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle cargo6: spawns upright",
@@ -372,7 +382,7 @@
   {
     "name": "vehicle cargo6: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "84 m, turned 94°, min up 0.93, final up 0.96, airborne 6% of samples, ended on sand"
+    "detail": "46 m, turned 51°, min up 0.94, final up 1.00, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicle mrap: spawns upright",
@@ -382,12 +392,12 @@
   {
     "name": "vehicle mrap: stays upright through scripted drive (bumps + turn)",
     "pass": true,
-    "detail": "83 m, turned 88°, min up 0.93, final up 0.97, airborne 5% of samples, ended on sand"
+    "detail": "44 m, turned 56°, min up 0.94, final up 1.00, airborne 0% of samples, ended on sand"
   },
   {
     "name": "vehicles: performance differs (0-60, top speed, turn rate, mud)",
     "pass": true,
-    "detail": "0-60 1.55-4.65s, top 70-128 km/h, turn 36.6-52.5 deg/s, mud 22.8-37.5 km/h; every pair differs"
+    "detail": "0-60 3.2-8.8s, top 39-54 km/h, turn 29.9-65.3 deg/s, mud 10.4-19.0 km/h; every pair differs"
   },
   {
     "name": "vehicles: character matches class",
@@ -397,7 +407,7 @@
   {
     "name": "steering lighter at speed without losing stability",
     "pass": true,
-    "detail": "Scout full-lock yaw @50/@80 km/h: before 38.5/29.7 -> after 44.7/41.0 deg/s; min up 1.00/1.00, min wheels 4/4"
+    "detail": "Scout full-lock yaw @50/@80 km/h: before 44.2/42.4 -> after 49.0/47.6 deg/s; min up 1.00/1.00, min wheels 4/4"
   },
   {
     "name": "garage desktop: panel leaves the showcase visible",
@@ -407,7 +417,7 @@
   {
     "name": "garage: cycles through all vehicles",
     "pass": true,
-    "detail": "scout, voyager, sahara, pickup, rally, recovery, van, ltv, patrol, cargo6, mrap"
+    "detail": "scout, f110, voyager, sahara, pickup, rally, recovery, van, ltv, patrol, cargo6, mrap"
   },
   {
     "name": "garage: selection + colour persist across reload and are used in Free Roam",
@@ -417,7 +427,7 @@
   {
     "name": "night: car body visibility improved by fill/rim light",
     "pass": true,
-    "detail": "mean luma around car (0-255): night 0.0 -> 57.8; clear 98.9 vs 98.9 (fill disabled in daylight)"
+    "detail": "mean luma around car (0-255): night 0.0 -> 70.9; clear 105.5 vs 105.5 (fill disabled in daylight)"
   },
   {
     "name": "phase5 desktop: no console errors",
@@ -427,7 +437,7 @@
   {
     "name": "garage portrait: panel sized, controls reachable",
     "pass": true,
-    "detail": "panel covers 53% of 390x844; buttons on-screen true; tap next -> voyager"
+    "detail": "panel covers 53% of 390x844; buttons on-screen true; tap next -> f110"
   },
   {
     "name": "garage portrait: no console errors",
@@ -437,7 +447,7 @@
   {
     "name": "garage landscape: panel sized, controls reachable",
     "pass": true,
-    "detail": "panel covers 37% of 844x390; buttons on-screen true; tap next -> voyager"
+    "detail": "panel covers 37% of 844x390; buttons on-screen true; tap next -> f110"
   },
   {
     "name": "garage landscape: no console errors",
@@ -452,62 +462,72 @@
   {
     "name": "model scout: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 22.8 cm, front steer range 0.32 rad, damper length range 12.2 cm, axle/arm motion 16.8 cm, 10 instanced parts; High: 28 draws / 28680 tris"
+    "detail": "hub travel 2.6 cm, front steer range 0.36 rad, damper length range 2.6 cm, axle/arm motion 1.8 cm, 10 instanced parts; High: 28 draws / 28680 tris"
+  },
+  {
+    "name": "model f110: wheels spin/steer and suspension parts animate",
+    "pass": true,
+    "detail": "hub travel 3.3 cm, front steer range 0.35 rad, damper length range 3.3 cm, axle/arm motion 2.6 cm, 12 instanced parts; High: 27 draws / 25936 tris"
   },
   {
     "name": "model voyager: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 23.0 cm, front steer range 0.30 rad, damper length range 10.3 cm, axle/arm motion 15.8 cm, 10 instanced parts; High: 28 draws / 28914 tris"
+    "detail": "hub travel 2.5 cm, front steer range 0.34 rad, damper length range 2.5 cm, axle/arm motion 1.7 cm, 10 instanced parts; High: 28 draws / 28914 tris"
   },
   {
     "name": "model sahara: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 23.3 cm, front steer range 0.41 rad, damper length range 12.0 cm, axle/arm motion 12.3 cm, 12 instanced parts; High: 27 draws / 27340 tris"
+    "detail": "hub travel 2.4 cm, front steer range 0.31 rad, damper length range 2.3 cm, axle/arm motion 1.8 cm, 12 instanced parts; High: 27 draws / 27340 tris"
   },
   {
     "name": "model pickup: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 19.3 cm, front steer range 0.28 rad, damper length range 10.0 cm, axle/arm motion 13.0 cm, 10 instanced parts; High: 27 draws / 26740 tris"
+    "detail": "hub travel 2.3 cm, front steer range 0.32 rad, damper length range 2.3 cm, axle/arm motion 1.3 cm, 10 instanced parts; High: 27 draws / 26740 tris"
   },
   {
     "name": "model rally: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 20.9 cm, front steer range 0.34 rad, damper length range 16.3 cm, axle/arm motion 14.9 cm, 12 instanced parts; High: 26 draws / 23768 tris"
+    "detail": "hub travel 2.0 cm, front steer range 0.38 rad, damper length range 1.5 cm, axle/arm motion 1.7 cm, 12 instanced parts; High: 26 draws / 23768 tris"
   },
   {
     "name": "model recovery: wheels spin/steer and suspension parts animate",
-    "pass": true,
-    "detail": "hub travel 12.0 cm, front steer range 0.28 rad, damper length range 7.9 cm, axle/arm motion 7.2 cm, 10 instanced parts; High: 28 draws / 31874 tris"
+    "pass": false,
+    "detail": "hub travel 1.8 cm, front steer range 0.31 rad, damper length range 1.6 cm, axle/arm motion 1.0 cm, 10 instanced parts; High: 28 draws / 31874 tris"
   },
   {
     "name": "model van: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 15.2 cm, front steer range 0.30 rad, damper length range 8.2 cm, axle/arm motion 9.1 cm, 10 instanced parts; High: 28 draws / 28614 tris"
+    "detail": "hub travel 2.2 cm, front steer range 0.33 rad, damper length range 2.2 cm, axle/arm motion 1.4 cm, 10 instanced parts; High: 28 draws / 28614 tris"
   },
   {
     "name": "model ltv: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 25.1 cm, front steer range 0.33 rad, damper length range 14.3 cm, axle/arm motion 19.7 cm, 10 instanced parts; High: 31 draws / 26590 tris"
+    "detail": "hub travel 2.9 cm, front steer range 0.36 rad, damper length range 2.5 cm, axle/arm motion 2.1 cm, 10 instanced parts; High: 31 draws / 26590 tris"
   },
   {
     "name": "model patrol: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 13.4 cm, front steer range 0.29 rad, damper length range 8.0 cm, axle/arm motion 8.1 cm, 10 instanced parts; High: 30 draws / 30968 tris"
+    "detail": "hub travel 2.0 cm, front steer range 0.32 rad, damper length range 2.0 cm, axle/arm motion 1.2 cm, 10 instanced parts; High: 30 draws / 30968 tris"
   },
   {
     "name": "model cargo6: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 11.7 cm, front steer range 0.28 rad, damper length range 5.6 cm, axle/arm motion 6.3 cm, 10 instanced parts; High: 31 draws / 28742 tris"
+    "detail": "hub travel 1.8 cm, front steer range 0.30 rad, damper length range 1.7 cm, axle/arm motion 1.0 cm, 10 instanced parts; High: 31 draws / 28742 tris"
   },
   {
     "name": "model mrap: wheels spin/steer and suspension parts animate",
     "pass": true,
-    "detail": "hub travel 9.3 cm, front steer range 0.27 rad, damper length range 5.3 cm, axle/arm motion 5.1 cm, 10 instanced parts; High: 30 draws / 27772 tris"
+    "detail": "hub travel 2.1 cm, front steer range 0.30 rad, damper length range 2.1 cm, axle/arm motion 1.3 cm, 10 instanced parts; High: 30 draws / 27772 tris"
   },
   {
     "name": "model scout: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
     "pass": true,
     "detail": "High/Medium: 28 draws, 28680 tris; Low: 23 draws, 4164 tris"
+  },
+  {
+    "name": "model f110: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
+    "pass": true,
+    "detail": "High/Medium: 27 draws, 25936 tris; Low: 21 draws, 4500 tris"
   },
   {
     "name": "model voyager: draw-call / triangle budgets (High ≤32/35000, Low ≤24/6000)",
@@ -567,7 +587,7 @@
   {
     "name": "mud builds up on the body in the mud basin (cosmetic)",
     "pass": true,
-    "detail": "dirt level 0.44 after ~6 s in mud"
+    "detail": "dirt level 0.39 after ~6 s in mud"
   },
   {
     "name": "phase5b desktop: no console errors",
@@ -602,7 +622,7 @@
   {
     "name": "p6 race: out-of-order checkpoint rejected",
     "pass": true,
-    "detail": "after crossing gate 3 first: next=0, rejected=1, messages [GO! | Missed checkpoint 1! | Wrong way!]"
+    "detail": "after crossing gate 3 first: next=0, rejected=2, messages [GO! | Missed checkpoint 1! | Wrong way! | Missed checkpoint 1! | Wrong way!]"
   },
   {
     "name": "p6 race: wrong-way crossing flagged, not counted",
@@ -612,7 +632,7 @@
   {
     "name": "p6 race: in-order checkpoint accepted with split",
     "pass": true,
-    "detail": "next=1, split 3.33 s"
+    "detail": "next=1, split 10.70 s"
   },
   {
     "name": "p6 race: reset returns to last checkpoint facing the course",
@@ -627,7 +647,7 @@
   {
     "name": "p6 races: bot completes both routes (gates in order, no rejections)",
     "pass": true,
-    "detail": "race-dash 26.35 s, 13 splits, gold; race-loop 31.07 s, 16 splits, gold"
+    "detail": "race-dash 38.65 s, 13 splits, gold; race-loop 43.88 s, 16 splits, gold"
   },
   {
     "name": "p6 results: medal, reward and retry/next/menu shown",
@@ -642,32 +662,32 @@
   {
     "name": "p6 results: best time + medal stored",
     "pass": true,
-    "detail": "best race-dash 26.35 s gold, splits 13"
+    "detail": "best race-dash 38.65 s gold, splits 13"
   },
   {
     "name": "p6 results: retry restarts same mission, next goes to the following one",
     "pass": true,
-    "detail": "retry -> race-loop (countdown); next -> race-dash; repeat run 31.07 s newBest=false"
+    "detail": "retry -> race-loop (countdown); next -> race-dash; repeat run 43.88 s newBest=false"
   },
   {
     "name": "p6 medals: thresholds gold<=silver<=bronze inclusive",
     "pass": true,
-    "detail": "targets {\"gold\":31.5,\"silver\":39.5,\"bronze\":52.5} -> gold, gold, silver, silver, bronze, bronze, none"
+    "detail": "targets {\"gold\":46.5,\"silver\":58,\"bronze\":77} -> gold, gold, silver, silver, bronze, bronze, none"
   },
   {
     "name": "p6 challenge mud: bot crosses both gates in time without reset",
     "pass": true,
-    "detail": "success in 9.10 s (limit 30 s)"
+    "detail": "success in 15.95 s (limit 30 s)"
   },
   {
     "name": "p6 challenge mud: reset = fail, timeout = fail",
-    "pass": true,
-    "detail": "reset -> fail (\"Reset used — challenge failed\"); idle 30.2 s -> fail (\"Out of time\")"
+    "pass": false,
+    "detail": "reset -> fail (\"Reset used — challenge failed\"); idle 30.2 s -> running (\"\")"
   },
   {
     "name": "p6 challenge climb: bot reaches summit flag",
     "pass": true,
-    "detail": "success in 48.13 s, summit y=34.3 m"
+    "detail": "success in 63.50 s, summit y=34.2 m"
   },
   {
     "name": "p6 challenge climb: timeout and rollover fail",
@@ -682,12 +702,12 @@
   {
     "name": "p6 tow: H attaches the rope joint, towing drags the 4x4 into the safe zone",
     "pass": true,
-    "detail": "attached (rope 3.9 m); stuck vehicle moved 36.2 m, ends 1.9 m from safe-zone centre (r=7) in 19.5 s"
+    "detail": "attached (rope 3.9 m); stuck vehicle moved 36 m, ends 2.1 m from safe-zone centre (r=7) in 27.2 s"
   },
   {
     "name": "p6 deliver: bot reaches camp and stops before dark; idle -> night fail",
     "pass": true,
-    "detail": "delivered in 45.63 s (limit 120 s); idle -> \"Night fell before the supplies arrived\""
+    "detail": "delivered in 89.00 s (limit 180 s); idle -> \"Night fell before the supplies arrived\""
   },
   {
     "name": "p6 unlock: locked vehicle blocks Drive; unlocking spends earned credits",
@@ -705,14 +725,14 @@
     "detail": ""
   },
   {
-    "name": "p6 upgrades: engine x3 -> quicker 0-60",
+    "name": "p6 upgrades: engine x3 -> quicker 0-40",
     "pass": true,
-    "detail": "0-60 2.2 s -> 1.7 s (drive force 4600 -> 5842)"
+    "detail": "0-40 4.05 s -> 3.2 s (drive force 4600 -> 5842)"
   },
   {
     "name": "p6 upgrades: tyres x3 -> more traction on loose surfaces",
     "pass": true,
-    "detail": "sand grip 1.00 -> 1.21; 3 s sand launch 61.0 -> 61.8 km/h; mud 36.0 -> 39.2 km/h"
+    "detail": "sand grip 1.00 -> 1.21; 3 s sand launch 29.1 -> 29.1 km/h; mud 20.9 -> 20.9 km/h"
   },
   {
     "name": "p6 upgrades: suspension x3 -> more travel, stiffer, measurably higher ride",
@@ -757,7 +777,7 @@
   {
     "name": "p6 portrait: mode select fits, mission HUD inside viewport, small, clear of touch controls",
     "pass": true,
-    "detail": "modes 51%, HUD opaque panels 7.2% (bounding box incl. message 305x116 px = 10.7%) at y 104, touch overlap false, winch on-screen true, hook tap attached true, start button visible true, mhud rect 42,104,348,220 in 390x844"
+    "detail": "modes 51%, HUD opaque panels 7.2% (bounding box incl. message 370x116 px = 13.0%) at y 104, touch overlap false, winch on-screen true, hook tap attached true, start button visible true, mhud rect 10,104,380,220 in 390x844"
   },
   {
     "name": "p6 portrait: no console errors",
@@ -766,8 +786,8 @@
   },
   {
     "name": "p6 landscape: mode select fits, mission HUD inside viewport, small, clear of touch controls",
-    "pass": true,
-    "detail": "modes 38%, HUD opaque panels 7.2% (bounding box incl. message 422x114 px = 14.6%) at y 10, touch overlap false, winch on-screen true, hook tap attached true, start button visible true, mhud rect 211,10,633,124 in 844x390"
+    "pass": false,
+    "detail": "modes 38%, HUD opaque panels 7.2% (bounding box incl. message 544x114 px = 18.8%) at y 10, touch overlap false, winch on-screen true, hook tap attached true, start button visible true, mhud rect 150,10,694,124 in 844x390"
   },
   {
     "name": "p6 landscape: no console errors",
@@ -777,62 +797,62 @@
   {
     "name": "p6b race-loop: clean bot finishes within gold",
     "pass": true,
-    "detail": "clean success 31.07 s (recorded 31.07 s) | gold 37.5 / silver 46.5 / bronze 62 s"
+    "detail": "clean success 43.88 s (recorded 43.88 s) | gold 52.5 / silver 66 / bronze 88 s"
   },
   {
     "name": "p6b race-loop: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
     "pass": true,
-    "detail": "human 53.53, 54.57, 53.65 s (mean 53.9 > gold 37.5), resets 0/0/0"
+    "detail": "human 66.30, 68.00, 69.33 s (mean 67.9 > gold 52.5), resets 0/0/0"
   },
   {
     "name": "p6b race-dash: clean bot finishes within gold",
     "pass": true,
-    "detail": "clean success 26.35 s (recorded 26.35 s) | gold 31.5 / silver 39.5 / bronze 52.5 s"
+    "detail": "clean success 38.55 s (recorded 38.55 s) | gold 46.5 / silver 58 / bronze 77 s"
   },
   {
     "name": "p6b race-dash: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
     "pass": true,
-    "detail": "human 43.18, 40.75, 41.92 s (mean 41.9 > gold 31.5), resets 0/0/0"
+    "detail": "human 53.58, 53.18, 53.42 s (mean 53.4 > gold 46.5), resets 0/0/0"
   },
   {
     "name": "p6b ch-mud: clean bot finishes within gold",
     "pass": true,
-    "detail": "clean success 9.10 s (recorded 9.1 s) | gold 11 / silver 13.5 / bronze 18 / limit 30 s"
+    "detail": "clean success 15.95 s (recorded 15.95 s) | gold 19 / silver 24 / bronze 32 / limit 35 s"
   },
   {
     "name": "p6b ch-mud: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
     "pass": true,
-    "detail": "human 11.30, 12.28, 12.55 s (mean 12.0 > gold 11), resets 0/0/0"
+    "detail": "human 19.22, 20.32, 20.47 s (mean 20.0 > gold 19), resets 0/0/0"
   },
   {
     "name": "p6b ch-climb: clean bot finishes within gold",
     "pass": true,
-    "detail": "clean success 48.13 s (recorded 48.13 s) | gold 58 / silver 72 / bronze 96.5 / limit 150 s"
+    "detail": "clean success 63.50 s (recorded 63.5 s) | gold 76 / silver 95.5 / bronze 127 / limit 150 s"
   },
   {
     "name": "p6b ch-climb: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
     "pass": true,
-    "detail": "human 62.53, 65.10, 68.70 s (mean 65.4 > gold 58), resets 1/0/0"
+    "detail": "human 77.17, 73.27, 114.00 s (mean 88.1 > gold 76), resets 0/0/1"
   },
   {
     "name": "p6b rs-tow: clean bot finishes within gold",
     "pass": true,
-    "detail": "clean success 25.70 s (recorded 25.7 s) | gold 31 / silver 38.5 / bronze 51.5 / limit 150 s"
+    "detail": "clean success 32.12 s (recorded 30 s) | gold 36 / silver 45 / bronze 60 / limit 150 s"
   },
   {
     "name": "p6b rs-tow: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
     "pass": true,
-    "detail": "human 29.05, 29.83, 36.88 s (mean 31.9 > gold 31), resets 0/0/0"
+    "detail": "human 38.93, 41.87, 33.10 s (mean 38.0 > gold 36), resets 0/0/0"
   },
   {
     "name": "p6b rs-deliver: clean bot finishes within gold",
     "pass": true,
-    "detail": "clean success 45.63 s (recorded 45.63 s) | gold 55 / silver 68.5 / bronze 91.5 / limit 120 s"
+    "detail": "clean success 89.00 s (recorded 75 s) | gold 90 / silver 112.5 / bronze 150 / limit 180 s"
   },
   {
     "name": "p6b rs-deliver: human-like bot (3 seeds) finishes within bronze; gold needs better driving",
     "pass": true,
-    "detail": "human 66.03, 65.70, 66.05 s (mean 65.9 > gold 55), resets 0/0/0"
+    "detail": "human 95.95, 96.22, 96.35 s (mean 96.2 > gold 90), resets 0/0/0"
   },
   {
     "name": "p6b targets: gold/silver/bronze = bot x1.2/1.5/2 (0.5 s), limits >= bronze",
@@ -840,9 +860,9 @@
     "detail": "factors {\"gold\":1.2,\"silver\":1.5,\"bronze\":2}"
   },
   {
-    "name": "p6b lengths: Ridge Climb 40-90 s and Supply Run 60-120 s for a human-like driver; races >= 40 s",
+    "name": "p6b lengths: Ridge Climb 40-90 s and Supply Run 60-170 s (0.8.2 pace) for a human-like driver; races >= 40 s",
     "pass": true,
-    "detail": "human mean: climb 65.4 s, supply 65.9 s, loop 53.9 s, dash 42.0 s"
+    "detail": "human mean: climb 88.1 s, supply 96.2 s, loop 67.9 s, dash 53.4 s"
   },
   {
     "name": "p6b ridge trail: switchback climb with hairpins and steep rocky sections",
@@ -857,27 +877,27 @@
   {
     "name": "p6b rock: distinct grip (more wheelspin than dirt on the same full-throttle launch)",
     "pass": true,
-    "detail": "1.2 s launch: rock slip 0.183 / 6.8 m vs dirt slip 0.103 / 7.0 m"
+    "detail": "1.2 s launch: rock slip 0.022 / 3.1 m vs dirt slip 0.004 / 3.2 m"
   },
   {
     "name": "p6b rock: own dust + gravel sound while driving on rock",
     "pass": true,
-    "detail": "real-time 1.5 s on rock: dust particles 52, gravel crunch level 0.105 (audio running)"
+    "detail": "real-time 1.5 s on rock: dust particles 28, gravel crunch level 0.061 (audio running)"
   },
   {
     "name": "p6b tow: stuck 4x4 at the zone edge does not count; well inside + 1 s hold does",
     "pass": true,
-    "detail": "zone r 7 m, rule <= 5 m for 1 s | inside but within 2 m of the edge for 3.0 s -> running (\"Pull it further into the safe zone\"), inside 1.9 m 0.5 s -> running, 1.3 s -> success"
+    "detail": "zone r 7 m, rule <= 5 m for 1 s | inside but within 2 m of the edge for 3.0 s -> running (\"Pull it further into the safe zone\"), inside 1.8 m 0.5 s -> running, 1.3 s -> success"
   },
   {
     "name": "p6b tow camera: sight line to the player clears the towed 4x4",
     "pass": true,
-    "detail": "40 towing samples, 0 with the 4x4 within 1.6 m of the camera->player line (min 3.68 m), final running"
+    "detail": "40 towing samples, 0 with the 4x4 within 1.6 m of the camera->player line (min 4.74 m), final running"
   },
   {
     "name": "p6b supply run: nightfall tied to the time limit",
     "pass": true,
-    "detail": "limit 120 s: t=12 s dusk 0.00 exp 1.05 | t=60 s dusk 0.27 exp 0.88 | t=108 s dusk 0.95 exp 0.45"
+    "detail": "limit 180 s: t=18 s dusk 0.00 exp 1.05 | t=90 s dusk 0.26 exp 0.88 | t=162 s dusk 0.95 exp 0.45"
   },
   {
     "name": "p6b presets: scree detail low < medium < high (low = 0)",
@@ -912,7 +932,7 @@
   {
     "name": "rework tilt: real-time drive (auto-throttle + tilt) moves and turns the car left",
     "pass": true,
-    "detail": "moved 14.5 m, yaw 77 deg, speed 46 km/h"
+    "detail": "moved 5.0 m, yaw 31 deg, speed 21 km/h"
   },
   {
     "name": "rework tilt: ⟲ Centre recalibrates; BRAKE pedal overrides auto-throttle",
@@ -932,7 +952,7 @@
   {
     "name": "rework touch halves: left half steers left while driving forward; both halves brake then reverse; release = drive on",
     "pass": true,
-    "detail": "left: steer 0.76 thr 1, yaw 74 deg; both: brake 1, speed after 3.5 s -16.6 km/h; released thr 1"
+    "detail": "left: steer 0.76 thr 1, yaw 29 deg; both: brake 1, speed after 3.5 s -5.3 km/h; released thr 1"
   },
   {
     "name": "rework tilt fallback (denied): no console errors",
@@ -962,17 +982,17 @@
   {
     "name": "rework L1: clean bot completes Desert Training (13 gates + stop in finish circle) within gold; results show Level 2 unlocked",
     "pass": true,
-    "detail": "16.82 s (gold 20.5), medal gold, \"+400 points · +240 XP · Level 1 complete — Level 2 unlocked!\", \"Level 1 · Easy\""
+    "detail": "23.73 s (gold 28.5), medal gold, \"+400 points · +240 XP · Level 1 complete — Level 2 unlocked!\", \"Level 1 · Easy\""
   },
   {
     "name": "rework L1: human-like bot finishes within bronze",
     "pass": true,
-    "detail": "24.50 s (bronze 34)"
+    "detail": "31.83 s (bronze 47.5)"
   },
   {
     "name": "rework persistence: points, XP, L1 completion/best time and L2 unlock survive a reload",
     "pass": true,
-    "detail": "700 pts, 420 XP, L1 best 16.82 s, L2 unlocked true, L3 unlocked false"
+    "detail": "700 pts, 420 XP, L1 best 23.73 s, L2 unlocked true, L3 unlocked false"
   },
   {
     "name": "rework garage: vehicle unlocked with points (price deducted), lock removed",
@@ -982,7 +1002,7 @@
   {
     "name": "rework persistence: unlocked + selected vehicle survives reload and is the one that drives",
     "pass": true,
-    "detail": "pickup drove 25.9 m in 3 s (58 km/h)"
+    "detail": "pickup drove 9.4 m in 3 s (25 km/h)"
   },
   {
     "name": "rework level rules: L2 forces sunset (restored after), L3 fails when stuck 15 s, L4 allows 3 recoveries then fails",
@@ -992,7 +1012,7 @@
   {
     "name": "rework presets: Low drops ground detail + grass, High has the most vegetation (FPS on SwiftShader CPU renderer)",
     "pass": true,
-    "detail": "low: 12.3 fps, 94 draws, 168k tris, 945 plants | medium: 12.9 fps, 170 draws, 307k tris, 5845 plants | high: 10 fps, 178 draws, 352k tris, 11540 plants"
+    "detail": "low: 13.7 fps, 92 draws, 167k tris, 945 plants | medium: 12.6 fps, 170 draws, 307k tris, 5845 plants | high: 10 fps, 178 draws, 352k tris, 11540 plants"
   },
   {
     "name": "rework robustness: WebGL context loss shows a reload overlay and pauses; overlay clears on restore",
@@ -1007,7 +1027,7 @@
   {
     "name": "drive opening: plays on launch, title card, 4x4 drives into the scene, tap skips to the live 3D menu",
     "pass": true,
-    "detail": "phase at load opening, title shown true, car moved 42.5 m by t=6.5 s, after tap: {\"phase\":\"menu\",\"reveal\":true,\"menu\":true}"
+    "detail": "phase at load opening, title shown true, car moved 28.4 m by t=6.5 s, after tap: {\"phase\":\"menu\",\"reveal\":true,\"menu\":true}"
   },
   {
     "name": "drive opening: no console errors",
@@ -1022,7 +1042,7 @@
   {
     "name": "drive pedals: throttle is progressive (ramps up while held), release = 0",
     "pass": true,
-    "detail": "ramp 0ms:0.00 120ms:0.30 307ms:0.50 476ms:0.70 656ms:0.90 828ms:1.00 997ms:1.00 1184ms:1.00 2048ms:1.00, after release gas 0, throttle 0"
+    "detail": "ramp 0ms:0.00 283ms:0.33 743ms:0.53 928ms:0.73 1097ms:0.93 1271ms:1.00 1451ms:1.00 1621ms:1.00 2485ms:1.00, after release gas 0, throttle 0"
   },
   {
     "name": "drive pedals: brake works on its own and always wins (throttle cut while both are pressed)",
@@ -1030,9 +1050,9 @@
     "detail": "brake only 0.87/0; both pressed: brake 1.00, throttle 0; brake released: throttle 1.00"
   },
   {
-    "name": "drive multitouch: wheel turned 90 deg clockwise while holding GAS -> steers right and accelerates, car turns right",
-    "pass": false,
-    "detail": "wheel 0 deg -> steer 0.00, throttle 0.93; yaw 0 deg, moved 7.2 m"
+    "name": "drive multitouch: wheel turned 270 deg clockwise while holding GAS -> steers right and accelerates, car turns right",
+    "pass": true,
+    "detail": "wheel 270 deg -> steer -0.59, throttle 0.77; yaw -11 deg, moved 1.7 m"
   },
   {
     "name": "drive wheel: self-centres after release",
@@ -1042,7 +1062,7 @@
   {
     "name": "drive transfer UI: popover opens; 4L while moving is rejected with a message and 4H is kept",
     "pass": true,
-    "detail": "at -0 km/h: transfer 4H, toast \"⛔ Stop and select N to shift into 4L\""
+    "detail": "at 18 km/h: transfer 4H, toast \"⛔ 4L rejected: slow below 8 km/h to shift into low range (now 18 km/h)\""
   },
   {
     "name": "drive pause/rotate: pause -> resume keeps gear + 4L; rotating to portrait keeps every control on-screen without overlaps",
@@ -1052,7 +1072,7 @@
   {
     "name": "drive recover: Recover pill resets the vehicle and play continues",
     "pass": true,
-    "detail": "{\"phase\":\"playing\",\"up\":0.999983820009339}"
+    "detail": "{\"phase\":\"playing\",\"up\":0.9999882682603773}"
   },
   {
     "name": "drive schemes: ◀ button steers (buttons mode shows buttons, hides wheel); halves = zones + auto-forward; tilt (stubbed sensor) steers with pedals shown",
@@ -1067,12 +1087,12 @@
   {
     "name": "drive transmission: P/R/N/D interlocks (R and P rejected while moving forward, D rejected while reversing, selector unchanged) and correct behaviour in each",
     "pass": true,
-    "detail": "D:ok R@56:REJECT(Stop before selecting R (56 km/h)) P@56:REJECT(Stop the vehicle to select P) R@-0.3:ok D@-30:REJECT(Stop before selecting D) P@0.0:ok N:ok | D 2 s 56.4 km/h, R 2.5 s -29.8 km/h, P + full throttle moved 0.00 m, N + throttle 0.1 km/h, AUTO brake at standstill -> -26.0 km/h"
+    "detail": "D:ok R@21:REJECT(Stop before selecting R (21 km/h)) P@21:REJECT(Stop the vehicle to select P) R@0.0:ok D@-8:REJECT(Stop before selecting D) P@-0.0:ok N:ok | D 2 s 20.8 km/h, R 2.5 s -7.6 km/h, P + full throttle moved 0.00 m, N + throttle -0.2 km/h, AUTO brake at standstill -> -7.7 km/h"
   },
   {
-    "name": "drive transfer case: 4L only when stopped AND in N (rejected while moving / in D, mode unchanged, reason shown); 2H<->4H on the fly at low speed",
+    "name": "drive transfer case: 4L only at <= 8 km/h (rejected while moving, mode unchanged, reason shown; any gear once slow); 2H<->4H on the fly at low speed",
     "pass": true,
-    "detail": "4L@48km/h:REJECT 2H@48km/h:ok 4H:ok 4L stopped in D:REJECT 4L stopped in N:ok | reason \"Stop and select N to shift into 4L\""
+    "detail": "4L@16km/h:REJECT 2H@16km/h:ok 4H:ok 4L stopped in D:ok 4L stopped in N:ok | reason \"4L rejected: slow below 8 km/h to shift into low range (now 16 km/h)\""
   },
   {
     "name": "drive vehicles: permanent-AWD rally has no 2H/4L (both rejected); recovery truck is 4H/4L only; SUVs + pickup offer 2H/4H/4L",
@@ -1082,22 +1102,22 @@
   {
     "name": "drive torque 2H: only the rear wheels receive drive force (front = 0), total unchanged",
     "pass": true,
-    "detail": "2H wheel force N [FL,FR,RL,RR] requested 0,0,9200,9200, delivered 0,0,5931,5704, engine 18400 N"
+    "detail": "2H wheel force N [FL,FR,RL,RR] requested 0,0,70,70, delivered 0,0,70,70, engine 140 N"
   },
   {
     "name": "drive torque 4H: front/rear split matches the vehicle config (scout 50/50, rally AWD 40/60)",
     "pass": true,
-    "detail": "scout 4H 4600,4600,4600,4600; rally AWD 3520,3520,5280,5280 -> front share 40.0 % (config 40 %)"
+    "detail": "scout 4H 35,35,35,35; rally AWD 27,27,40,40 -> front share 40.0 % (config 40 %)"
   },
   {
     "name": "drive torque 4L: wheel force / engine force = 2.6 exactly once (no double multiplication); same speed -> higher engine RPM",
-    "pass": true,
-    "detail": "4L: requested 11960,11960,11960,11960 = 47840 N vs engine 18400 N -> ratio 2.600; 4H ratio 1.000 | RPM at ~18 km/h: 4H 3238 @ 20.4 km/h, 4L 4566 @ 22.8 km/h"
+    "pass": false,
+    "detail": "4L: requested 91,91,91,91 = 364 N vs engine 140 N -> ratio 2.600; 4H ratio 1.000 | RPM at ~18 km/h: 4H 3559 @ 19.4 km/h, 4L 3407 @ 19.8 km/h"
   },
   {
     "name": "drive steering: full lock changes the front wheel angle and the heading",
     "pass": true,
-    "detail": "front wheel angle 0.509 rad, heading change 55.3 deg in 1 s at 27.6 km/h"
+    "detail": "front wheel angle 0.545 rad, heading change 23.8 deg in 1 s at 9.6 km/h"
   },
   {
     "name": "drive table: every mode measured (0-30, wheel speed, stopping, sand, mud, steep rocky climb) under fixed conditions",
@@ -1107,17 +1127,17 @@
   {
     "name": "drive realism: 2H gains less than 4H on loose sand and mud (traction-limited rear axle); 4L delivers the most wheel force at launch",
     "pass": true,
-    "detail": "sand 3 s: 2H 16.77 / 4H 28.5 / 4L 25.75 m; mud 3 s: 2H 12.84 / 4H 19.69 / 4L 17.02 m; launch force 2H 14656 / 4H 17931 / 4L 25961 N"
+    "detail": "sand 3 s: 2H 9.85 / 4H 9.85 / 4L 14.01 m; mud 3 s: 2H 5.27 / 4H 7.9 / 4L 10.31 m; launch force 2H 841 / 4H 841 / 4L 2187 N"
   },
   {
     "name": "drive climb: steep rocky section climbed in 4H and 4L; 4L at least as quick as 4H to +5 m",
     "pass": true,
-    "detail": "+5 m: 2H 3.5 s, 4H 3 s, 4L 2.75 s"
+    "detail": "+5 m: 2H 7.25 s, 4H 7 s, 4L 5 s"
   },
   {
     "name": "drive 4L top speed: limited to about top speed / 2.6 (crawl range)",
     "pass": true,
-    "detail": "8 s full throttle on the flat: 2H 89.2 km/h, 4H 88.8 km/h, 4L 48.5 km/h"
+    "detail": "8 s full throttle on the flat: 2H 52 km/h, 4H 52 km/h, 4L 27.6 km/h"
   },
   {
     "name": "drive physics: no console errors",
@@ -1132,7 +1152,7 @@
   {
     "name": "layout iphone-se-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 12.8%; off [] overlaps []; steer 1.00 thr 1.00, moved 17.6 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 12.8%; off [] overlaps []; steer 1.00 thr 1.00, moved 7.2 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout iphone-se-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1152,7 +1172,7 @@
   {
     "name": "layout iphone-se-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 12.8%; off [] overlaps []; steer 1.00 thr 1.00, moved 15.9 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 12.8%; off [] overlaps []; steer 1.00 thr 1.00, moved 9.7 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout iphone-se-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1172,7 +1192,7 @@
   {
     "name": "layout iphone-13-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.7%; off [] overlaps []; steer 1.00 thr 1.00, moved 18.2 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.7%; off [] overlaps []; steer 1.00 thr 1.00, moved 9.6 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout iphone-13-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1192,7 +1212,7 @@
   {
     "name": "layout iphone-13-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.7%; off [] overlaps []; steer 1.00 thr 1.00, moved 12.9 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.7%; off [] overlaps []; steer 1.00 thr 1.00, moved 8.5 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout iphone-13-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1212,7 +1232,7 @@
   {
     "name": "layout iphone-promax-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.5%; off [] overlaps []; steer 1.00 thr 1.00, moved 15.9 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 9.5%; off [] overlaps []; steer 1.00 thr 1.00, moved 9.4 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout iphone-promax-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1232,7 +1252,7 @@
   {
     "name": "layout iphone-promax-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 8.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 14 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 8.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 9.3 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout iphone-promax-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1252,7 +1272,7 @@
   {
     "name": "layout ipad-portrait: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 4.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 14 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 4.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 7.2 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout ipad-portrait: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",
@@ -1262,7 +1282,7 @@
   {
     "name": "layout ipad-portrait (820x1180): every panel is a sized card/drawer (never full-screen), fully on-screen, no clipped buttons or horizontal overflow",
     "pass": true,
-    "detail": "menu 24%, garage 25%, career 43%, modes 18%, lobby 19%, settings 41%, pause 10%, pause-settings 41%"
+    "detail": "menu 24%, garage 26%, career 43%, modes 18%, lobby 19%, settings 41%, pause 10%, pause-settings 41%"
   },
   {
     "name": "layout ipad-portrait: no console errors",
@@ -1272,7 +1292,7 @@
   {
     "name": "layout ipad-landscape: default mobile controls = ◀ ▶ + GAS + BRAKE/REV + Reset, nothing overlapping or off-screen; steer + gas together drive and turn",
     "pass": true,
-    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 4.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 16.4 m in >= 1.5 s + 25 frames"
+    "detail": "setting buttons, steer true, gas true, brake true, reset true, wheel false; controls cover 4.0%; off [] overlaps []; steer 1.00 thr 1.00, moved 7.2 m in >= 1.5 s + 25 frames"
   },
   {
     "name": "layout ipad-landscape: closing Pause (Resume) or the Settings drawer opened from Pause returns straight to driving; no stacked overlays",

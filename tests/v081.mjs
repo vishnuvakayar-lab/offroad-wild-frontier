@@ -9,7 +9,7 @@ const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args
 const page = await (await b.newContext({ viewport: { width: 1280, height: 720 } })).newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
 const fr = (n) => page.evaluate(async (n) => { for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r)); }, n);
 await page.goto(APP + '?noopening&dev=1'); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 180000 });
-ok('Build 0.8.1+', /Build 0\.8\.1/.test(await page.textContent('body')));
+ok('Build 0.8.1+', /Build 0\.8\.[1-9]/.test(await page.textContent('body')));
 await page.evaluate(() => { const g = window.__game; g.setPreset('low'); g.setVehicle('f110'); g.play(); g.skipIntro?.(); }); await page.waitForFunction(() => window.__game.phase === 'playing'); await fr(20);
 const S = await page.evaluate(() => window.__game.state());
 // cockpit head motion while accelerating hard, vibration at speed

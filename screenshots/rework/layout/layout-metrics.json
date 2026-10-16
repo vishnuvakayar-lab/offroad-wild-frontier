@@ -79,7 +79,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 17.6
+    "moved": 7.2
    }
   },
   "pause": {
@@ -185,7 +185,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 15.9
+    "moved": 9.7
    }
   },
   "pause": {
@@ -291,7 +291,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 18.2
+    "moved": 9.6
    }
   },
   "pause": {
@@ -397,7 +397,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 12.9
+    "moved": 8.5
    }
   },
   "pause": {
@@ -503,7 +503,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 15.9
+    "moved": 9.4
    }
   },
   "pause": {
@@ -609,7 +609,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 14
+    "moved": 9.3
    }
   },
   "pause": {
@@ -655,12 +655,12 @@
   },
   "garage": {
    "visible": true,
-   "cover": 0.245614406779661,
+   "cover": 0.2612076271186441,
    "inside": true,
    "hOverflow": false,
    "clipped": [],
    "w": 328,
-   "h": 725
+   "h": 771
   },
   "career": {
    "visible": true,
@@ -715,7 +715,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 14
+    "moved": 7.2
    }
   },
   "pause": {
@@ -821,7 +821,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 16.4
+    "moved": 7.2
    }
   },
   "pause": {

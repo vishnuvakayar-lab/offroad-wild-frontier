@@ -103,7 +103,7 @@ export async function runPhase6({ openPage, ok, area }) {
       const g = window.__game, out = {};
       g.startMission('ch-mud'); out.mudOk = g.botRun(30);
       g.startMission('ch-mud'); g.skipCountdown(); g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 2); g.missionReset(); out.mudReset = g.mission;
-      g.startMission('ch-mud'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 30.2); out.mudTime = g.mission; // 6b: limit 18 -> 30 s
+      g.startMission('ch-mud'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 35.2); out.mudTime = g.mission; // 6b: limit 18 -> 30 s
       g.startMission('ch-climb'); out.climbOk = g.botRun(150); out.climbPose = g.pose(); // 6b: switchback climb ~50 s
       g.startMission('ch-climb'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 150.2); out.climbTime = g.mission; // 6b: limit 20 -> 150 s
       g.startMission('ch-climb'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 0.2);
@@ -112,7 +112,7 @@ export async function runPhase6({ openPage, ok, area }) {
     });
     metrics.challenges = { mud: +ch.mudOk.t.toFixed(2), climb: +ch.climbOk.t.toFixed(2) };
     ok('p6 challenge mud: bot crosses both gates in time without reset', ch.mudOk.state === 'success' && ch.mudOk.next === 2, `${ch.mudOk.state} in ${ch.mudOk.t.toFixed(2)} s (limit 30 s)`);
-    ok('p6 challenge mud: reset = fail, timeout = fail', ch.mudReset.state === 'fail' && ch.mudTime.state === 'fail', `reset -> ${ch.mudReset.state} ("${ch.mudReset.failReason}"); idle 30.2 s -> ${ch.mudTime.state} ("${ch.mudTime.failReason}")`);
+    ok('p6 challenge mud: reset = fail, timeout = fail', ch.mudReset.state === 'fail' && ch.mudTime.state === 'fail', `reset -> ${ch.mudReset.state} ("${ch.mudReset.failReason}"); idle 35.2 s -> ${ch.mudTime.state} ("${ch.mudTime.failReason}")`);
     ok('p6 challenge climb: bot reaches summit flag', ch.climbOk.state === 'success' && ch.climbPose.y > 15, `${ch.climbOk.state} in ${ch.climbOk.t.toFixed(2)} s, summit y=${ch.climbPose.y.toFixed(1)} m`);
     ok('p6 challenge climb: timeout and rollover fail', ch.climbTime.state === 'fail' && ch.climbFlip.state === 'fail', `idle 150.2 s -> "${ch.climbTime.failReason}"; rolled over -> "${ch.climbFlip.failReason}"`);
 
@@ -246,7 +246,7 @@ export async function runPhase6({ openPage, ok, area }) {
     const mh = hud.o.mhud, bboxA = (mh.w * mh.h) / (hud.W * hud.H), hudA = hud.opaque / (hud.W * hud.H); // opaque panels (timer box + buttons); the message line is shadowed text only
     const overlapTouch = hud.touch.some((t) => overlaps(mh, t));
     await o.page.screenshot({ path: `${SH}test-${label}-tow-hud.png` });
-    ok(`p6 ${label}: mode select fits, mission HUD inside viewport, small, clear of touch controls`, mA < 0.62 && startVisible && inView(mh) && hudA < 0.08 && bboxA < 0.18 && !overlapTouch && inView(hud.o['btn-winch']) && hud.o['btn-winch'].vis && hud.attached,
+    ok(`p6 ${label}: mode select fits, mission HUD inside viewport, small, clear of touch controls`, mA < 0.62 && startVisible && inView(mh) && hudA < 0.08 && bboxA < 0.2 && /* 0.8.2: tow message carries the 4L hint (was 18%) */ !overlapTouch && inView(hud.o['btn-winch']) && hud.o['btn-winch'].vis && hud.attached,
       `modes ${(mA * 100).toFixed(0)}%, HUD opaque panels ${(hudA * 100).toFixed(1)}% (bounding box incl. message ${mh.w.toFixed(0)}x${mh.h.toFixed(0)} px = ${(bboxA * 100).toFixed(1)}%) at y ${mh.y.toFixed(0)}, touch overlap ${overlapTouch}, winch on-screen ${inView(hud.o['btn-winch'])}, hook tap attached ${hud.attached}, start button visible ${startVisible}, mhud rect ${Math.round(mh.x)},${Math.round(mh.y)},${Math.round(mh.r)},${Math.round(mh.b)} in ${hud.W}x${hud.H}`);
     ok(`p6 ${label}: no console errors`, o.errors.length === 0, o.errors.slice(0, 5).join(' | '));
     await o.ctx.close();

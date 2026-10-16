@@ -3,31 +3,31 @@
  "DEV": "iphone",
  "pass": 34,
  "total": 34,
- "loadS": "2.5",
- "fps": 15.355086372360844,
+ "loadS": "2.0",
+ "fps": 22.615535889872167,
  "prof": {
   "pro": {
-   "t0_50": 1.7,
-   "stop50m": 9.3,
-   "turnDegS": 59,
+   "t0_50": 6.8,
+   "stop50m": 15.9,
+   "turnDegS": 57.2,
    "up": 1
   },
   "offroad": {
-   "t0_50": 1.8,
-   "stop50m": 9.8,
-   "turnDegS": 59.8,
+   "t0_50": 7.2,
+   "stop50m": 17.3,
+   "turnDegS": 56,
    "up": 1
   },
   "sim": {
-   "t0_50": 1.9,
-   "stop50m": 10.5,
-   "turnDegS": 50.2,
+   "t0_50": 7.7,
+   "stop50m": 19.1,
+   "turnDegS": 47.3,
    "up": 1
   },
   "arcade": {
-   "t0_50": 1.45,
-   "stop50m": 8.2,
-   "turnDegS": 69,
+   "t0_50": 5.5,
+   "stop50m": 12.1,
+   "turnDegS": 67.1,
    "up": 1
   }
  },
@@ -35,43 +35,43 @@
   {
    "m": "pro",
    "stAbove": 3.69,
-   "drAbove": 4.89,
-   "dist": 12.3
+   "drAbove": 3.95,
+   "dist": 10.2
   },
   {
    "m": "far",
    "stAbove": 4.9,
-   "drAbove": 5.79,
-   "dist": 14.2
+   "drAbove": 5.17,
+   "dist": 14.5
   },
   {
    "m": "cockpit",
    "stAbove": 1.87,
-   "drAbove": 1.86,
+   "drAbove": 1.87,
    "dist": 1
   },
   {
    "m": "hood",
-   "stAbove": 2.22,
-   "drAbove": 2.45,
-   "dist": 1.6
+   "stAbove": 1.92,
+   "drAbove": 1.96,
+   "dist": 2.1
   },
   {
    "m": "bumper",
    "stAbove": 1.02,
-   "drAbove": 1.26,
+   "drAbove": 1.07,
    "dist": 2.5
   },
   {
    "m": "cinematic",
-   "stAbove": 1.24,
-   "drAbove": 2.63,
-   "dist": 19
+   "stAbove": 2.36,
+   "drAbove": 0.64,
+   "dist": 3.6
   },
   {
    "m": "wheel",
    "stAbove": 0.76,
-   "drAbove": 0.79,
+   "drAbove": 0.81,
    "dist": 1.5
   },
   {
@@ -82,16 +82,16 @@
   },
   {
    "m": "orbit",
-   "stAbove": 4.57,
-   "drAbove": 5.27,
+   "stAbove": 4.6,
+   "drAbove": 4.54,
    "dist": 8.4
   }
  ],
  "res": [
   {
-   "n": "boots to menu, Build 0.8.0",
+   "n": "boots to menu, Build 0.8.x",
    "p": true,
-   "d": "load 2.5 s"
+   "d": "load 2.0 s"
   },
   {
    "n": "menu: no page scroll",
@@ -101,7 +101,7 @@
   {
    "n": "manifest: relative start_url/scope/icons (stays inside the deploy folder)",
    "p": true,
-   "d": "{\"h\":\"http://127.0.0.1:4173/manifest.webmanifest\",\"start\":\"./\",\"scope\":\"./\",\"icons\":[\"icon-192.png\",\"icon-512.png\",\"favicon.svg\"]}"
+   "d": "{\"h\":\"https://vishnuvakayar-lab.github.io/offroad-wild-frontier/preview/manifest.webmanifest\",\"start\":\"./\",\"scope\":\"./\",\"icons\":[\"icon-192.png\",\"icon-512.png\",\"favicon.svg\"]}"
   },
   {
    "n": "service worker file built with precache list + version cache",
@@ -111,42 +111,42 @@
   {
    "n": "service worker registration scope = this folder (or unsupported/http)",
    "p": true,
-   "d": "not registered"
+   "d": "https://vishnuvakayar-lab.github.io/offroad-wild-frontier/preview/"
   },
   {
    "n": "camera pro: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 3.69 / 4.89 m, dist 12.3 m"
+   "d": "above 3.69 / 3.95 m, dist 10.2 m"
   },
   {
    "n": "camera far: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.90 / 5.79 m, dist 14.2 m"
+   "d": "above 4.90 / 5.17 m, dist 14.5 m"
   },
   {
    "n": "camera cockpit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.87 / 1.86 m, dist 1.0 m"
+   "d": "above 1.87 / 1.87 m, dist 1.0 m"
   },
   {
    "n": "camera hood: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.22 / 2.45 m, dist 1.6 m"
+   "d": "above 1.92 / 1.96 m, dist 2.1 m"
   },
   {
    "n": "camera bumper: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.02 / 1.26 m, dist 2.5 m"
+   "d": "above 1.02 / 1.07 m, dist 2.5 m"
   },
   {
    "n": "camera cinematic: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.24 / 2.63 m, dist 19.0 m"
+   "d": "above 2.36 / 0.64 m, dist 3.6 m"
   },
   {
    "n": "camera wheel: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 0.76 / 0.79 m, dist 1.5 m"
+   "d": "above 0.76 / 0.81 m, dist 1.5 m"
   },
   {
    "n": "camera mirror: active, above terrain stationary + driving",
@@ -156,12 +156,12 @@
   {
    "n": "camera orbit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.57 / 5.27 m, dist 8.4 m"
+   "d": "above 4.60 / 4.54 m, dist 8.4 m"
   },
   {
    "n": "camera cycles (C key / camera button), smooth blend starts, choice stored for session",
    "p": true,
-   "d": "{\"m\":\"far\",\"blend\":0.38833333333333336,\"ses\":\"far\"}"
+   "d": "{\"m\":\"far\",\"blend\":0.24666666666666667,\"ses\":\"far\"}"
   },
   {
    "n": "look back engages",
@@ -176,7 +176,7 @@
   {
    "n": "profiles all reach 50 km/h, stop, stay upright",
    "p": true,
-   "d": "{\"pro\":{\"t0_50\":1.7,\"stop50m\":9.3,\"turnDegS\":59,\"up\":1},\"offroad\":{\"t0_50\":1.8,\"stop50m\":9.8,\"turnDegS\":59.8,\"up\":1},\"sim\":{\"t0_50\":1.9,\"stop50m\":10.5,\"turnDegS\":50.2,\"up\":1},\"arcade\":{\"t0_50\":1.45,\"stop50m\":8.2,\"turnDegS\":69,\"up\":1}}"
+   "d": "{\"pro\":{\"t0_50\":6.8,\"stop50m\":15.9,\"turnDegS\":57.2,\"up\":1},\"offroad\":{\"t0_50\":7.2,\"stop50m\":17.3,\"turnDegS\":56,\"up\":1},\"sim\":{\"t0_50\":7.7,\"stop50m\":19.1,\"turnDegS\":47.3,\"up\":1},\"arcade\":{\"t0_50\":5.5,\"stop50m\":12.1,\"turnDegS\":67.1,\"up\":1}}"
   },
   {
    "n": "profiles measurably different (0-50, stopping, turn rate)",
@@ -186,17 +186,17 @@
   {
    "n": "ARCADE stops shorter than SIMULATION",
    "p": true,
-   "d": "8.2 vs 10.5 m"
+   "d": "12.1 vs 19.1 m"
   },
   {
    "n": "drive forward, brake to stop, reverse on held brake",
    "p": true,
-   "d": "fwd 65 km/h, after brake 0.7, reverse -31.5 km/h"
+   "d": "fwd 31 km/h, after brake 1.0, reverse -8.6 km/h"
   },
   {
    "n": "4L rejected above 8 km/h with message, accepted when stopped",
    "p": true,
-   "d": "65 km/h -> \"4L rejected: slow below 8 km/h to shift into low range (now 65 km/h)\""
+   "d": "31 km/h -> \"4L rejected: slow below 8 km/h to shift into low range (now 31 km/h)\""
   },
   {
    "n": "SIMULATED gamepad: left stick left = steer left (+), RT throttles, device = pad",
@@ -236,12 +236,12 @@
   {
    "n": "touch GAS hold -> throttle (progressive ramp); touchcancel releases; blur releases",
    "p": true,
-   "d": "hold 0.7533333333333333, after cancel 0, after blur 0"
+   "d": "hold 0.6173333333333333, after cancel 0, after blur 0"
   },
   {
    "n": "mobile HUD: every control on-screen, no horizontal scroll",
    "p": true,
-   "d": "{\"n\":11,\"bad\":[],\"sw\":428,\"w\":428}"
+   "d": "{\"n\":12,\"bad\":[],\"sw\":428,\"w\":428}"
   },
   {
    "n": "window blur pauses (single player)",

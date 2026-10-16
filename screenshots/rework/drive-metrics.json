@@ -5,35 +5,35 @@
    "v": 0
   },
   {
-   "t": 93,
-   "v": 0.3
+   "t": 394,
+   "v": 0.3334000000000015
   },
   {
-   "t": 269,
-   "v": 0.5
+   "t": 908,
+   "v": 0.5334000000000014
   },
   {
-   "t": 430,
-   "v": 0.7
+   "t": 2154,
+   "v": 0.7334000000000014
   },
   {
-   "t": 610,
-   "v": 0.8999999999999999
+   "t": 3086,
+   "v": 0.9334000000000013
   },
   {
-   "t": 776,
+   "t": 4046,
    "v": 1
   },
   {
-   "t": 966,
+   "t": 4719,
    "v": 1
   },
   {
-   "t": 1163,
+   "t": 5217,
    "v": 1
   },
   {
-   "t": 2035,
+   "t": 6310,
    "v": 1
   }
  ],
@@ -64,13 +64,13 @@
  },
  "transfer": {
   "a": false,
-  "aMsg": "Stop and select N to shift into 4L",
+  "aMsg": "4L rejected: slow below 8 km/h to shift into low range (now 48 km/h)",
   "keepA": "4H",
   "r2h": true,
   "r4h": true,
-  "b": false,
-  "bMsg": "Stop and select N to shift into 4L",
-  "keepB": "4H",
+  "b": true,
+  "bMsg": "4L",
+  "keepB": "4L",
   "c": true,
   "after": "4L",
   "veh": {
@@ -136,7 +136,7 @@
    "4L@48km/h:REJECT",
    "2H@48km/h:ok",
    "4H:ok",
-   "4L stopped in D:REJECT",
+   "4L stopped in D:ok",
    "4L stopped in N:ok"
   ]
  },

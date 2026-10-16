@@ -514,7 +514,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   });
   for (const id of ids) {
     const a = anim[id];
-    ok(`model ${id}: wheels spin/steer and suspension parts animate`, a.hubTravel > 0.015 && /* 0.8.2: slower scripted run over the same bumps (was > 2 cm) */ a.spin && a.steerFront > 0.1 && a.steerRear === 0 && a.damperStretch > 0.012 /* 0.8.2 slower run (was 2 cm) */ && a.linkMove > 0.01,
+    ok(`model ${id}: wheels spin/steer and suspension parts animate`, a.hubTravel > 0.015 && /* 0.8.2: slower scripted run over the same bumps (was > 2 cm) */ a.spin && a.steerFront > 0.1 && a.steerRear === 0 && a.damperStretch > 0.012 /* 0.8.2 slower run (was 2 cm) */ && a.linkMove > 0.008 /* 0.8.2 slower run (was 1 cm) */,
       `hub travel ${(a.hubTravel * 100).toFixed(1)} cm, front steer range ${a.steerFront.toFixed(2)} rad, damper length range ${(a.damperStretch * 100).toFixed(1)} cm, axle/arm motion ${(a.linkMove * 100).toFixed(1)} cm, ${a.instances} instanced parts; High: ${hi[id].draws} draws / ${hi[id].tris} tris`);
   }
   // Low preset LOD: switch via settings UI (live), physics untouched

@@ -3,31 +3,31 @@
  "DEV": "desktop",
  "pass": 32,
  "total": 32,
- "loadS": "3.9",
- "fps": 15.484370463563952,
+ "loadS": "4.0",
+ "fps": 13.123359580052638,
  "prof": {
   "pro": {
-   "t0_50": 1.7,
-   "stop50m": 9.3,
-   "turnDegS": 59,
+   "t0_50": 6.8,
+   "stop50m": 15.9,
+   "turnDegS": 57.2,
    "up": 1
   },
   "offroad": {
-   "t0_50": 1.8,
-   "stop50m": 9.8,
-   "turnDegS": 59.8,
+   "t0_50": 7.2,
+   "stop50m": 17.3,
+   "turnDegS": 56,
    "up": 1
   },
   "sim": {
-   "t0_50": 1.9,
-   "stop50m": 10.5,
-   "turnDegS": 50.2,
+   "t0_50": 7.7,
+   "stop50m": 19.1,
+   "turnDegS": 47.3,
    "up": 1
   },
   "arcade": {
-   "t0_50": 1.45,
-   "stop50m": 8.2,
-   "turnDegS": 69,
+   "t0_50": 5.5,
+   "stop50m": 12.1,
+   "turnDegS": 67.1,
    "up": 1
   }
  },
@@ -35,49 +35,49 @@
   {
    "m": "pro",
    "stAbove": 3.69,
-   "drAbove": 3.71,
-   "dist": 8
+   "drAbove": 4.14,
+   "dist": 9.6
   },
   {
    "m": "far",
    "stAbove": 4.9,
-   "drAbove": 5.27,
-   "dist": 12.2
+   "drAbove": 6,
+   "dist": 14.8
   },
   {
    "m": "cockpit",
    "stAbove": 1.87,
-   "drAbove": 1.82,
+   "drAbove": 1.85,
    "dist": 1
   },
   {
    "m": "hood",
-   "stAbove": 2.22,
-   "drAbove": 2.18,
-   "dist": 1.6
+   "stAbove": 1.92,
+   "drAbove": 1.82,
+   "dist": 2.1
   },
   {
    "m": "bumper",
    "stAbove": 1.02,
-   "drAbove": 0.99,
+   "drAbove": 1.16,
    "dist": 2.5
   },
   {
    "m": "cinematic",
-   "stAbove": 1.64,
-   "drAbove": 1.55,
-   "dist": 33.5
+   "stAbove": 1.31,
+   "drAbove": 0.64,
+   "dist": 3.9
   },
   {
    "m": "wheel",
    "stAbove": 0.76,
-   "drAbove": 0.76,
+   "drAbove": 0.82,
    "dist": 1.5
   },
   {
    "m": "mirror",
    "stAbove": 2.01,
-   "drAbove": 2.01,
+   "drAbove": 2.04,
    "dist": 1.7
   },
   {
@@ -89,9 +89,9 @@
  ],
  "res": [
   {
-   "n": "boots to menu, Build 0.8.0",
+   "n": "boots to menu, Build 0.8.x",
    "p": true,
-   "d": "load 3.9 s"
+   "d": "load 4.0 s"
   },
   {
    "n": "menu: no page scroll",
@@ -116,42 +116,42 @@
   {
    "n": "camera pro: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 3.69 / 3.71 m, dist 8.0 m"
+   "d": "above 3.69 / 4.14 m, dist 9.6 m"
   },
   {
    "n": "camera far: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.90 / 5.27 m, dist 12.2 m"
+   "d": "above 4.90 / 6.00 m, dist 14.8 m"
   },
   {
    "n": "camera cockpit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.87 / 1.82 m, dist 1.0 m"
+   "d": "above 1.87 / 1.85 m, dist 1.0 m"
   },
   {
    "n": "camera hood: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.22 / 2.18 m, dist 1.6 m"
+   "d": "above 1.92 / 1.82 m, dist 2.1 m"
   },
   {
    "n": "camera bumper: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.02 / 0.99 m, dist 2.5 m"
+   "d": "above 1.02 / 1.16 m, dist 2.5 m"
   },
   {
    "n": "camera cinematic: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.64 / 1.55 m, dist 33.5 m"
+   "d": "above 1.31 / 0.64 m, dist 3.9 m"
   },
   {
    "n": "camera wheel: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 0.76 / 0.76 m, dist 1.5 m"
+   "d": "above 0.76 / 0.82 m, dist 1.5 m"
   },
   {
    "n": "camera mirror: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.01 / 2.01 m, dist 1.7 m"
+   "d": "above 2.01 / 2.04 m, dist 1.7 m"
   },
   {
    "n": "camera orbit: active, above terrain stationary + driving",
@@ -176,7 +176,7 @@
   {
    "n": "profiles all reach 50 km/h, stop, stay upright",
    "p": true,
-   "d": "{\"pro\":{\"t0_50\":1.7,\"stop50m\":9.3,\"turnDegS\":59,\"up\":1},\"offroad\":{\"t0_50\":1.8,\"stop50m\":9.8,\"turnDegS\":59.8,\"up\":1},\"sim\":{\"t0_50\":1.9,\"stop50m\":10.5,\"turnDegS\":50.2,\"up\":1},\"arcade\":{\"t0_50\":1.45,\"stop50m\":8.2,\"turnDegS\":69,\"up\":1}}"
+   "d": "{\"pro\":{\"t0_50\":6.8,\"stop50m\":15.9,\"turnDegS\":57.2,\"up\":1},\"offroad\":{\"t0_50\":7.2,\"stop50m\":17.3,\"turnDegS\":56,\"up\":1},\"sim\":{\"t0_50\":7.7,\"stop50m\":19.1,\"turnDegS\":47.3,\"up\":1},\"arcade\":{\"t0_50\":5.5,\"stop50m\":12.1,\"turnDegS\":67.1,\"up\":1}}"
   },
   {
    "n": "profiles measurably different (0-50, stopping, turn rate)",
@@ -186,17 +186,17 @@
   {
    "n": "ARCADE stops shorter than SIMULATION",
    "p": true,
-   "d": "8.2 vs 10.5 m"
+   "d": "12.1 vs 19.1 m"
   },
   {
    "n": "drive forward, brake to stop, reverse on held brake",
    "p": true,
-   "d": "fwd 65 km/h, after brake 0.7, reverse -31.6 km/h"
+   "d": "fwd 33 km/h, after brake 0.9, reverse -8.9 km/h"
   },
   {
    "n": "4L rejected above 8 km/h with message, accepted when stopped",
    "p": true,
-   "d": "65 km/h -> \"4L rejected: slow below 8 km/h to shift into low range (now 65 km/h)\""
+   "d": "31 km/h -> \"4L rejected: slow below 8 km/h to shift into low range (now 31 km/h)\""
   },
   {
    "n": "SIMULATED gamepad: left stick left = steer left (+), RT throttles, device = pad",

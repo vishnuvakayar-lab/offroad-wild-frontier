@@ -1,18 +1,23 @@
 [
  {
-  "n": "build label 0.7.3",
+  "n": "build label 0.8.x",
   "p": true,
   "d": ""
  },
  {
   "n": "vehicle list has van, ltv, patrol, cargo6, mrap + the 6 originals",
   "p": true,
-  "d": "scout,voyager,sahara,pickup,rally,recovery,van,ltv,patrol,cargo6,mrap"
+  "d": "scout,f110,voyager,sahara,pickup,rally,recovery,van,ltv,patrol,cargo6,mrap"
  },
  {
   "n": "garage shows scout",
   "p": true,
   "d": "{\"draws\":28,\"tris\":28680,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
+ },
+ {
+  "n": "garage shows f110",
+  "p": true,
+  "d": "{\"draws\":27,\"tris\":25936,\"parts\":[{\"name\":\"static:rubber\",\"mat\":\"rubber\",\"color\""
  },
  {
   "n": "garage shows voyager",
@@ -67,32 +72,32 @@
  {
   "n": "scout drives (W key) and stays upright",
   "p": true,
-  "d": "26 km/h after 4 s, up 1.00"
+  "d": "9 km/h after 4 s, up 1.00"
  },
  {
   "n": "van drives (W key) and stays upright",
   "p": true,
-  "d": "22 km/h after 4 s, up 1.00"
+  "d": "6 km/h after 4 s, up 1.00"
  },
  {
   "n": "ltv drives (W key) and stays upright",
   "p": true,
-  "d": "34 km/h after 4 s, up 1.00"
+  "d": "9 km/h after 4 s, up 1.00"
  },
  {
   "n": "patrol drives (W key) and stays upright",
   "p": true,
-  "d": "22 km/h after 4 s, up 1.00"
+  "d": "8 km/h after 4 s, up 1.00"
  },
  {
   "n": "cargo6 drives (W key) and stays upright",
   "p": true,
-  "d": "15 km/h after 4 s, up 1.00"
+  "d": "6 km/h after 4 s, up 1.00"
  },
  {
   "n": "mrap drives (W key) and stays upright",
   "p": true,
-  "d": "17 km/h after 4 s, up 1.00"
+  "d": "5 km/h after 4 s, up 1.00"
  },
  {
   "n": "scout: C key -> driver view; 3D steering wheel rotates with steering (left/right opposite)",
@@ -107,10 +112,10 @@
  {
   "n": "scout: 🎥 button -> 360° orbit; mouse drag rotates around the vehicle",
   "p": true,
-  "d": "moved 11.6 m"
+  "d": "moved 9.0 m"
  },
  {
-  "n": "scout: button cycles back to chase",
+  "n": "scout: button cycles back to Pro Chase",
   "p": true,
   "d": ""
  },
@@ -127,22 +132,22 @@
  {
   "n": "mrap: 🎥 button -> 360° orbit; mouse drag rotates around the vehicle",
   "p": true,
-  "d": "moved 11.6 m"
+  "d": "moved 10.6 m"
  },
  {
-  "n": "mrap: button cycles back to chase",
+  "n": "mrap: button cycles back to Pro Chase",
   "p": true,
   "d": ""
  },
  {
   "n": "split-screen: arrow keys drive P2 only",
   "p": true,
-  "d": "P2 moved 111.9 m, P1 0.0 m"
+  "d": "P2 moved 116.0 m, P1 0.0 m"
  },
  {
   "n": "split-screen: WASD drives P1 only",
   "p": true,
-  "d": "P1 moved 65.8 m; P1 input throttle 1, P2 input throttle 0"
+  "d": "P1 moved 34.6 m; P1 input throttle 1, P2 input throttle 0"
  },
  {
   "n": "leaving to menu ends split-screen",
@@ -156,8 +161,8 @@
  },
  {
   "n": "touch split-screen: holding P2 GAS drives P2",
-  "p": true,
-  "d": "P2 moved 3.7 m"
+  "p": false,
+  "d": "P2 moved 0.8 m"
  },
  {
   "n": "touch split-screen: P2 steering wheel drag steers P2 right and its 3D wheel mirrors it",
