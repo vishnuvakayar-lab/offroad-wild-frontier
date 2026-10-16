@@ -15,7 +15,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <title>OFFROAD: WILD FRONTIER</title>
-  <script type="module" crossorigin src="./assets/index-LYq3H0ya.js"></script>
+  <script type="module" crossorigin src="./assets/index-Cl8ULQqZ.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-iWToyg0p.css">
 </head>
 <body>
@@ -111,6 +111,7 @@
     <div id="selbar" class="selbar hidden">
       <button id="cam-chip" class="sel-chip" aria-label="Camera view">🎥 Pro Chase</button>
       <button id="prof-chip" class="sel-chip prof" aria-label="Driving profile">PRO</button>
+      <button id="spd-chip" class="sel-chip" aria-label="Speed limit: tap for LOW / NORMAL">NORMAL</button>
       <div id="cam-pop" class="sel-pop hidden" role="menu" aria-label="Camera views"></div>
       <div id="prof-pop" class="sel-pop hidden" role="menu" aria-label="Driving profile"></div>
     </div>
@@ -265,9 +266,11 @@
       <label class="group-label">Gamepad <span id="pad-status" class="note">none connected</span></label>
       <div class="row cam"><span>Dead zone</span><input type="range" id="rng-pdz" min="0.04" max="0.35" step="0.01" aria-label="Gamepad dead zone" /></div>
       <div class="row cam"><span>Sensitivity</span><input type="range" id="rng-psens" min="0.6" max="1.6" step="0.05" aria-label="Gamepad steering sensitivity" /></div>
+      <label class="group-label">Speed limit</label>
+      <div class="seg" id="seg-speed"><button data-v="normal">NORMAL (40-60 km/h)</button><button data-v="low">LOW (25 km/h)</button></div>
       <label class="group-label">Camera shake / feedback</label>
       <div class="seg" id="seg-shake"><button data-v="off">Off</button><button data-v="low">Low</button><button data-v="medium">Medium</button><button data-v="high">High</button></div>
-      <p class="note">Build 0.8.0 · rework in progress</p>
+      <p class="note">Build 0.8.1 · rework in progress</p>
     </aside>
   </div>
 </body>
