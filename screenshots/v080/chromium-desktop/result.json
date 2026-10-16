@@ -3,8 +3,8 @@
  "DEV": "desktop",
  "pass": 32,
  "total": 32,
- "loadS": "3.1",
- "fps": 13.547513063673007,
+ "loadS": "3.9",
+ "fps": 15.484370463563952,
  "prof": {
   "pro": {
    "t0_50": 1.7,
@@ -35,14 +35,14 @@
   {
    "m": "pro",
    "stAbove": 3.69,
-   "drAbove": 3.74,
+   "drAbove": 3.71,
    "dist": 8
   },
   {
    "m": "far",
    "stAbove": 4.9,
-   "drAbove": 5.31,
-   "dist": 12.3
+   "drAbove": 5.27,
+   "dist": 12.2
   },
   {
    "m": "cockpit",
@@ -53,20 +53,20 @@
   {
    "m": "hood",
    "stAbove": 2.22,
-   "drAbove": 2.23,
+   "drAbove": 2.18,
    "dist": 1.6
   },
   {
    "m": "bumper",
    "stAbove": 1.02,
-   "drAbove": 1.12,
+   "drAbove": 0.99,
    "dist": 2.5
   },
   {
    "m": "cinematic",
-   "stAbove": 2.12,
-   "drAbove": 2.33,
-   "dist": 33.2
+   "stAbove": 1.64,
+   "drAbove": 1.55,
+   "dist": 33.5
   },
   {
    "m": "wheel",
@@ -82,8 +82,8 @@
   },
   {
    "m": "orbit",
-   "stAbove": 4.57,
-   "drAbove": 4.77,
+   "stAbove": 4.56,
+   "drAbove": 4.62,
    "dist": 8.4
   }
  ],
@@ -91,7 +91,7 @@
   {
    "n": "boots to menu, Build 0.8.0",
    "p": true,
-   "d": "load 3.1 s"
+   "d": "load 3.9 s"
   },
   {
    "n": "menu: no page scroll",
@@ -116,12 +116,12 @@
   {
    "n": "camera pro: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 3.69 / 3.74 m, dist 8.0 m"
+   "d": "above 3.69 / 3.71 m, dist 8.0 m"
   },
   {
    "n": "camera far: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.90 / 5.31 m, dist 12.3 m"
+   "d": "above 4.90 / 5.27 m, dist 12.2 m"
   },
   {
    "n": "camera cockpit: active, above terrain stationary + driving",
@@ -131,17 +131,17 @@
   {
    "n": "camera hood: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.22 / 2.23 m, dist 1.6 m"
+   "d": "above 2.22 / 2.18 m, dist 1.6 m"
   },
   {
    "n": "camera bumper: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.02 / 1.12 m, dist 2.5 m"
+   "d": "above 1.02 / 0.99 m, dist 2.5 m"
   },
   {
    "n": "camera cinematic: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.12 / 2.33 m, dist 33.2 m"
+   "d": "above 1.64 / 1.55 m, dist 33.5 m"
   },
   {
    "n": "camera wheel: active, above terrain stationary + driving",
@@ -156,12 +156,12 @@
   {
    "n": "camera orbit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.57 / 4.77 m, dist 8.4 m"
+   "d": "above 4.56 / 4.62 m, dist 8.4 m"
   },
   {
    "n": "camera cycles (C key / camera button), smooth blend starts, choice stored for session",
    "p": true,
-   "d": "{\"m\":\"far\",\"blend\":0.49983333333332364,\"ses\":\"far\"}"
+   "d": "{\"m\":\"far\",\"blend\":0.6666666666666667,\"ses\":\"far\"}"
   },
   {
    "n": "look back engages",
@@ -191,7 +191,7 @@
   {
    "n": "drive forward, brake to stop, reverse on held brake",
    "p": true,
-   "d": "fwd 65 km/h, after brake 0.6, reverse -31.6 km/h"
+   "d": "fwd 65 km/h, after brake 0.7, reverse -31.6 km/h"
   },
   {
    "n": "4L rejected above 8 km/h with message, accepted when stopped",

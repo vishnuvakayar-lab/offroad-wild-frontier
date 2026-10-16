@@ -315,7 +315,7 @@ export class Vehicle {
       this.headlights.push(s);
     }
     // rear red glow: tail lamps light the ground behind at night (and brighten under braking)
-    this.rearGlow = new THREE.PointLight(0xff2010, 0, 9, 2); this.rearGlow.position.set(0, L.y, -spec.chassis.hz - 0.3); g.add(this.rearGlow);
+    this.rearGlow = new THREE.PointLight(0xff2010, 0, 9, 2); this.rearGlow.visible = false; this.rearGlow.position.set(0, L.y, -spec.chassis.hz - 0.3); g.add(this.rearGlow);
     this.beam = new THREE.SpotLight(0xfff1d0, 0, 70, 0.42, 0.6, 1.0);
     this.beam.position.set(0, L.y + 0.25, L.z);
     this.beam.target.position.set(0, -1, L.z + 14);
@@ -634,7 +634,7 @@ export class Vehicle {
     this.group.quaternion.set(r.x, r.y, r.z, r.w);
     this.bodyVis.rotation.set(this.lean.pitch, 0, this.lean.roll);
     if (this.tailMat) this.tailMat.emissiveIntensity = this.braking ? 5 : this.lightsOn ? 2.6 : 1.2; // brake / tail lights
-    if (this.rearGlow) this.rearGlow.intensity = this.lightsOn ? (this.braking ? 6 : 2.2) : this.braking ? 1.5 : 0;
+    if (this.rearGlow) { this.rearGlow.visible = this.lightsOn; this.rearGlow.intensity = this.braking ? 6 : 2.2; } // only lit with the headlights (an invisible light costs no shader time)
     for (let i = 0; i < 4; i++) {
       const c = this.conn[i];
       const len = this.ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest;

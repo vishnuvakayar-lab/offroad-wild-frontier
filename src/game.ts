@@ -936,7 +936,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     window.addEventListener('gamepaddisconnected', () => { $('pad-status').textContent = 'none connected'; toast('🎮 Gamepad disconnected'); });
   }
   // pause when the window loses focus (not online: online cars keep driving on the server)
-  window.addEventListener('blur', () => { if (phase === 'playing' && !online.inRoom && !(window as any).__noAutoPause) setPhase('paused'); });
+  window.addEventListener('blur', () => { if (phase === 'playing' && !online.inRoom && !((window as any).__noAutoPause ?? /[?&]dev=1/.test(location.search))) setPhase('paused'); /* dev/test URLs: off unless a test opts in */ });
   // ---------- gamepad: in-game actions + menu navigation ----------
   input.onPadAction = (a) => {
     if (phase !== 'playing') return;
