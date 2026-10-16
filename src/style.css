@@ -423,3 +423,8 @@ body.split .selbar, body.split #btn-lookback, body.split #btn-camreset { display
   #cockpit[data-sc="wheel"] .ck-pills { bottom: calc(176px + var(--sab)); }
 }
 html, body { overscroll-behavior: none; touch-action: none; }
+/* portrait phones (<= 500 px wide): the 6 round HUD buttons wrap into a 3 x 2 block instead of running off-screen */
+@media (max-width: 500px) and (orientation: portrait) {
+  #hud .hud-right { flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 126px; }
+  #hud .hud-right .round { width: 38px; height: 38px; }
+}

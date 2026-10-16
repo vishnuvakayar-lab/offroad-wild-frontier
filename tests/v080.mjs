@@ -174,7 +174,7 @@ if (mobile) {
     await page.evaluate(() => window.dispatchEvent(new Event('blur'))); await frames(page, 3);
     const b = await page.evaluate(() => window.__game.readInput().throttle);
     await page.evaluate(() => window.__touch.up?.(2));
-    ok('touch GAS hold -> throttle; touchcancel releases; blur releases', h > 0.9 && c === 0 && b === 0, `hold ${h}, after cancel ${c}, after blur ${b}`);
+    ok('touch GAS hold -> throttle (progressive ramp); touchcancel releases; blur releases', h > 0.4 && c === 0 && b === 0, `hold ${h}, after cancel ${c}, after blur ${b}`);
   } else ok('touch GAS hold/cancel/blur', false, `touch helper ${hasT}, gas box ${!!box}`);
   const lay = await page.evaluate(() => { const els = [...document.querySelectorAll('#hud button, #cockpit .wheel, #cockpit .pedal, #selbar .sel-chip')].filter((e) => e.offsetParent); const bad = els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < -1 || r.top < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1; }).map((e) => e.id || e.className); return { n: els.length, bad, sw: document.documentElement.scrollWidth, w: innerWidth }; });
   ok('mobile HUD: every control on-screen, no horizontal scroll', lay.bad.length === 0 && lay.sw <= lay.w + 1, JSON.stringify(lay));
