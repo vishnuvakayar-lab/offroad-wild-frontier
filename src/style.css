@@ -399,3 +399,17 @@ body.split.touch #p2ctl { top: calc(50% - 104px); height: 96px; }
 body.split.touch #cockpit[data-sc="wheel"] .wheel { width: 120px; height: 120px; }
 .wheel .w-turn { position: absolute; inset: 0; will-change: transform; pointer-events: none; }
 @media (orientation: portrait) { #cockpit[data-sc="wheel"] .wheel { width: 144px; height: 144px; } .drv { bottom: calc(196px + var(--sab)); } }
+
+/* ---- 0.8.0: compact camera / profile selectors + traction chip ---- */
+.selbar { position: absolute; z-index: 11; top: calc(64px + var(--sat)); right: calc(12px + var(--sar)); display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; max-width: 300px; pointer-events: none; }
+.sel-chip { pointer-events: auto; min-height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid rgba(255,255,255,.22); background: rgba(10,12,14,.62); color: #fff; font: 700 12px/1 system-ui, sans-serif; letter-spacing: .04em; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.sel-chip.prof { color: var(--amber); }
+.sel-pop { pointer-events: auto; flex-basis: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px; border-radius: 14px; background: rgba(10,12,14,.86); border: 1px solid rgba(255,255,255,.16); }
+.sel-pop.hidden { display: none; }
+#prof-pop { grid-template-columns: repeat(2, 1fr); }
+.sel-pop button { min-height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: #fff; font: 700 11px/1.1 system-ui, sans-serif; }
+.sel-pop button.on { background: var(--amber); color: #1a1206; }
+.chip.trac.ok { color: #9be39b; } .chip.trac.warn { color: #ffd166; } .chip.trac.bad { color: #ff7b6b; } .chip.trac.air { color: #8fc7ff; }
+#btn-lookback.active { background: rgba(242,169,59,.6); }
+body.split .selbar, body.split #btn-lookback, body.split #btn-camreset { display: none; }
+@media (orientation: portrait) { .selbar { top: calc(108px + var(--sat)); max-width: 240px; } }

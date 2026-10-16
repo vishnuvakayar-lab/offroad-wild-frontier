@@ -57,11 +57,14 @@
         <div class="speed"><b id="hud-speed">0</b><span>km/h</span><em id="hud-gear">1</em></div>
         <div class="hud-col">
           <div class="chip" id="hud-surface">Dirt</div>
+          <span class="chip trac ok" id="hud-trac">Grip</span>
           <span class="chip fps" id="hud-fps">-- fps</span>
         </div>
       </div>
       <div class="hud-right">
-        <button id="btn-cam" class="round" aria-label="In-car view" title="In-car view (C)">🎥</button>
+        <button id="btn-cam" class="round" aria-label="Next camera" title="Camera (C)">🎥</button>
+        <button id="btn-lookback" class="round" aria-label="Look back (hold)" title="Look back (hold B)">↶</button>
+        <button id="btn-camreset" class="round" aria-label="Reset camera" title="Reset camera (V)">⌖</button>
         <button id="btn-weather" class="round" aria-label="Change weather" title="Weather (T)">☀</button>
         <button id="btn-mute" class="round" aria-label="Mute" title="Mute (M)">🔊</button>
         <button id="btn-pause" class="round" aria-label="Pause">❚❚</button>
@@ -104,6 +107,12 @@
     </div>
     <div id="p2hud" class="p2hud"><b>P2</b> <span id="p2-speed">0</span> km/h <small>arrows · RShift HB · / reset</small></div>
     <div id="p1tag" class="p1tag"><b>P1</b> <small>WASD · Space HB · R reset</small></div>
+    <div id="selbar" class="selbar hidden">
+      <button id="cam-chip" class="sel-chip" aria-label="Camera view">🎥 Pro Chase</button>
+      <button id="prof-chip" class="sel-chip prof" aria-label="Driving profile">PRO</button>
+      <div id="cam-pop" class="sel-pop hidden" role="menu" aria-label="Camera views"></div>
+      <div id="prof-pop" class="sel-pop hidden" role="menu" aria-label="Driving profile"></div>
+    </div>
     <div id="drv" class="drv hidden">
       <button id="drv-chip" class="drv-chip" aria-label="Transmission and transfer case" aria-expanded="false"><b id="drv-gear">A</b><span id="drv-mode">4H</span></button>
       <div id="drv-pop" class="drv-pop hidden">
@@ -250,8 +259,9 @@
       <label class="group-label">Camera</label>
       <div class="row cam"><span>Distance</span><input type="range" id="rng-camdist" min="0.75" max="1.45" step="0.05" aria-label="Camera distance" /></div>
       <div class="row cam"><span>Height</span><input type="range" id="rng-camheight" min="0.6" max="1.6" step="0.05" aria-label="Camera height" /></div>
-      <label class="row"><input type="checkbox" id="chk-shake" /> Camera shake on rough terrain</label>
-      <p class="note">Build 0.7.3 · rework in progress</p>
+      <label class="group-label">Camera shake / feedback</label>
+      <div class="seg" id="seg-shake"><button data-v="off">Off</button><button data-v="low">Low</button><button data-v="medium">Medium</button><button data-v="high">High</button></div>
+      <p class="note">Build 0.8.0 · rework in progress</p>
     </aside>
   </div>
   <script type="module" src="/src/main.ts"></script>

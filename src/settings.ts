@@ -2,18 +2,22 @@ export type Preset = 'low' | 'medium' | 'high';
 export type TouchMode = 'auto' | 'on' | 'off';
 import type { WeatherId } from './weather';
 import type { ControlScheme } from './input';
-export interface Settings { preset: Preset; showFps: boolean; touch: TouchMode; weather: WeatherId; volume: number; muted: boolean; intro: boolean; vehicle: string; paints: Record<string, number>; controls: ControlScheme; autoThrottle: boolean; camDist: number; camHeight: number; shake: boolean; wheelSens: number; ctlV: number; }
+import type { ProfileId } from './profiles';
+export interface Settings { preset: Preset; showFps: boolean; touch: TouchMode; weather: WeatherId; volume: number; muted: boolean; intro: boolean; vehicle: string; paints: Record<string, number>; controls: ControlScheme; autoThrottle: boolean; camDist: number; camHeight: number; shake: boolean; wheelSens: number; ctlV: number; shakeLevel: ShakeLevel; profile: ProfileId; }
+export type ShakeLevel = 'off' | 'low' | 'medium' | 'high';
+export const SHAKE_K: Record<ShakeLevel, number> = { off: 0, low: 0.45, medium: 1, high: 1.7 };
 
 const KEY = 'owf.settings.v1';
 const CTL_V = 4;
 export const isCoarse = () => window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 
 export function loadSettings(): Settings {
-  const def: Settings = { preset: isCoarse() ? 'medium' : 'high', showFps: true, touch: 'auto', weather: 'clear', volume: 0.8, muted: false, intro: true, vehicle: 'scout', paints: {}, controls: 'wheel', autoThrottle: isCoarse(), camDist: 1, camHeight: 1, shake: true, wheelSens: 1, ctlV: CTL_V };
+  const def: Settings = { preset: isCoarse() ? 'medium' : 'high', showFps: true, touch: 'auto', weather: 'clear', volume: 0.8, muted: false, intro: true, vehicle: 'scout', paints: {}, controls: 'wheel', autoThrottle: isCoarse(), camDist: 1, camHeight: 1, shake: true, wheelSens: 1, ctlV: CTL_V, shakeLevel: 'medium', profile: 'pro' };
   try {
     const s = { ...def, ...JSON.parse(localStorage.getItem(KEY) || '{}') } as Settings;
     // control defaults changed (v4 / 0.7.3: mobile default = rotational steering wheel + GAS + BRAKE/REV; ◀ ▶ stay optional): saves from older builds are force-migrated once
     if ((s.ctlV ?? 0) < CTL_V) { s.controls = def.controls; s.autoThrottle = def.autoThrottle; s.ctlV = CTL_V; }
+    if (!s.shakeLevel) s.shakeLevel = s.shake === false ? 'off' : 'medium';
     return s;
   } catch { return def; }
 }

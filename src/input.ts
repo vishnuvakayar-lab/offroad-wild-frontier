@@ -69,9 +69,12 @@ export class Input {
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => { this.keys.clear(); this.clearTouch(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { this.keys.clear(); this.clearTouch(); } });
   }
 
-  clearTouch() { for (const k of Object.keys(this.touch) as (keyof typeof this.touch)[]) { this.touch[k] = false; this.p2touch[k] = false; } this.zones.clear(); }
+  /** release callbacks of every bound control (held buttons / wheels): blur, visibilitychange, phase changes */
+  private releasers: (() => void)[] = [];
+  clearTouch() { for (const r of this.releasers) r(); for (const k of Object.keys(this.touch) as (keyof typeof this.touch)[]) { this.touch[k] = false; this.p2touch[k] = false; } this.zones.clear(); }
 
   /**
    * Bind a multi-touch-safe hold button. iOS Safari: native touchstart/touchend/touchcancel listeners ({passive:false},
@@ -83,6 +86,7 @@ export class Input {
   bindHold(el: HTMLElement, key: keyof Input['touch'], target: Input['touch'] = this.touch) {
     const active = new Set<string>();
     const set = () => { target[key] = active.size > 0; el.classList.toggle('active', active.size > 0); };
+    this.releasers.push(() => { active.clear(); set(); });
     const opt = { passive: false } as AddEventListenerOptions;
     el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); for (const t of e.changedTouches) active.add('t' + t.identifier); set(); }, opt);
     const tEnd = (e: TouchEvent) => { e.preventDefault(); for (const t of e.changedTouches) active.delete('t' + t.identifier); if (e.targetTouches.length === 0) active.clear(); set(); };
@@ -133,6 +137,7 @@ export class Input {
       st.wheelDeg = Math.max(-lim, Math.min(lim, st.wheelDeg + d)); onTurn(st.wheelDeg);
     };
     const end = () => { st.wheelHeld = false; el.classList.remove('active'); };
+    this.releasers.push(() => { tid = null; pid = null; end(); });
     const opt = { passive: false } as AddEventListenerOptions;
     el.addEventListener('touchstart', (e) => {
       e.preventDefault(); e.stopPropagation(); if (tid !== null) return;

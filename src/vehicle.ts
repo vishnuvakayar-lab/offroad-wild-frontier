@@ -4,6 +4,7 @@ import { surfaceAt, puddleAt, type Surface } from './terrain';
 import { TrackMarks } from './tracks';
 import { type VehicleSpec } from './vehicles';
 import { Kit, mergeStatic, type Mats, type Lod } from './kit';
+import { PROFILES, type DriveProfile, type ProfileId } from './profiles';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export interface DriveInput { throttle: number; brake: number; steer: number; handbrake: boolean; }
@@ -12,7 +13,8 @@ export type Transfer = '2H' | '4H' | '4L' | 'AWD';
 /** Transmission selector: A = automatic (brake at standstill engages reverse), or manual P / R / N / D. */
 export type GearSel = 'A' | 'P' | 'R' | 'N' | 'D';
 export const LOW_RANGE = 2.6;          // 4L reduction ratio: x2.6 wheel torque, top speed / 2.6
-export const SHIFT_ON_FLY_KMH = 60;    // 2H <-> 4H allowed below this speed
+export const SHIFT_ON_FLY_KMH = 60;
+export const LOW_RANGE_MAX_KMH = 8;    // 4L in/out only when stopped or creeping below this speed    // 2H <-> 4H allowed below this speed
 export const DIR_SHIFT_KMH = 2;        // D <-> R only below this speed
 export interface ShiftResult { ok: boolean; msg: string }
 
@@ -38,6 +40,11 @@ export class Vehicle {
   private lastV: { x: number; y: number; z: number } | null = null;
   wheelMeshes: THREE.Object3D[] = [];
   steer = 0;
+  /** 0.8.0: driving profile (scales physics) + wetness 0..1 (rain lowers hard-ground grip) */
+  profile: DriveProfile = PROFILES.pro; wet = 0;
+  static defaultProfile: ProfileId = 'pro';
+  /** landing / impact feedback for the camera: last frame's vertical jolt (m/s) */
+  landJolt = 0; private lastVy = 0;
   /** cockpit: steering wheel (rotates with steering), driver eye point in vehicle space */
   steeringWheel: THREE.Group | null = null;
   /** on-screen wheel angle (deg, + = clockwise = right) mirrored 1:1 by the 3D wheel; null = follow the road-wheel angle */
@@ -121,7 +128,7 @@ export class Vehicle {
       this.ctrl.setWheelFrictionSlip(i, SURFACE_PARAMS.ground.slip);
       this.ctrl.setWheelSideFrictionStiffness(i, 1);
     }
-    if (!headless) { this.buildModel(paint); scene!.add(this.group); }
+    if (!headless) { this.setProfile(Vehicle.defaultProfile); this.buildModel(paint); scene!.add(this.group); }
   }
 
   /** Remove physics body, controller and visuals (used when switching vehicles in the garage). */
@@ -428,9 +435,19 @@ export class Vehicle {
     if (!this.driveModes.includes(t)) return { ok: false, msg: `${t} is not available on the ${this.spec.name}` };
     if (t === this.transfer) return { ok: true, msg: t };
     if (t === '4L' || this.transfer === '4L') {
-      if (kmh > 1 || (this.sel !== 'N' && this.sel !== 'P')) return { ok: false, msg: `Stop and select N to shift ${t === '4L' ? 'into' : 'out of'} 4L` };
+      if (kmh > LOW_RANGE_MAX_KMH) return { ok: false, msg: `4L rejected: slow below ${LOW_RANGE_MAX_KMH} km/h to shift ${t === '4L' ? 'into' : 'out of'} low range (now ${kmh.toFixed(0)} km/h)` };
     } else if (kmh > SHIFT_ON_FLY_KMH) return { ok: false, msg: `Slow below ${SHIFT_ON_FLY_KMH} km/h to shift to ${t}` };
     this.transfer = t; return { ok: true, msg: t };
+  }
+  /** Apply a driving profile: suspension values go straight to the physics controller; the rest is used per step. */
+  setProfile(id: ProfileId) {
+    const P = this.profile = PROFILES[id] ?? PROFILES.pro, su = this.spec.susp;
+    for (let i = 0; i < 4; i++) {
+      this.ctrl.setWheelSuspensionStiffness(i, su.stiffness * P.stiff);
+      this.ctrl.setWheelSuspensionCompression(i, su.compression * P.damp);
+      this.ctrl.setWheelSuspensionRelaxation(i, su.relaxation * P.damp);
+      this.ctrl.setWheelMaxSuspensionTravel(i, su.travel * P.travel);
+    }
   }
   /** Gear selector with interlocks: P only at a standstill, no D <-> R while moving. */
   setGear(g: GearSel): ShiftResult {
@@ -453,15 +470,18 @@ export class Vehicle {
     }
     // speed-sensitive steering, smoothed
     const sp0 = this.spec;
-    const maxSteer = sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 28);
+    const P = this.profile;
+    const maxSteer = (sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 28)) * P.steerLim;
     const target = inp.steer * maxSteer;
-    this.steer += (target - this.steer) * Math.min(1, dt * 8);
+    this.steer += (target - this.steer) * Math.min(1, dt * P.steerRate);
+    // profile throttle curve (exponent < 1 = punchy, > 1 = progressive)
+    inp = { ...inp, throttle: inp.throttle > 0 ? Math.pow(inp.throttle, P.throttleExp) : 0 };
 
     // drive / brake / reverse logic (transmission selector + transfer case)
     let engine = 0, brake = 0;
-    const bs = sp0.mass / 1650; // brake impulses scale with mass
+    const bs = (sp0.mass / 1650) * P.brake; // brake impulses scale with mass (and the profile's brake force)
     const low = this.transfer === '4L' ? LOW_RANGE : 1;
-    const force = sp0.engine * low, top = sp0.topSpeed / low, rev = sp0.reverse / low;
+    const force = sp0.engine * low * P.engine, top = sp0.topSpeed / low, rev = sp0.reverse / low;
     const fwdDrive = (t: number) => force * t * Math.max(0, 1 - Math.max(0, speed) / top);
     const revDrive = (t: number) => -force * 0.6 * t * Math.max(0, 1 - Math.max(0, -speed) / rev);
     const sel = this.sel;
@@ -508,8 +528,11 @@ export class Vehicle {
       this.surfaces[i] = s;
       const sp = SURFACE_PARAMS[s ?? 'ground'];
       const surf = s ?? 'ground';
-      const gripK = sp0.grip[surf === 'rock' ? 'ground' : surf] * sp.slip; // tyres: rock uses the hard-surface grip rating
-      const dragK = sp.drag * (surf === 'ground' || surf === 'rock' ? 1 : sp0.drag[surf]);
+      const soft = surf === 'mud' || surf === 'sand';
+      // tyres: rock uses the hard-surface rating; wet weather (rain) cuts hard-ground / rock grip, a puddle cuts it more
+      const wetK = soft ? 1 : 1 - 0.14 * this.wet - (this.inPuddle[i] ? 0.12 : 0);
+      const gripK = sp0.grip[surf === 'rock' ? 'ground' : surf] * sp.slip * P.grip * (soft ? P.softGrip : 1) * wetK;
+      const dragK = sp.drag * (surf === 'ground' || surf === 'rock' ? 1 : sp0.drag[surf] * P.softDrag);
       dragSum += inContact ? dragK + (this.inPuddle[i] ? 0.35 : 0) : 0;
       // slip estimate: requested drive force vs available grip (Rapier clamps the forward impulse at
       // suspensionForce * frictionSlip) plus sideways sliding
@@ -521,7 +544,7 @@ export class Vehicle {
       } else this.slip[i] = 0;
       const rear = i >= 2;
       ctrl.setWheelFrictionSlip(i, gripK);
-      ctrl.setWheelSideFrictionStiffness(i, sp.side * sp0.side * (rear && inp.handbrake ? 0.35 : 1));
+      ctrl.setWheelSideFrictionStiffness(i, sp.side * sp0.side * P.side * (soft ? 1 : 1 - 0.1 * this.wet) * (rear && inp.handbrake ? 0.35 : 1));
       ctrl.setWheelSteering(i, rear ? 0 : this.steer);
       // traction limit for force above the arcade baseline: the tuned tyre model always delivers the high-range per-wheel
       // force; anything beyond it (2H doubling the rear, 4L multiplication) is limited by load x grip -> wheelspin instead
@@ -546,7 +569,10 @@ export class Vehicle {
       }
       this.lastV = { x: v1.x, y: v1.y, z: v1.z };
       // spring-damper towards the target lean (looks like body roll / dive / squat on the springs)
-      const L = this.lean, tp = THREE.MathUtils.clamp(-this.accLocal.y * 0.0055, -0.055, 0.055), tr = THREE.MathUtils.clamp(this.accLocal.x * 0.0065, -0.065, 0.065);
+      const L = this.lean, lk = P.lean, tp = THREE.MathUtils.clamp(-this.accLocal.y * 0.0055 * lk, -0.07, 0.07), tr = THREE.MathUtils.clamp(this.accLocal.x * 0.0065 * lk, -0.08, 0.08);
+      // landing: a sudden stop of the downward velocity dips the nose / squats the body (damped, never a bounce loop)
+      const jolt = Math.max(0, v1.y - this.lastVy); this.lastVy = v1.y; this.landJolt = jolt;
+      if (jolt > 2.5) L.vp += Math.min(0.6, (jolt - 2.5) * 0.08);
       L.vp += ((tp - L.pitch) * 90 - L.vp * 11) * dt; L.pitch += L.vp * dt;
       L.vr += ((tr - L.roll) * 80 - L.vr * 10) * dt; L.roll += L.vr * dt;
       this.braking = (inp.brake > 0.05 && speed > 0.5) || (inp.handbrake && Math.abs(speed) > 0.5);
@@ -574,13 +600,20 @@ export class Vehicle {
       const up = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w));
       const w = this.body.angvel(); const yawRate = w.x * up.x + w.y * up.y + w.z * up.z;
       const fade = Math.min(1, (Math.abs(speed) - 2) / 12);
-      const want = inp.steer * sp0.assist * fade * Math.sign(speed);
+      const want = inp.steer * sp0.assist * P.assist * fade * Math.sign(speed);
       // don't add more once the yaw rate already exceeds ~1.1 rad/s in that direction (prevents spins)
-      const room = Math.max(0, 1.1 - Math.sign(want) * yawRate);
+      const room = Math.max(0, P.yawCap - Math.sign(want) * yawRate);
       const tq = (this.inertiaY * want * Math.min(1, room)) * dt;
       this.body.applyTorqueImpulse({ x: up.x * tq, y: up.y * tq, z: up.z * tq }, true);
     }
 
+    // ARCADE stability assist: damps yaw that the driver isn't asking for (anti-spin), only with wheels down
+    if (P.stability > 0 && contacts >= 3) {
+      const w = this.body.angvel(), rq = this.body.rotation();
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w));
+      const yawRate = w.x * up.x + w.y * up.y + w.z * up.z, wanted = inp.steer * 1.2 * Math.sign(speed || 1);
+      const excess = yawRate - wanted; if (Math.abs(excess) > 0.4) { const tq = -excess * this.inertiaY * P.stability * dt; this.body.applyTorqueImpulse({ x: up.x * tq, y: up.y * tq, z: up.z * tq }, true); }
+    }
     // surface resistance (mud suction, sand ploughing) + light aero drag
     if (contacts > 0) {
       const v = this.body.linvel();
