@@ -1,0 +1,252 @@
+{
+ "BR": "chromium",
+ "DEV": "desktop",
+ "pass": 32,
+ "total": 32,
+ "loadS": "3.1",
+ "fps": 13.547513063673007,
+ "prof": {
+  "pro": {
+   "t0_50": 1.7,
+   "stop50m": 9.3,
+   "turnDegS": 59,
+   "up": 1
+  },
+  "offroad": {
+   "t0_50": 1.8,
+   "stop50m": 9.8,
+   "turnDegS": 59.8,
+   "up": 1
+  },
+  "sim": {
+   "t0_50": 1.9,
+   "stop50m": 10.5,
+   "turnDegS": 50.2,
+   "up": 1
+  },
+  "arcade": {
+   "t0_50": 1.45,
+   "stop50m": 8.2,
+   "turnDegS": 69,
+   "up": 1
+  }
+ },
+ "camRows": [
+  {
+   "m": "pro",
+   "stAbove": 3.69,
+   "drAbove": 3.74,
+   "dist": 8
+  },
+  {
+   "m": "far",
+   "stAbove": 4.9,
+   "drAbove": 5.31,
+   "dist": 12.3
+  },
+  {
+   "m": "cockpit",
+   "stAbove": 1.87,
+   "drAbove": 1.82,
+   "dist": 1
+  },
+  {
+   "m": "hood",
+   "stAbove": 2.22,
+   "drAbove": 2.23,
+   "dist": 1.6
+  },
+  {
+   "m": "bumper",
+   "stAbove": 1.02,
+   "drAbove": 1.12,
+   "dist": 2.5
+  },
+  {
+   "m": "cinematic",
+   "stAbove": 2.12,
+   "drAbove": 2.33,
+   "dist": 33.2
+  },
+  {
+   "m": "wheel",
+   "stAbove": 0.76,
+   "drAbove": 0.76,
+   "dist": 1.5
+  },
+  {
+   "m": "mirror",
+   "stAbove": 2.01,
+   "drAbove": 2.01,
+   "dist": 1.7
+  },
+  {
+   "m": "orbit",
+   "stAbove": 4.57,
+   "drAbove": 4.77,
+   "dist": 8.4
+  }
+ ],
+ "res": [
+  {
+   "n": "boots to menu, Build 0.8.0",
+   "p": true,
+   "d": "load 3.1 s"
+  },
+  {
+   "n": "menu: no page scroll",
+   "p": true,
+   "d": "{\"sw\":1280,\"cw\":1280,\"sh\":720,\"ch\":720}"
+  },
+  {
+   "n": "manifest: relative start_url/scope/icons (stays inside the deploy folder)",
+   "p": true,
+   "d": "{\"h\":\"http://127.0.0.1:4173/manifest.webmanifest\",\"start\":\"./\",\"scope\":\"./\",\"icons\":[\"icon-192.png\",\"icon-512.png\",\"favicon.svg\"]}"
+  },
+  {
+   "n": "service worker file built with precache list + version cache",
+   "p": true,
+   "d": "sw.js present"
+  },
+  {
+   "n": "service worker registration scope = this folder (or unsupported/http)",
+   "p": true,
+   "d": "not registered"
+  },
+  {
+   "n": "camera pro: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 3.69 / 3.74 m, dist 8.0 m"
+  },
+  {
+   "n": "camera far: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 4.90 / 5.31 m, dist 12.3 m"
+  },
+  {
+   "n": "camera cockpit: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 1.87 / 1.82 m, dist 1.0 m"
+  },
+  {
+   "n": "camera hood: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 2.22 / 2.23 m, dist 1.6 m"
+  },
+  {
+   "n": "camera bumper: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 1.02 / 1.12 m, dist 2.5 m"
+  },
+  {
+   "n": "camera cinematic: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 2.12 / 2.33 m, dist 33.2 m"
+  },
+  {
+   "n": "camera wheel: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 0.76 / 0.76 m, dist 1.5 m"
+  },
+  {
+   "n": "camera mirror: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 2.01 / 2.01 m, dist 1.7 m"
+  },
+  {
+   "n": "camera orbit: active, above terrain stationary + driving",
+   "p": true,
+   "d": "above 4.57 / 4.77 m, dist 8.4 m"
+  },
+  {
+   "n": "camera cycles (C key / camera button), smooth blend starts, choice stored for session",
+   "p": true,
+   "d": "{\"m\":\"far\",\"blend\":0.49983333333332364,\"ses\":\"far\"}"
+  },
+  {
+   "n": "look back engages",
+   "p": true,
+   "d": "k 1.00"
+  },
+  {
+   "n": "one-tap camera reset -> Pro Chase",
+   "p": true,
+   "d": ""
+  },
+  {
+   "n": "profiles all reach 50 km/h, stop, stay upright",
+   "p": true,
+   "d": "{\"pro\":{\"t0_50\":1.7,\"stop50m\":9.3,\"turnDegS\":59,\"up\":1},\"offroad\":{\"t0_50\":1.8,\"stop50m\":9.8,\"turnDegS\":59.8,\"up\":1},\"sim\":{\"t0_50\":1.9,\"stop50m\":10.5,\"turnDegS\":50.2,\"up\":1},\"arcade\":{\"t0_50\":1.45,\"stop50m\":8.2,\"turnDegS\":69,\"up\":1}}"
+  },
+  {
+   "n": "profiles measurably different (0-50, stopping, turn rate)",
+   "p": true,
+   "d": ""
+  },
+  {
+   "n": "ARCADE stops shorter than SIMULATION",
+   "p": true,
+   "d": "8.2 vs 10.5 m"
+  },
+  {
+   "n": "drive forward, brake to stop, reverse on held brake",
+   "p": true,
+   "d": "fwd 65 km/h, after brake 0.6, reverse -31.6 km/h"
+  },
+  {
+   "n": "4L rejected above 8 km/h with message, accepted when stopped",
+   "p": true,
+   "d": "65 km/h -> \"4L rejected: slow below 8 km/h to shift into low range (now 65 km/h)\""
+  },
+  {
+   "n": "SIMULATED gamepad: left stick left = steer left (+), RT throttles, device = pad",
+   "p": true,
+   "d": "{\"dev\":\"pad\",\"i\":{\"throttle\":1,\"brake\":0,\"steer\":1,\"handbrake\":false}}"
+  },
+  {
+   "n": "gamepad dead zone filters small stick drift",
+   "p": true,
+   "d": "steer 0"
+  },
+  {
+   "n": "last active device wins, inputs not summed (keyboard D overrides pad left stick)",
+   "p": true,
+   "d": "{\"dev\":\"keys\",\"i\":{\"throttle\":0,\"brake\":0,\"steer\":-1,\"handbrake\":false}}"
+  },
+  {
+   "n": "gamepad Y cycles camera",
+   "p": true,
+   "d": ""
+  },
+  {
+   "n": "gamepad Start pauses; D-pad moves menu focus",
+   "p": true,
+   "d": "phase paused, focused 1"
+  },
+  {
+   "n": "gamepad B resumes from pause",
+   "p": true,
+   "d": ""
+  },
+  {
+   "n": "configurable bindings: throttle rebound to I works + persisted, reset restores",
+   "p": true,
+   "d": "default KeyW/ArrowUp"
+  },
+  {
+   "n": "window blur pauses (single player)",
+   "p": true,
+   "d": ""
+  },
+  {
+   "n": "HUD shows camera + profile selectors and traction chip",
+   "p": true,
+   "d": "{\"trac\":\"Grip\",\"cam\":\"🎥 Pro Chase\",\"prof\":\"PRO\"}"
+  },
+  {
+   "n": "no console errors / page errors",
+   "p": true,
+   "d": ""
+  }
+ ]
+}

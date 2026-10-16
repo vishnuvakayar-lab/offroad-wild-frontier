@@ -219,16 +219,23 @@ export class Input {
   }
 
   /** Poll the Gamepad API (standard mapping). Returns true if a pad is connected. Edge-triggered actions go to onPadAction. */
+  private padAt = -1e9; private padOn = false;
   pollPad(): boolean {
+    const now = performance.now(); if (now - this.padAt < 4) return this.padOn; // once per frame: menus + driving share the same edges
+    this.padAt = now; this.padOn = this.pollPadNow(); return this.padOn;
+  }
+  private pollPadNow(): boolean {
     const pads = (navigator.getGamepads?.() ?? []) as (Gamepad | null)[];
     let gp: Gamepad | null = null;
     for (const p of pads) if (p && p.connected && (p.mapping === 'standard' || !gp)) { gp = p; if (p.mapping === 'standard') break; }
     if (!gp) { this.padIndex = -1; this.padName = ''; return false; }
     this.padIndex = gp.index; this.padName = gp.id;
     this.padPrev = this.padNow; this.padNow = gp.buttons.map((b) => b.pressed || b.value > 0.5); this.padVals = gp.buttons.map((b) => b.value);
-    this.padAxes = gp.axes.slice();
-    const dz = this.padDeadzone, active = this.padNow.some(Boolean) || this.padAxes.some((a) => Math.abs(a) > dz + 0.1);
-    if (active) this.lastDevice = 'pad';
+    const prevAxes = this.padAxes; this.padAxes = gp.axes.slice();
+    // the pad becomes the active device only when it CHANGES (button edge or stick moved), so a resting / drifting pad never steals from keys or touch
+    const dz = this.padDeadzone;
+    const changed = this.padNow.some((b, i) => b !== !!this.padPrev[i]) || this.padAxes.some((a, i) => Math.abs(a - (prevAxes[i] ?? 0)) > 0.2 && Math.abs(a) > dz);
+    if (changed) this.lastDevice = 'pad';
     return true;
   }
   /** pad button went down this poll */

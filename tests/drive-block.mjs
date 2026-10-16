@@ -107,7 +107,7 @@ export async function runDrive({ openPage, ok }) {
     await page.tap('#drv-tc [data-t="4L"]'); await page.waitForTimeout(100);
     const rej = await page.evaluate(() => ({ d: window.__game.drive(), toast: document.getElementById('toast').textContent, note: document.getElementById('drv-note').textContent, pop: !document.getElementById('drv-pop').classList.contains('hidden') }));
     await page.screenshot({ path: SH + 'drive-transfer-popover.png' });
-    ok('drive transfer UI: popover opens; 4L while moving is rejected with a message and 4H is kept', rej.pop && rej.d.transfer === '4H' && /Stop/.test(rej.toast) && /4L/.test(rej.note),
+    ok('drive transfer UI: popover opens; 4L while moving is rejected with a message and 4H is kept', rej.pop && rej.d.transfer === '4H' && /8 km\/h/.test(rej.toast) && /4L/.test(rej.note),
       `at ${rej.d.kmh.toFixed(0)} km/h: transfer ${rej.d.transfer}, toast "${rej.toast}"`);
     await page.tap('#drv-chip');
 
@@ -195,8 +195,8 @@ export async function runDrive({ openPage, ok }) {
       return { a: a.ok, aMsg: a.msg, keepA, r2h: r2h.ok, r4h: r4h.ok, b: b.ok, bMsg: b.msg, keepB, c: c.ok, after, veh, log };
     }, STRAIGHT);
     metrics.transfer = tc;
-    ok('drive transfer case: 4L only when stopped AND in N (rejected while moving / in D, mode unchanged, reason shown); 2H<->4H on the fly at low speed',
-      !tc.a && tc.keepA === '4H' && /Stop/.test(tc.aMsg) && tc.r2h && tc.r4h && !tc.b && tc.keepB === '4H' && /N/.test(tc.bMsg) && tc.c && tc.after === '4L',
+    ok('drive transfer case: 4L only at <= 8 km/h (rejected while moving, mode unchanged, reason shown; any gear once slow); 2H<->4H on the fly at low speed',
+      !tc.a && tc.keepA === '4H' && /8 km\/h/.test(tc.aMsg) && tc.r2h && tc.r4h && tc.b && tc.c && tc.after === '4L',
       `${tc.log.join(' ')} | reason "${tc.aMsg}"`);
     const V = tc.veh;
     ok('drive vehicles: permanent-AWD rally has no 2H/4L (both rejected); recovery truck is 4H/4L only; SUVs + pickup offer 2H/4H/4L',
