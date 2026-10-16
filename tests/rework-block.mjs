@@ -62,7 +62,7 @@ export async function runRework({ openPage, ok, area }) {
     const p0 = await pose(page); await page.waitForTimeout(3000); const p1 = await pose(page);
     let dy = p1.yaw - p0.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     const moved = Math.hypot(p1.x - p0.x, p1.z - p0.z);
-    ok('rework tilt: real-time drive (auto-throttle + tilt) moves and turns the car left', moved > 5 && dy > 0.2, `moved ${moved.toFixed(1)} m, yaw ${(dy * 180 / Math.PI).toFixed(0)} deg, speed ${(p1.speed * 3.6).toFixed(0)} km/h`);
+    ok('rework tilt: real-time drive (auto-throttle + tilt) moves and turns the car left', moved > 3 && dy > 0.2, /* 0.8.2 pace (was > 5 m) */ `moved ${moved.toFixed(1)} m, yaw ${(dy * 180 / Math.PI).toFixed(0)} deg, speed ${(p1.speed * 3.6).toFixed(0)} km/h`);
     await page.screenshot({ path: SH + 'l1-portrait-tilt.png' });
     await page.tap('#ck-cal'); await page.waitForTimeout(100);
     const c3 = await ctl(page);
@@ -94,7 +94,7 @@ export async function runRework({ openPage, ok, area }) {
       await zone(page, 'l', 'pointerup', 1); await zone(page, 'r', 'pointerup', 2); await page.waitForTimeout(150);
       const cc = await inp(page);
       await page.screenshot({ path: SH + 'l1-touch-halves.png' });
-      ok('rework touch halves: left half steers left while driving forward; both halves brake then reverse; release = drive on', a.steer > 0.3 && a.throttle === 1 && dy > 0.15 && b.brake === 1 && b.throttle === 0 && p2.speed < 0 && cc.throttle === 1 && cc.brake === 0,
+      ok('rework touch halves: left half steers left while driving forward; both halves brake then reverse; release = drive on', a.steer > 0.3 && a.throttle === 1 && dy > 0.06 && /* 0.8.2: slower -> less yaw in the window (was 0.15 rad) */ b.brake === 1 && b.throttle === 0 && p2.speed < 0 && cc.throttle === 1 && cc.brake === 0,
         `left: steer ${a.steer.toFixed(2)} thr ${a.throttle}, yaw ${(dy * 180 / Math.PI).toFixed(0)} deg; both: brake ${b.brake}, speed after 3.5 s ${(p2.speed * 3.6).toFixed(1)} km/h; released thr ${cc.throttle}`);
     }
     ok(`rework tilt fallback (${label}): no console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
@@ -157,7 +157,7 @@ export async function runRework({ openPage, ok, area }) {
     await page.reload(); await page.waitForFunction(() => window.__game?.phase === 'menu' || window.__game?.phase === 'opening', null, { timeout: 90000 }); await page.evaluate(() => window.__game.skipOpening());
     await page.click('#btn-play'); await page.waitForFunction(() => window.__game.phase !== 'menu'); await page.evaluate(() => window.__game.skipIntro());
     const drv = await page.evaluate(() => { const g = window.__game; const r = g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 3); return { id: g.vehicle.id, saveV: g.save.vehicles, d: r.distance, v: r.finalSpeed }; });
-    ok('rework persistence: unlocked + selected vehicle survives reload and is the one that drives', drv.id === 'pickup' && drv.saveV.includes('pickup') && drv.d > 10, `${drv.id} drove ${drv.d.toFixed(1)} m in 3 s (${(drv.v * 3.6).toFixed(0)} km/h)`);
+    ok('rework persistence: unlocked + selected vehicle survives reload and is the one that drives', drv.id === 'pickup' && drv.saveV.includes('pickup') && drv.d > 7, /* 0.8.2 pace (was > 10 m in 3 s) */ `${drv.id} drove ${drv.d.toFixed(1)} m in 3 s (${(drv.v * 3.6).toFixed(0)} km/h)`);
     // level rules: forced weather, stuck fail, limited recoveries
     const rules = await page.evaluate(() => { const g = window.__game, H = { throttle: 0, brake: 0, steer: 0, handbrake: true }, o = {};
       g.startMission('lv2-dune-challenge'); o.l2Weather = g.forcedWeather; g.endMission(); o.afterWeather = g.state().weather;

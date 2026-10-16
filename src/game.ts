@@ -441,7 +441,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     if (rope) { world.removeImpulseJoint(rope, true); rope = null; mission.attached = false; mission.say('Rope released'); return true; }
     const d = toWorld(car, anchorRear()).distanceTo(toWorld(stuck, anchorFront()));
     if (d > 10) { mission.say(`Too far to hook up (${d.toFixed(0)} m) — back up closer`); return false; }
-    makeRope(Math.max(3, d + 0.3)); mission.attached = true; mission.reached = true; mission.say('Tow rope attached — drag it to the safe zone!', 2.5);
+    makeRope(Math.max(3, d + 0.3)); mission.attached = true; mission.reached = true; mission.say(car.transfer === '4L' ? 'Tow rope attached — drag it to the safe zone!' : 'Tow rope attached — stop and select 4L for pulling power, then drag it to the safe zone', 3.5);
     return true;
   }
   function sampleCar() {
@@ -474,6 +474,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       for (const l of [...stuck.headlights, stuck.beam]) l.visible = false;
       placeAt(stuck, def.stuck);
       for (let k = 0; k < 90; k++) { stuck.step(STEP, { ...STUCK_IN, handbrake: true }); world.step(); } // settle into the mud
+      stuck.setGear('N'); // a vehicle being recovered rolls in neutral (no engine braking against the strap)
       stuck.sync();
     }
     forcedWeather = def.weather ?? (def.type === 'deliver' ? 'sunset' : null);
@@ -870,7 +871,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const sp = car.spec, c = sp.cabin, ch = sp.chassis, W = sp.wheel;
     switch (m) {
       case 'cockpit': return [car.eye.clone(), new THREE.Vector3(car.eye.x, car.eye.y - 0.9, car.eye.z + 10)];
-      case 'hood': { const y = ch.y + ch.hy + 0.42, z = ch.hz - 0.35; return [new THREE.Vector3(0, y, z), new THREE.Vector3(0, y - 0.55, z + 12)]; } // low + forward: bonnet edge, for narrow trails / water
+      case 'hood': { const y = sp.hoodCam?.[0] ?? ch.y + ch.hy + 0.42, z = sp.hoodCam?.[1] ?? ch.hz - 0.35; return [new THREE.Vector3(0, y, z), new THREE.Vector3(0, y - 0.55, z + 12)]; } // low + forward: bonnet edge, for narrow trails / water
       case 'bumper': { const y = ch.y - ch.hy + 0.35, z = ch.hz + 0.25; return [new THREE.Vector3(0, y, z), new THREE.Vector3(0, y - 0.25, z + 12)]; }
       case 'wheel': { const x = W.x + W.w / 2 + 0.3, y = W.y + 0.05; return [new THREE.Vector3(x, y, W.zf - W.r - 0.9), new THREE.Vector3(x - 0.15, y - 0.25, W.zf + 8)]; }
       default: { const mx = c.hx + 0.32, my = c.y - c.hy + 0.55, mz = c.z + c.hz - 0.15; return [new THREE.Vector3(mx, my, mz), new THREE.Vector3(mx + 0.9, my - 0.45, mz - 12)]; } // mirror
@@ -1595,7 +1596,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
           if (off > 6) vmax = Math.min(vmax, 8);
           if (def.zone && (def.type === 'deliver' || def.type === 'trail' || o.slowZone) && Math.hypot(def.zone.x - c.x, def.zone.z - c.z) < 22 && prog > cum[cum.length - 1] - 30) vmax = 3;
         }
-        if (def.type === 'tow' && mission.attached) winching = ropeLen > 4;
+        if (def.type === 'tow' && mission.attached) { winching = ropeLen > 4; if (car.transfer !== '4L' && car.spec.drive?.includes('4L') && Math.abs(c.speed) < 2) car.setTransfer('4L'); } // follows the 4L hint like a player
         let err = Math.atan2(tg.x - c.x, tg.z - c.z) - c.yaw; err = Math.atan2(Math.sin(err), Math.cos(err));
         if (k % 60 === 0) { const moved = Math.hypot(c.x - lastP.x, c.z - lastP.z); stuckT = moved < 1.0 && mission.state === 'running' ? stuckT + 1 : 0; lastP = c; if (stuckT >= 2) { rev = 90; stuckT = 0; } }
         let thr = c.speed < vmax ? (o.throttle ?? 1) : 0, brk = c.speed > vmax + (H ? 2.5 : 1) ? 1 : 0;

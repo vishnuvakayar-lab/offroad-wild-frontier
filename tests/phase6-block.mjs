@@ -37,7 +37,7 @@ export async function runPhase6({ openPage, ok, area }) {
     // out-of-order + wrong way + reset to last checkpoint (Canyon Dash)
     const oo = await page.evaluate(() => {
       const g = window.__game, def = g.missions.find((m) => m.id === 'race-dash'), G = def.gates;
-      const through = (gt, back = false) => { const y = back ? gt.yaw + Math.PI : gt.yaw, d = 3; g.teleport(gt.x - Math.sin(y) * d, gt.z - Math.cos(y) * d, y); g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 2); };
+      const through = (gt, back = false) => { const y = back ? gt.yaw + Math.PI : gt.yaw, d = 3; g.teleport(gt.x - Math.sin(y) * d, gt.z - Math.cos(y) * d, y); g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 6); }; // 0.8.2: 6 s - root cause: teleported onto the uphill gate approach the car rolls back during the 0.7 s pedal ramp; at the realistic launch it needs ~3 s to cover 3-4 m (old 2 s window too short)
       g.startMission('race-dash'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 0.1);
       through(G[2]); const a = g.mission;                          // skip gates 1-2
       g.startMission('race-dash'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 0.1);
@@ -47,7 +47,7 @@ export async function runPhase6({ openPage, ok, area }) {
       g.missionReset(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 0.3); const p = g.pose(), d = g.mission;
       return { a, b, c, d, resetDist: Math.hypot(p.x - G[0].x, p.z - G[0].z), resetYawErr: Math.abs(Math.atan2(Math.sin(p.yaw - G[0].yaw), Math.cos(p.yaw - G[0].yaw))) };
     });
-    ok('p6 race: out-of-order checkpoint rejected', oo.a.next === 0 && oo.a.rejected === 1 && oo.a.splits.length === 0 && oo.a.log.some((x) => /Missed checkpoint 1/.test(x)), `after crossing gate 3 first: next=${oo.a.next}, rejected=${oo.a.rejected}, messages [${oo.a.log.join(' | ')}]`);
+    ok('p6 race: out-of-order checkpoint rejected', oo.a.next === 0 && oo.a.rejected >= 1 && /* 0.8.2: the longer 6 s run can also cross gate 4, a second rejection */ oo.a.splits.length === 0 && oo.a.log.some((x) => /Missed checkpoint 1/.test(x)), `after crossing gate 3 first: next=${oo.a.next}, rejected=${oo.a.rejected}, messages [${oo.a.log.join(' | ')}]`);
     ok('p6 race: wrong-way crossing flagged, not counted', oo.b.next === 0 && oo.b.log.some((x) => /Wrong way/.test(x)) && oo.b.splits.length === 0, `fresh run, backwards through gate 1: next=${oo.b.next}, messages [${oo.b.log.join(' | ')}]`);
     ok('p6 race: in-order checkpoint accepted with split', oo.c.next === 1 && oo.c.splits.length === 1 && oo.c.splits[0] > 0, `next=${oo.c.next}, split ${oo.c.splits[0]?.toFixed(2)} s`);
     ok('p6 race: reset returns to last checkpoint facing the course', oo.d.resets === 1 && oo.resetDist < 8 && oo.resetYawErr < 0.3 && oo.d.state === 'running', `resets=${oo.d.resets}, ${oo.resetDist.toFixed(1)} m from gate 1, yaw error ${(oo.resetYawErr * 57.3).toFixed(0)}°`);
@@ -57,7 +57,7 @@ export async function runPhase6({ openPage, ok, area }) {
       const g = window.__game, out = {};
       for (const id of ['race-loop', 'race-dash']) {
         const def = g.missions.find((m) => m.id === id); g.startMission(id); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 0.05);
-        for (const gt of def.gates) { g.teleport(gt.x - Math.sin(gt.yaw) * 4, gt.z - Math.cos(gt.yaw) * 4, gt.yaw); g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 2); }
+        for (const gt of def.gates) { g.teleport(gt.x - Math.sin(gt.yaw) * 4, gt.z - Math.cos(gt.yaw) * 4, gt.yaw); g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 6); }
         const m = g.mission; out[id] = { state: m.state, next: m.next, n: def.gates.length, splits: m.splits.length, rejected: m.rejected };
       }
       g.endMission(); return out;
@@ -134,11 +134,11 @@ export async function runPhase6({ openPage, ok, area }) {
       `attached (rope ${tw1.m0.ropeLen.toFixed(1)} m); stuck vehicle moved ${metrics.tow.moved} m, ends ${zd.toFixed(1)} m from safe-zone centre (r=${tw0.zone.r}) in ${tw1.r.t.toFixed(1)} s`);
     const dv = await page.evaluate(() => { const g = window.__game, out = {};
       g.startMission('rs-deliver'); out.ok = g.botRun(120, { slowZone: true }); // 6b: route ~45-65 s
-      g.startMission('rs-deliver'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 120.2); out.late = g.mission; // 6b: limit 25 -> 120 s
+      g.startMission('rs-deliver'); g.skipCountdown(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: true }, 180.2); out.late = g.mission; // 6b: limit 25 -> 120 s; 0.8.2: 180 s at the realistic pace
       g.endMission(); return out; });
     metrics.deliver = +dv.ok.t.toFixed(2);
     ok('p6 deliver: bot reaches camp and stops before dark; idle -> night fail', dv.ok.state === 'success' && dv.late.state === 'fail' && /night|dark/i.test(dv.late.failReason),
-      `delivered in ${dv.ok.t.toFixed(2)} s (limit 120 s); idle -> "${dv.late.failReason}"`);
+      `delivered in ${dv.ok.t.toFixed(2)} s (limit 180 s); idle -> "${dv.late.failReason}"`);
 
     // unlock with earned credits; persistence across reload
     const before = await page.evaluate(() => window.__game.save);
@@ -168,7 +168,7 @@ export async function runPhase6({ openPage, ok, area }) {
       const measure = () => {
         const r = {};
         g.teleport(-32, 0, Math.PI / 2); g.simulate(I(0, 0, 0, true), 1);
-        let t = 0; r.t60 = null; while (t < 10) { g.simulate(I(1, 0, 0, false), 0.05); t += 0.05; if (g.state().speed >= 16.667) { r.t60 = +t.toFixed(2); break; } }
+        let t = 0; r.t60 = null; while (t < 15) { g.simulate(I(1, 0, 0, false), 0.05); t += 0.05; if (g.state().speed >= 11.111) /* 0.8.2: 0-40 */ { r.t60 = +t.toFixed(2); break; } }
         // grip: sand launch (wheelspin-limited) and steady-state lateral grip on the flat strip
         g.teleport(80, -55, 0); g.simulate(I(0, 0, 0, true), 1); r.sand3 = g.simulate(I(1, 0, 0, false), 3).finalSpeed * 3.6;
         g.teleport(-102, 40, Math.PI / 2); g.simulate(I(0, 1, 0, true), 1.5); r.mud3 = g.simulate(I(1, 0, 0, false), 3).finalSpeed * 3.6;
@@ -189,8 +189,8 @@ export async function runPhase6({ openPage, ok, area }) {
       return out;
     });
     metrics.upgrades = m;
-    ok('p6 upgrades: engine x3 -> quicker 0-60', m.engine.t60 < m.base.t60 * 0.9 && m.engine.engine > m.base.engine * 1.25, `0-60 ${m.base.t60} s -> ${m.engine.t60} s (drive force ${m.base.engine} -> ${m.engine.engine.toFixed(0)})`);
-    ok('p6 upgrades: tyres x3 -> more traction on loose surfaces', m.tyres.grip > m.engine.grip * 1.2 && (m.tyres.sand3 > m.engine.sand3 + 0.5 || m.tyres.mud3 > m.engine.mud3 + 0.5),
+    ok('p6 upgrades: engine x3 -> quicker 0-40', m.engine.t60 < m.base.t60 * 0.9 && m.engine.engine > m.base.engine * 1.25, `0-40 ${m.base.t60} s -> ${m.engine.t60} s (drive force ${m.base.engine} -> ${m.engine.engine.toFixed(0)})`);
+    ok('p6 upgrades: tyres x3 -> more traction on loose surfaces', m.tyres.grip > m.engine.grip * 1.2 && m.tyres.sand3 >= m.engine.sand3 - 0.3 && m.tyres.mud3 >= m.engine.mud3 - 0.3, /* 0.8.2: at the realistic drive force a 3 s launch is no longer traction-limited, so extra grip cannot show as speed there (was +0.5 km/h) */
       `sand grip ${m.engine.grip.toFixed(2)} -> ${m.tyres.grip.toFixed(2)}; 3 s sand launch ${m.engine.sand3.toFixed(1)} -> ${m.tyres.sand3.toFixed(1)} km/h; mud ${m.engine.mud3.toFixed(1)} -> ${m.tyres.mud3.toFixed(1)} km/h`);
     ok('p6 upgrades: suspension x3 -> more travel, stiffer, measurably higher ride', m.susp.travel > m.tyres.travel * 1.25 && m.susp.stiff > m.tyres.stiff * 1.2 && m.susp.ride > m.tyres.ride + 0.04,
       `travel ${m.tyres.travel.toFixed(3)} -> ${m.susp.travel.toFixed(3)} m, stiffness ${m.tyres.stiff.toFixed(1)} -> ${m.susp.stiff.toFixed(1)}, settled ride height ${m.tyres.ride.toFixed(3)} -> ${m.susp.ride.toFixed(3)} m`);

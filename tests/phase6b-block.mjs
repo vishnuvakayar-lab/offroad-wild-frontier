@@ -26,7 +26,7 @@ export async function runPhase6b({ openPage, ok }) {
   const fac = defs.ms.filter((m) => defs.bot[m.id]).every((m) => Math.abs(m.targets.gold - defs.bot[m.id] * defs.f.gold) <= 0.26 && Math.abs(m.targets.bronze - defs.bot[m.id] * defs.f.bronze) <= 0.26 && (!m.limit || m.limit >= m.targets.bronze));
   ok('p6b targets: gold/silver/bronze = bot x1.2/1.5/2 (0.5 s), limits >= bronze', fac, `factors ${JSON.stringify(defs.f)}`);
   const B = metrics.bots, hm = (id) => B[id].human.reduce((a, b) => a + b, 0) / B[id].human.length;
-  ok('p6b lengths: Ridge Climb 40-90 s and Supply Run 60-120 s for a human-like driver; races >= 40 s', hm('ch-climb') >= 40 && hm('ch-climb') <= 90 && hm('rs-deliver') >= 60 && hm('rs-deliver') <= 120 && hm('race-loop') >= 40 && hm('race-dash') >= 40,
+  ok('p6b lengths: Ridge Climb 40-90 s and Supply Run 60-170 s (0.8.2 pace) for a human-like driver; races >= 40 s', hm('ch-climb') >= 40 && hm('ch-climb') <= 90 && hm('rs-deliver') >= 60 && hm('rs-deliver') <= 170 && hm('race-loop') >= 40 && hm('race-dash') >= 40,
     `human mean: climb ${hm('ch-climb').toFixed(1)} s, supply ${hm('rs-deliver').toFixed(1)} s, loop ${hm('race-loop').toFixed(1)} s, dash ${hm('race-dash').toFixed(1)} s`);
 
   // ---------- B: ridge trail geometry ----------

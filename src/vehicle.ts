@@ -604,7 +604,7 @@ export class Vehicle {
     // simple automatic gearbox -> engine RPM for audio/HUD
     this.throttle = Math.max(inp.throttle, engine < 0 ? inp.brake : 0);
     const kmh = Math.abs(speed) * 3.6;
-    const gk = (top * 3.6) / 130;
+    const gk = (normalCap(sp0.topSpeed) / low * 3.6) / 130; // gear ladder from the vehicle's NORMAL cap; 4L divides it by the 2.6 reduction (same road speed -> higher RPM)
     const GEARS = [0, 18, 36, 58, 82, 108, 140].map((g) => g * gk);
     let gI = 1; while (gI < GEARS.length - 1 && kmh > GEARS[gI]) gI++;
     this.gear = speed < -0.5 || sel === 'R' ? -1 : gI;

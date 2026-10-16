@@ -9,6 +9,8 @@ export interface VehicleSpec {
   id: string; name: string; klass: string; desc: string; defaultPaint: number;
   /** contrast roof / accent colour (default cream) */
   accent?: number;
+  /** optional hood camera eye (vehicle space y, z) when the generic rig sits too high */
+  hoodCam?: [number, number];
   /** garage category */
   cat: VehicleCat;
   mass: number; inertia?: V3; com: V3;
@@ -50,7 +52,7 @@ export const VEHICLES: VehicleSpec[] = [
   },
   {
     drive: ['2H', '4H', '4L'],
-    id: 'f110', cat: 'suv', name: 'Frontier 110', klass: 'Modern boxy expedition SUV', defaultPaint: 0x6b6a4c, accent: 0x111214,
+    id: 'f110', cat: 'suv', name: 'Frontier 110', klass: 'Modern boxy expedition SUV', defaultPaint: 0x6b6a4c, accent: 0x111214, hoodCam: [0.78, 1.85],
     desc: 'Upright 4-door expedition wagon: black roof, roof rack and long-travel suspension. Heavy and tall: roll it into corners and let the springs work.',
     mass: 2300, inertia: [5600, 6300, 1800], com: [0, -0.2, 0.05],
     chassis: { hx: 1.0, hy: 0.45, hz: 2.3, y: 0.1 }, cabin: { hx: 0.95, hy: 0.32, hz: 1.55, y: 0.95, z: -0.6 },

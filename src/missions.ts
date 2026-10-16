@@ -53,7 +53,7 @@ const deliverStart: Pose = { x: DELIVER_PTS[0][0] + 8, z: DELIVER_PTS[0][1] - 10
 /** Medal targets from the clean test bot's time on the Scout (deterministic, tests/phase6b): gold = bot x 1.2,
  *  silver = x 1.5, bronze = x 2 (rounded to 0.5 s). The human-like bot (reaction delay, input noise, slower corners)
  *  must still reach bronze; see tests/phase6b-block.mjs. */
-export const BOT_TIMES: Record<string, number> = { 'race-loop': 43.88, 'race-dash': 38.55, 'ch-mud': 15.95, 'ch-climb': 63.5, 'rs-tow': 37.3, 'rs-deliver': 65.02 }; // 0.8.1 pace (clean bot); rs-tow scaled x1.45 (bot did not finish)
+export const BOT_TIMES: Record<string, number> = { 'race-loop': 43.88, 'race-dash': 38.55, 'ch-mud': 15.95, 'ch-climb': 63.5, 'rs-tow': 30, 'rs-deliver': 75 }; // 0.8.1 pace (clean bot); 0.8.2: rs-tow clean bot 34.25 s, set to 30 so gold stays a better-than-average run; rs-deliver clean bot 89 s / human 96 s -> 75 so gold (90 s) needs a clean, quick run
 export const MEDAL_FACTORS = { gold: 1.2, silver: 1.5, bronze: 2 };
 const r05 = (x: number) => Math.round(x * 2) / 2;
 const fromBot = (id: string) => ({ gold: r05(BOT_TIMES[id] * MEDAL_FACTORS.gold), silver: r05(BOT_TIMES[id] * MEDAL_FACTORS.silver), bronze: r05(BOT_TIMES[id] * MEDAL_FACTORS.bronze) });
@@ -64,14 +64,14 @@ export const MISSIONS: MissionDef[] = [
   { id: 'race-dash', mode: 'race', type: 'race', title: 'Canyon Dash', desc: 'Point-to-point sprint across the dune field and up the canyon rim and back to base. 13 checkpoints.',
     start: startBefore(dashGates[0]), gates: dashGates, limit: null, targets: fromBot('race-dash'), reward: 320 },
   { id: 'ch-mud', mode: 'challenge', type: 'mudrun', title: 'Mud Crossing', desc: 'Cross the mud basin through both gates within the time limit. No resets allowed.',
-    start: { x: -72, z: 1, yaw: 0 }, gates: gatesFrom([[-72, 30], [-72, 78]], 14), limit: 30, noReset: true, targets: fromBot('ch-mud'), reward: 250 },
+    start: { x: -72, z: 1, yaw: 0 }, gates: gatesFrom([[-72, 30], [-72, 78]], 14), limit: 35, /* 0.8.2: >= bronze (2 x 15.95 s) */ noReset: true, targets: fromBot('ch-mud'), reward: 250 },
   { id: 'ch-climb', mode: 'challenge', type: 'climb', title: 'Ridge Climb', desc: 'Switchback trail up the rocky mountain: steep loose-rock sections and tight hairpins. Reach the summit flag; do not roll over.',
     start: { ...RIDGE_TRAIL.start }, gates: climbGates, limit: 150, zone: { x: RIDGE_TRAIL.summit.x, z: RIDGE_TRAIL.summit.z, r: 7 }, path: pathOf(TRAIL), targets: fromBot('ch-climb'), reward: 420 },
   { id: 'rs-tow', mode: 'rescue', type: 'tow', title: 'Bogged Down', desc: 'A 4x4 is stuck deep in the mud basin. Reach it, hook up the tow rope (H / Hook) and drag it well inside the safe zone.',
     start: { x: -14, z: 34, yaw: -Math.PI / 2 }, gates: [], limit: 150, zone: { x: -22, z: 48, r: 7 }, stuck: { x: -60, z: 46, yaw: Math.PI / 2 },
     targets: fromBot('rs-tow'), reward: 450 },
   { id: 'rs-deliver', mode: 'rescue', type: 'deliver', title: 'Supply Run', desc: 'Cross the map with supplies — mud basin, proving ground, eastern hills and dunes — and stop at the stranded camp before night falls.',
-    start: deliverStart, gates: deliverGates, limit: 120, zone: { x: DELIVER_CAMP.x, z: DELIVER_CAMP.z, r: 8 },
+    start: deliverStart, gates: deliverGates, limit: 180, zone: { x: DELIVER_CAMP.x, z: DELIVER_CAMP.z, r: 8 },
     path: [{ x: deliverStart.x, z: deliverStart.z }, ...DELIVER_PTS.map(([x, z]) => ({ x, z })), DELIVER_CAMP], targets: fromBot('rs-deliver'), reward: 500 },
 ];
 export const missionById = (id: string) => MISSIONS.find((m) => m.id === id);
