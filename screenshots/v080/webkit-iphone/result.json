@@ -1,10 +1,10 @@
 {
  "BR": "webkit",
  "DEV": "iphone",
- "pass": 32,
+ "pass": 34,
  "total": 34,
  "loadS": "2.5",
- "fps": 23.346303501945513,
+ "fps": 15.355086372360844,
  "prof": {
   "pro": {
    "t0_50": 1.7,
@@ -35,55 +35,55 @@
   {
    "m": "pro",
    "stAbove": 3.69,
-   "drAbove": 4.32,
-   "dist": 12.2
+   "drAbove": 4.89,
+   "dist": 12.3
   },
   {
    "m": "far",
    "stAbove": 4.9,
-   "drAbove": 5.4,
-   "dist": 16.7
+   "drAbove": 5.79,
+   "dist": 14.2
   },
   {
    "m": "cockpit",
    "stAbove": 1.87,
-   "drAbove": 1.88,
+   "drAbove": 1.86,
    "dist": 1
   },
   {
    "m": "hood",
    "stAbove": 2.22,
-   "drAbove": 2.24,
+   "drAbove": 2.45,
    "dist": 1.6
   },
   {
    "m": "bumper",
    "stAbove": 1.02,
-   "drAbove": 1.09,
+   "drAbove": 1.26,
    "dist": 2.5
   },
   {
    "m": "cinematic",
-   "stAbove": 2.04,
-   "drAbove": 1.66,
-   "dist": 34.5
+   "stAbove": 1.24,
+   "drAbove": 2.63,
+   "dist": 19
   },
   {
    "m": "wheel",
    "stAbove": 0.76,
-   "drAbove": 0.88,
+   "drAbove": 0.79,
    "dist": 1.5
   },
   {
    "m": "mirror",
    "stAbove": 2.01,
-   "drAbove": 2.15,
+   "drAbove": 2.07,
    "dist": 1.7
   },
   {
    "m": "orbit",
-   "stAbove": 4.6,
-   "drAbove": 4.59,
+   "stAbove": 4.57,
+   "drAbove": 5.27,
    "dist": 8.4
   }
  ],
@@ -116,52 +116,52 @@
   {
    "n": "camera pro: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 3.69 / 4.32 m, dist 12.2 m"
+   "d": "above 3.69 / 4.89 m, dist 12.3 m"
   },
   {
    "n": "camera far: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.90 / 5.40 m, dist 16.7 m"
+   "d": "above 4.90 / 5.79 m, dist 14.2 m"
   },
   {
    "n": "camera cockpit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.87 / 1.88 m, dist 1.0 m"
+   "d": "above 1.87 / 1.86 m, dist 1.0 m"
   },
   {
    "n": "camera hood: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.22 / 2.24 m, dist 1.6 m"
+   "d": "above 2.22 / 2.45 m, dist 1.6 m"
   },
   {
    "n": "camera bumper: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.02 / 1.09 m, dist 2.5 m"
+   "d": "above 1.02 / 1.26 m, dist 2.5 m"
   },
   {
    "n": "camera cinematic: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.04 / 1.66 m, dist 34.5 m"
+   "d": "above 1.24 / 2.63 m, dist 19.0 m"
   },
   {
    "n": "camera wheel: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 0.76 / 0.88 m, dist 1.5 m"
+   "d": "above 0.76 / 0.79 m, dist 1.5 m"
   },
   {
    "n": "camera mirror: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.01 / 2.15 m, dist 1.7 m"
+   "d": "above 2.01 / 2.07 m, dist 1.7 m"
   },
   {
    "n": "camera orbit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.60 / 4.59 m, dist 8.4 m"
+   "d": "above 4.57 / 5.27 m, dist 8.4 m"
   },
   {
    "n": "camera cycles (C key / camera button), smooth blend starts, choice stored for session",
    "p": true,
-   "d": "{\"m\":\"far\",\"blend\":0.23833333333333334,\"ses\":\"far\"}"
+   "d": "{\"m\":\"far\",\"blend\":0.38833333333333336,\"ses\":\"far\"}"
   },
   {
    "n": "look back engages",
@@ -211,7 +211,7 @@
   {
    "n": "last active device wins, inputs not summed (keyboard D overrides pad left stick)",
    "p": true,
-   "d": "{\"dev\":\"keys\",\"i\":{\"throttle\":0,\"brake\":0,\"steer\":-0.9918333333333333,\"handbrake\":false}}"
+   "d": "{\"dev\":\"keys\",\"i\":{\"throttle\":0,\"brake\":0,\"steer\":-1,\"handbrake\":false}}"
   },
   {
    "n": "gamepad Y cycles camera",
@@ -234,14 +234,14 @@
    "d": "default KeyW/ArrowUp"
   },
   {
-   "n": "touch GAS hold -> throttle; touchcancel releases; blur releases",
-   "p": false,
-   "d": "hold 0.5953333333333333, after cancel 0, after blur 0"
+   "n": "touch GAS hold -> throttle (progressive ramp); touchcancel releases; blur releases",
+   "p": true,
+   "d": "hold 0.7533333333333333, after cancel 0, after blur 0"
   },
   {
    "n": "mobile HUD: every control on-screen, no horizontal scroll",
-   "p": false,
-   "d": "{\"n\":11,\"bad\":[\"btn-mute\",\"btn-pause\"],\"sw\":428,\"w\":428}"
+   "p": true,
+   "d": "{\"n\":11,\"bad\":[],\"sw\":428,\"w\":428}"
   },
   {
    "n": "window blur pauses (single player)",

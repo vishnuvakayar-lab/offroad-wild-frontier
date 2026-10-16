@@ -18,7 +18,7 @@ export interface SaveData {
 
 /** Unlock rules: level requirement + credit price (Scout is free). */
 export const VEHICLE_UNLOCK: Record<string, { level: number; price: number }> = {
-  scout: { level: 1, price: 0 }, pickup: { level: 2, price: 1200 }, voyager: { level: 2, price: 1600 },
+  scout: { level: 1, price: 0 }, f110: { level: 1, price: 0 }, pickup: { level: 2, price: 1200 }, voyager: { level: 2, price: 1600 },
   recovery: { level: 3, price: 2000 }, rally: { level: 3, price: 2400 }, sahara: { level: 4, price: 3000 },
   van: { level: 2, price: 1500 }, ltv: { level: 2, price: 1800 }, patrol: { level: 3, price: 2600 }, cargo6: { level: 4, price: 3200 }, mrap: { level: 5, price: 4000 },
 };

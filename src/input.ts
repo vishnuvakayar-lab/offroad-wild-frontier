@@ -75,6 +75,7 @@ export class Input {
   private onOrient = (e: DeviceOrientationEvent) => {
     if (e.beta === null || e.gamma === null) return;
     if (this.tiltEvents++ === 0) this.onTiltData();
+    if (this.scheme === 'tilt' && this.lastDevice !== 'touch' && this.tiltRaw !== null && Math.abs(this.tiltValue) > 0.15) this.lastDevice = 'touch';
     if (this.tiltState === 'no-data' || this.tiltState === 'pending') this.tiltState = 'granted';
     const ang = (screen.orientation?.angle ?? (window as any).orientation ?? 0) as number;
     // positive = steer left. Portrait: tilt left (left edge down) => gamma < 0. Landscape: roll is beta, sign by orientation.
@@ -255,7 +256,9 @@ export class Input {
     if (this.pollPad()) for (const [b, a] of [[PAD.Y, 'camera'], [PAD.X, 'reset'], [PAD.BACK, 'camreset'], [PAD.START, 'pause']] as const) if (this.padPressed(b)) this.onPadAction(a);
     const zv = [...this.zones.values()], zl = zv.includes('L'), zr = zv.includes('R');
     const na = this.split; // in split-screen the arrow keys belong to player 2
-    const dev = this.lastDevice;
+    // keyboard only "owns" the car while a driving key is held; otherwise touch / tilt schemes (auto-throttle, halves) keep working
+    const keyHeld = (['up', 'down', 'left', 'right', 'hand'] as Action[]).some((a) => this.held(a, na));
+    const dev = this.lastDevice === 'keys' && !keyHeld && this.touchActive ? 'touch' : this.lastDevice;
     let thr = 0, brk = 0, left = false, right = false, analog: number | null = null, hand = false;
     // self-centring wheel when released (also when the wheel UI is hidden)
     Input.recentre(this, dt, (d) => this.onWheel(d));

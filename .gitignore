@@ -4,3 +4,5 @@ test-results
 *.log
 dist-server/
 tests/_*.mjs
+release/
+docs-ref-*.png

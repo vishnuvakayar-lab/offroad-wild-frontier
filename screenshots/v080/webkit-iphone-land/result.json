@@ -1,10 +1,10 @@
 {
  "BR": "webkit",
  "DEV": "iphone-land",
- "pass": 33,
+ "pass": 34,
  "total": 34,
- "loadS": "2.0",
- "fps": 20,
+ "loadS": "2.6",
+ "fps": 11.83431952662722,
  "prof": {
   "pro": {
    "t0_50": 1.7,
@@ -35,55 +35,55 @@
   {
    "m": "pro",
    "stAbove": 3.69,
-   "drAbove": 4.31,
-   "dist": 12.4
+   "drAbove": 3.86,
+   "dist": 8.4
   },
   {
    "m": "far",
    "stAbove": 4.9,
-   "drAbove": 5.52,
-   "dist": 16.6
+   "drAbove": 5.33,
+   "dist": 12.4
   },
   {
    "m": "cockpit",
    "stAbove": 1.87,
-   "drAbove": 1.9,
+   "drAbove": 1.85,
    "dist": 1
   },
   {
    "m": "hood",
    "stAbove": 2.22,
-   "drAbove": 2.24,
+   "drAbove": 2.23,
    "dist": 1.6
   },
   {
    "m": "bumper",
    "stAbove": 1.02,
-   "drAbove": 0.99,
+   "drAbove": 1.13,
    "dist": 2.5
   },
   {
    "m": "cinematic",
-   "stAbove": 1.39,
-   "drAbove": 2.75,
-   "dist": 22
+   "stAbove": 2.4,
+   "drAbove": 1.86,
+   "dist": 18.7
   },
   {
    "m": "wheel",
    "stAbove": 0.76,
-   "drAbove": 0.86,
+   "drAbove": 0.79,
    "dist": 1.5
   },
   {
    "m": "mirror",
    "stAbove": 2.01,
-   "drAbove": 2.12,
+   "drAbove": 2.05,
    "dist": 1.7
   },
   {
    "m": "orbit",
-   "stAbove": 4.6,
-   "drAbove": 4.82,
+   "stAbove": 4.57,
+   "drAbove": 4.79,
    "dist": 8.4
   }
  ],
@@ -91,7 +91,7 @@
   {
    "n": "boots to menu, Build 0.8.0",
    "p": true,
-   "d": "load 2.0 s"
+   "d": "load 2.6 s"
   },
   {
    "n": "menu: no page scroll",
@@ -116,52 +116,52 @@
   {
    "n": "camera pro: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 3.69 / 4.31 m, dist 12.4 m"
+   "d": "above 3.69 / 3.86 m, dist 8.4 m"
   },
   {
    "n": "camera far: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.90 / 5.52 m, dist 16.6 m"
+   "d": "above 4.90 / 5.33 m, dist 12.4 m"
   },
   {
    "n": "camera cockpit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.87 / 1.90 m, dist 1.0 m"
+   "d": "above 1.87 / 1.85 m, dist 1.0 m"
   },
   {
    "n": "camera hood: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.22 / 2.24 m, dist 1.6 m"
+   "d": "above 2.22 / 2.23 m, dist 1.6 m"
   },
   {
    "n": "camera bumper: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.02 / 0.99 m, dist 2.5 m"
+   "d": "above 1.02 / 1.13 m, dist 2.5 m"
   },
   {
    "n": "camera cinematic: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 1.39 / 2.75 m, dist 22.0 m"
+   "d": "above 2.40 / 1.86 m, dist 18.7 m"
   },
   {
    "n": "camera wheel: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 0.76 / 0.86 m, dist 1.5 m"
+   "d": "above 0.76 / 0.79 m, dist 1.5 m"
   },
   {
    "n": "camera mirror: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 2.01 / 2.12 m, dist 1.7 m"
+   "d": "above 2.01 / 2.05 m, dist 1.7 m"
   },
   {
    "n": "camera orbit: active, above terrain stationary + driving",
    "p": true,
-   "d": "above 4.60 / 4.82 m, dist 8.4 m"
+   "d": "above 4.57 / 4.79 m, dist 8.4 m"
   },
   {
    "n": "camera cycles (C key / camera button), smooth blend starts, choice stored for session",
    "p": true,
-   "d": "{\"m\":\"far\",\"blend\":0.265,\"ses\":\"far\"}"
+   "d": "{\"m\":\"far\",\"blend\":0.4133333333333334,\"ses\":\"far\"}"
   },
   {
    "n": "look back engages",
@@ -191,7 +191,7 @@
   {
    "n": "drive forward, brake to stop, reverse on held brake",
    "p": true,
-   "d": "fwd 65 km/h, after brake 0.7, reverse -31.4 km/h"
+   "d": "fwd 65 km/h, after brake 0.7, reverse -31.5 km/h"
   },
   {
    "n": "4L rejected above 8 km/h with message, accepted when stopped",
@@ -234,9 +234,9 @@
    "d": "default KeyW/ArrowUp"
   },
   {
-   "n": "touch GAS hold -> throttle; touchcancel releases; blur releases",
-   "p": false,
-   "d": "hold 0.5513333333333333, after cancel 0, after blur 0"
+   "n": "touch GAS hold -> throttle (progressive ramp); touchcancel releases; blur releases",
+   "p": true,
+   "d": "hold 0.7993333333333333, after cancel 0, after blur 0"
   },
   {
    "n": "mobile HUD: every control on-screen, no horizontal scroll",

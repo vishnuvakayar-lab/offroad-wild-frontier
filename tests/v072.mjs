@@ -18,7 +18,7 @@ const errors = [];
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   await boot(page);
-  ok('build label 0.7.3', /Build 0\.7\.3/.test(await page.textContent('body')));
+  ok('build label 0.8.0', /Build 0\.8\.0/.test(await page.textContent('body')));
   // vehicles in garage
   const ids = await page.evaluate(() => window.__game.vehicles);
   ok('vehicle list has van, ltv, patrol, cargo6, mrap + the 6 originals', ['scout','voyager','sahara','pickup','rally','recovery','van','ltv','patrol','cargo6','mrap'].every((i) => ids.includes(i)), ids.join(','));

@@ -46,6 +46,58 @@ function slatGrille(k: Kit, w: number, h: number, y: number, z: number, n: numbe
   for (let i = 0; i < n; i++) k.add(k.box(w * 0.98, (h / n) * 0.42, 0.04, 0.01), slat, 0, y - h / 2 + (h / n) * (i + 0.5), z + 0.035, 0, 0, 0, i % 2 && n > 4 ? 1 : 0);
 }
 
+// ---------------------------------------------------------------- Frontier 110 (0.8.0)
+// Original boxy expedition SUV: square upright body, short front overhang, flat bonnet, round LED-ring lamps with a DRL
+// halo, horizontal-slat grille (no lettering/logo), black contrast roof with alpine windows, side-hinged rear door with a
+// plain-cover spare, tall corner tail lamps, black arches/cladding/bumpers, roof rack, 5-spoke dark alloys. No badges or text.
+export function buildFrontier110(k: Kit, s: VehicleSpec) {
+  const { paint, dark, steel, glass, lamp, tail, amber, accent } = k.m;
+  const yc = -0.6, W = 2.0, Wu = 1.9, F = 2.3, R = -2.32;
+  // lower body (flat bonnet line) + greenhouse with near-vertical windscreen
+  k.add(k.profile([[R, -0.3], [R - 0.02, 0.62], [0.95, 0.66], [F - 0.05, 0.62], [F, 0.5], [F, -0.26]], -0.3, arch(s, yc, 0.11), W, 0.07), paint);
+  k.add(k.profile([[R + 0.02, 0.62], [R + 0.02, 1.22], [0.62, 1.24], [0.95, 0.66]], 0.62, [], Wu, 0.05), paint);
+  // black contrast roof slab + alpine windows
+  k.add(k.box(Wu + 0.02, 0.07, 3.0, 0.03), accent, 0, 1.28, -0.85);
+  const xs = Wu / 2 + 0.004, xl = W / 2 + 0.003;
+  k.span([0.93, 0.7], [0.66, 1.2], 1.72, glass);
+  k.sidePoly([[0.1, 0.72], [0.86, 0.72], [0.64, 1.18], [0.1, 1.18]], xs, glass);
+  k.sidePoly([[-0.98, 0.72], [-0.04, 0.72], [-0.04, 1.18], [-0.98, 1.18]], xs, glass);
+  k.sidePoly([[-2.18, 0.72], [-1.12, 0.72], [-1.12, 1.18], [-2.18, 1.18]], xs, glass);
+  k.sidePoly([[-1.9, 1.2], [-1.0, 1.2], [-1.0, 1.25], [-1.9, 1.25]], xs, glass, 1); // alpine strip
+  for (const sx of [1, -1]) for (const z of [-1.2, -1.75]) k.add(k.box(0.5, 0.012, 0.36), glass, sx * 0.55, 1.323, z, 0, 0, 0, 1); // roof alpine lights
+  k.sym(() => k.box(0.03, 0.62, 0.06), accent, xs + 0.002, 0.95, 0.03); k.sym(() => k.box(0.03, 0.62, 0.06), accent, xs + 0.002, 0.95, -1.06); // black pillars
+  k.sym(() => k.box(0.04, 0.5, 0.95), accent, xs + 0.003, 0.95, -1.65); // signature solid side panel ahead of the tail
+  for (const z of [0.95, 0.04, -1.04]) k.line([z, -0.28], [z, 0.62], xl);
+  // flat bonnet, wing vents (plain), black cladding + sills
+  k.add(k.box(1.86, 0.03, 1.32, 0.02), paint, 0, 0.665, 1.6);
+  k.sym(() => k.box(0.03, 0.08, 0.32), dark, xl + 0.005, 0.42, 1.5, 0, 0, 0, 1);
+  k.sym(() => k.box(0.06, 0.2, 3.2), dark, xl + 0.02, -0.2, -0.05);
+  k.flare(s.wheel.zf, yc, s.wheel.r + 0.12, W / 2 + 0.06, 0.15, 0.13);
+  k.flare(s.wheel.zr, yc, s.wheel.r + 0.12, W / 2 + 0.06, 0.15, 0.13);
+  // front: horizontal-slat grille (NO lettering / logo), round LED lamps + DRL halo, black bumper with skid plate
+  slatGrille(k, 1.0, 0.24, 0.42, F + 0.005, 4, dark, steel);
+  for (const sx of [1, -1]) {
+    k.add(k.cylZ(0.13, 0.05, 24), dark, sx * 0.72, 0.42, F + 0.01);
+    k.add(new THREE.TorusGeometry(0.105, 0.018, 6, k.lod ? 28 : 12), lamp, sx * 0.72, 0.42, F + 0.04); // DRL halo ring
+    k.add(k.cylZ(0.065, 0.06, 18), lamp, sx * 0.72, 0.42, F + 0.03);
+    k.add(k.box(0.12, 0.03, 0.02), amber, sx * 0.72, 0.26, F + 0.03, 0, 0, 0, 1);
+  }
+  k.add(k.box(W + 0.04, 0.32, 0.26, 0.05), dark, 0, -0.08, F + 0.06);
+  k.add(k.box(0.9, 0.06, 0.2), steel, 0, -0.26, F + 0.1, 0, 0, 0, 1);
+  towHooks(k, 0.6, -0.12, F + 0.2);
+  // rear: side-hinged door, plain-cover spare offset left, tall vertical corner tail lamps, black bumper
+  k.line([R - 0.025, -0.28], [R - 0.025, 1.18], 0.36);
+  k.add(new THREE.PlaneGeometry(1.1, 0.42), glass, -0.12, 0.93, R - 0.025, 0, Math.PI, 0);
+  const sr = 0.4; const t = k.tyre(sr, 0.26); t.rotateY(Math.PI / 2); k.add(t, k.m.rubber, -0.18, 0.32, R - 0.16);
+  k.add(k.cylZ(sr * 0.98, 0.28, 24), dark, -0.18, 0.32, R - 0.17); // plain cover, no text
+  for (const sx of [1, -1]) { k.add(k.box(0.13, 0.5, 0.04, 0.02), dark, sx * 0.86, 0.68, R - 0.02); k.add(k.box(0.09, 0.44, 0.03, 0.01), tail, sx * 0.86, 0.68, R - 0.035); }
+  k.add(k.box(W + 0.04, 0.28, 0.22, 0.05), dark, 0, -0.16, R - 0.06);
+  // roof rack, mirrors, underbody
+  rack(k, 1.62, 1.36, -2.0, 0.35, 7);
+  k.mirrors(xs, 0.82, 0.8);
+  underbody(k, s, -0.4, -2.1, 2.1);
+}
+
 // ---------------------------------------------------------------- Frontier Scout
 // Design cues of the classic short-wheelbase utility 4x4: upright slab-sided body, flat clamshell bonnet and
 // flat wing tops, near-vertical windscreen, contrast roof with small alpine windows, round headlamps in a
@@ -613,7 +665,7 @@ export function buildMrap(k: Kit, s: VehicleSpec) {
 }
 
 export const BUILDERS: Record<string, (k: Kit, s: VehicleSpec) => void> = {
-  scout: buildScout, voyager: buildVoyager, sahara: buildSahara, pickup: buildPickup, rally: buildRally, recovery: buildRecovery,
+  scout: buildScout, f110: buildFrontier110, voyager: buildVoyager, sahara: buildSahara, pickup: buildPickup, rally: buildRally, recovery: buildRecovery,
   van: buildVan, ltv: buildLtv, patrol: buildPatrol, cargo6: buildCargo6, mrap: buildMrap,
 };
 export type { P2 };

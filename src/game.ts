@@ -200,7 +200,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     car.beam.intensity = w.headlights ? (night ? 320 : 160) : 0;
     const beamShadow = w.headlights && cfg.beamShadow && cfg.shadows && (night || id === 'fog');
     if (car.beam.castShadow !== beamShadow) { car.beam.castShadow = beamShadow; car.beam.shadow.map?.dispose(); (car.beam.shadow as any).map = null; }
-    car.lampMat.emissiveIntensity = w.headlights ? 5 : 1.5;
+    car.lampMat.emissiveIntensity = w.headlights ? 5 : 1.5; car.lightsOn = !!w.headlights;
     scene.traverse((o) => { const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.needsUpdate = true; });
     $('btn-weather').textContent = w.icon;
     document.querySelectorAll('#seg-weather button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.v === id));
@@ -907,7 +907,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       eyeW.copy(e); car.bodyVis.localToWorld(eyeW); aheadW.copy(a); car.bodyVis.localToWorld(aheadW);
       const gy = heightAt(eyeW.x, eyeW.z) + 0.25; if (eyeW.y < gy) eyeW.y = gy; // never below the terrain
       camera.position.copy(eyeW); camera.up.set(0, 1, 0).applyQuaternion(car.group.quaternion); camera.lookAt(aheadW); camera.up.set(0, 1, 0);
-      camera.fov = camMode === 'cockpit' ? baseFov + 8 : camMode === 'mirror' ? baseFov - 12 : camMode === 'wheel' ? baseFov + 4 : baseFov + 6;
+      camera.fov = (camMode === 'cockpit' ? baseFov + 8 : camMode === 'mirror' ? baseFov - 12 : camMode === 'wheel' ? baseFov + 4 : baseFov + 6) + (camMode === 'mirror' ? 0 : Math.min(8, Math.abs(car.forwardSpeed()) * 0.3)); // mild speed widening
       // acceleration / braking / landing / impact feedback (scaled by the shake setting)
       const k = shakeK(), jolt = Math.min(1, car.landJolt / 6 + shakeKick);
       camera.rotateX(THREE.MathUtils.clamp(car.accLocal.y * 0.0025, -0.04, 0.04) * k);

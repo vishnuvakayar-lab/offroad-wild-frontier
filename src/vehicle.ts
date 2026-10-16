@@ -59,6 +59,7 @@ export class Vehicle {
   beam!: THREE.SpotLight;
   paint!: THREE.MeshStandardMaterial;
   lampMat!: THREE.MeshStandardMaterial;
+  rearGlow!: THREE.PointLight; lightsOn = false;
   /** per-wheel telemetry for particles/audio */
   slip = [0, 0, 0, 0];
   contact: (THREE.Vector3 | null)[] = [null, null, null, null];
@@ -230,7 +231,7 @@ export class Vehicle {
       lamp: this.lampMat = std('lamp', { color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 2.0, roughness: 0.2 }),
       tail: std('tail', { color: 0x700000, emissive: 0xff1a1a, emissiveIntensity: 1.2, roughness: 0.25 }),
       amber: std('amber', { color: 0x7a4a00, emissive: 0xffa000, emissiveIntensity: 1.5, roughness: 0.25 }),
-      accent: std('accent', { color: 0xece8de, roughness: 0.5, metalness: 0.1 }),
+      accent: std('accent', { color: spec.accent ?? 0xece8de, roughness: 0.5, metalness: 0.1 }),
       rubber: std('rubber', { color: 0x161616, roughness: 0.92, metalness: 0 }, 0.15),
       alloy: std('alloy', { color: spec.rim.color, roughness: spec.rim.rough, metalness: spec.rim.metal }, 1.1),
       caliper: std('caliper', { color: spec.spring, roughness: 0.4, metalness: 0.3 }),
@@ -313,6 +314,8 @@ export class Vehicle {
       g.add(s, s.target);
       this.headlights.push(s);
     }
+    // rear red glow: tail lamps light the ground behind at night (and brighten under braking)
+    this.rearGlow = new THREE.PointLight(0xff2010, 0, 9, 2); this.rearGlow.position.set(0, L.y, -spec.chassis.hz - 0.3); g.add(this.rearGlow);
     this.beam = new THREE.SpotLight(0xfff1d0, 0, 70, 0.42, 0.6, 1.0);
     this.beam.position.set(0, L.y + 0.25, L.z);
     this.beam.target.position.set(0, -1, L.z + 14);
@@ -630,7 +633,8 @@ export class Vehicle {
     this.group.position.set(t.x, t.y, t.z);
     this.group.quaternion.set(r.x, r.y, r.z, r.w);
     this.bodyVis.rotation.set(this.lean.pitch, 0, this.lean.roll);
-    if (this.tailMat) this.tailMat.emissiveIntensity = this.braking ? 5 : 1.2; // brake lights
+    if (this.tailMat) this.tailMat.emissiveIntensity = this.braking ? 5 : this.lightsOn ? 2.6 : 1.2; // brake / tail lights
+    if (this.rearGlow) this.rearGlow.intensity = this.lightsOn ? (this.braking ? 6 : 2.2) : this.braking ? 1.5 : 0;
     for (let i = 0; i < 4; i++) {
       const c = this.conn[i];
       const len = this.ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest;

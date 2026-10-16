@@ -7,6 +7,8 @@ export type VehicleCat = 'suv' | 'pickup' | 'recovery' | 'rally' | 'van' | 'mili
 export const CATEGORIES: { id: VehicleCat; label: string }[] = [{ id: 'suv', label: 'SUVs' }, { id: 'pickup', label: 'Pickups' }, { id: 'rally', label: 'Rally' }, { id: 'recovery', label: 'Recovery' }, { id: 'van', label: 'Vans' }, { id: 'military', label: 'Military' }];
 export interface VehicleSpec {
   id: string; name: string; klass: string; desc: string; defaultPaint: number;
+  /** contrast roof / accent colour (default cream) */
+  accent?: number;
   /** garage category */
   cat: VehicleCat;
   mass: number; inertia?: V3; com: V3;
@@ -45,6 +47,18 @@ export const VEHICLES: VehicleSpec[] = [
     engine: 4600, topSpeed: 36, reverse: 9, grip: { ground: 1, sand: 1, mud: 1 }, side: 1, drag: { sand: 1, mud: 1 },
     steerLow: 0.6, steerHigh: 0.26, assist: 3, lamp: { x: 0.7, y: 0.35, z: 2.3 },
     rim: { style: 'steel', color: 0xd9d9d4, metal: 0.3, rough: 0.5 }, axle: 'solid', spring: 0xc8a400, build: BUILDERS.scout,
+  },
+  {
+    drive: ['2H', '4H', '4L'],
+    id: 'f110', cat: 'suv', name: 'Frontier 110', klass: 'Modern boxy expedition SUV', defaultPaint: 0x6b6a4c, accent: 0x111214,
+    desc: 'Upright 4-door expedition wagon: black roof, roof rack and long-travel suspension. Heavy and tall: roll it into corners and let the springs work.',
+    mass: 2300, inertia: [5600, 6300, 1800], com: [0, -0.2, 0.05],
+    chassis: { hx: 1.0, hy: 0.45, hz: 2.3, y: 0.1 }, cabin: { hx: 0.95, hy: 0.32, hz: 1.55, y: 0.95, z: -0.6 },
+    wheel: { x: 1.0, y: -0.3, zf: 1.5, zr: -1.52, r: 0.45, w: 0.32 },
+    susp: { rest: 0.44, travel: 0.4, stiffness: 24, compression: 2.3, relaxation: 2.9 },
+    engine: 5400, topSpeed: 42, reverse: 9, grip: { ground: 0.95, sand: 1.05, mud: 1.05 }, side: 0.95, drag: { sand: 0.95, mud: 0.95 },
+    steerLow: 0.56, steerHigh: 0.24, assist: 2.6, lamp: { x: 0.72, y: 0.42, z: 2.32 },
+    rim: { style: 'rally', color: 0x2a2b2d, metal: 0.6, rough: 0.35 }, axle: 'independent', spring: 0x2a2a2a, build: BUILDERS.f110,
   },
   {
     drive: ['2H', '4H', '4L'],
@@ -173,6 +187,7 @@ export const PAINTS: { name: string; hex: number }[] = [
   { name: 'Desert Tan', hex: 0xb8823a }, { name: 'Expedition Green', hex: 0x4f5d3a }, { name: 'Glacier White', hex: 0xe6e6e0 },
   { name: 'Rescue Red', hex: 0xb3261e }, { name: 'Ocean Blue', hex: 0x2c5d8f }, { name: 'Graphite', hex: 0x3a3d42 },
   { name: 'Sunburst Orange', hex: 0xe07a1f }, { name: 'Sand Beige', hex: 0xd8c49a },
+  { name: 'Satin Olive Khaki', hex: 0x6b6a4c }, { name: 'Expedition Silver', hex: 0xb4b8bc }, { name: 'Basalt Grey', hex: 0x55595e }, { name: 'Night Black', hex: 0x18191b }, { name: 'Fuji White', hex: 0xeeeeea },
 ];
 
 /** 0..1 stat-bar values derived from the actual physics tuning. */
