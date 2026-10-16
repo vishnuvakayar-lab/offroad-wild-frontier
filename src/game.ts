@@ -810,7 +810,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     $('prof-chip').textContent = PROFILES[id].label;
     document.querySelectorAll<HTMLElement>('#prof-pop [data-prof]').forEach((x) => x.classList.toggle('on', x.dataset.prof === id));
     // each drive mode brings its default camera shake unless the player picked one in Settings
-    if (!quiet && !settings.shakeUser) { settings.shakeLevel = PROFILES[id].shake; settings.shake = settings.shakeLevel !== 'off'; saveSettings(settings); refreshUI(); }
+    if (!settings.shakeUser && settings.shakeLevel !== PROFILES[id].shake) { settings.shakeLevel = PROFILES[id].shake; settings.shake = settings.shakeLevel !== 'off'; saveSettings(settings); refreshUI(); }
     if (!quiet) toast(`🚙 ${PROFILES[id].label}: ${PROFILES[id].desc}`);
   }
   $('prof-pop').innerHTML = PROFILE_ORDER.map((id) => `<button data-prof="${id}">${PROFILES[id].label}</button>`).join('');
@@ -830,7 +830,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   let camMode: CamMode = (CAM_MODES as string[]).includes(sessionStorage.getItem(CAM_KEY) ?? '') ? sessionStorage.getItem(CAM_KEY) as CamMode : 'pro';
   let orbitYaw = 0, orbitPitch = 0.35, orbitIdle = 0, lookBack = false, lookBackK = 0;
   const blendFrom = { pos: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 62, t: 1 };
-  const cine = { pos: new THREE.Vector3(), set: false, t: 0, side: false, sideSign: 1 };
+  const cine = { pos: new THREE.Vector3(), set: false, t: 0, side: false, sideSign: 1, n: 0 };
   const eyeW = new THREE.Vector3(), aheadW = new THREE.Vector3(), tmpL = new THREE.Vector3();
   const startBlend = () => { blendFrom.pos.copy(camera.position); blendFrom.q.copy(camera.quaternion); blendFrom.fov = camera.fov; blendFrom.t = 0; };
   const isChase = (m: CamMode) => m === 'pro' || m === 'far';
@@ -899,14 +899,14 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
         if (cine.t > 7) { cine.side = false; cine.set = false; cine.t = 0; startBlend(); blendFrom.t = 0.999; }
       } else {
       const dist = cine.set ? cine.pos.distanceTo(p) : 1e9, behind = cine.set && (cine.pos.x - p.x) * f.x + (cine.pos.z - p.z) * f.z < -8;
-      if (!cine.set || dist > 45 || behind || cine.t > 9) {
+      if (cine.set && (dist > 45 || behind || cine.t > 9) && ++cine.n % 2 === 1) { cine.side = true; cine.sideSign = Math.random() < 0.5 ? -1 : 1; cine.set = false; cine.t = 0; startBlend(); blendFrom.t = 0.999; } // every other shot: low side tracking
+      else if (!cine.set || dist > 45 || behind || cine.t > 9) {
         const side = Math.random() < 0.5 ? -1 : 1, ahead = 14 + Math.min(30, sp * 2.2), off = 6 + Math.random() * 5;
         cine.pos.set(p.x + f.x * ahead + f.z * off * side, 0, p.z + f.z * ahead - f.x * off * side);
         cine.pos.y = heightAt(cine.pos.x, cine.pos.z) + 1.2 + Math.random() * 1.8; cine.set = true; cine.t = 0; startBlend(); blendFrom.t = 0.999; // cut between shots (cinematic edit), no swoop
       }
       camera.position.copy(cine.pos); camera.lookAt(p.x, p.y + 0.6, p.z);
       camera.fov = THREE.MathUtils.clamp(2400 / Math.max(8, cine.pos.distanceTo(p)) / 2.2, 22, baseFov);
-      if (cine.t > 6 && !cine.side) { cine.side = true; cine.sideSign = Math.random() < 0.5 ? -1 : 1; cine.set = false; cine.t = 0; startBlend(); blendFrom.t = 0.999; }
       }
     } else {
       // internal / on-body views ride the sprung body (lean = suspension pitch/roll); look-around + look-back rotate the view
@@ -1466,7 +1466,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     split: { start: () => startSplit(), stop: () => { stopSplit(); setPhase('menu'); }, get on() { return split; }, setP2: (d: DriveInput | null) => { input.override2 = d; },
       p2: () => { if (!car2) return null; const t = car2.body.translation(); return { x: t.x, y: t.y, z: t.z, speed: car2.forwardSpeed(), steer: car2.steer, input: drive2, p1input: lastInput }; } },
     /** test-only flat pad (2 km long, 400 m up, 'ground' surface) for repeatable flat-road pace numbers */
-    testPad: () => { if (!(window as any).__pad0) { const b = world.createRigidBody(RAPIER.RigidBodyDesc.fixed()); world.createCollider(RAPIER.ColliderDesc.cuboid(20, 1, 1000).setTranslation(-400, 399, 0), b); (window as any).__pad0 = true; } return { x: -400, y: 400, z: -950 }; },
+    testPad: () => { if (!(window as any).__pad0) { const b = world.createRigidBody(RAPIER.RigidBodyDesc.fixed()); world.createCollider(RAPIER.ColliderDesc.cuboid(150, 1, 1000).setTranslation(-400, 399, 0), b); (window as any).__pad0 = true; } return { x: -400, y: 400, z: -950 }; },
     place: (x: number, y: number, z: number, yaw: number) => { car.reset(x, y, z, yaw); camInit = false; },
     speedMode: (m: 'normal' | 'low') => setSpeedMode(m, true), get capKmh() { return car.capKmh; },
     profile: (id: ProfileId) => setProfile(id, true), get profileId() { return car.profile.id; }, profileIds: PROFILE_ORDER,

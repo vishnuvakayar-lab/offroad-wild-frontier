@@ -134,7 +134,7 @@ async function fpsSample(page, ms) {
     return { v0: a.finalSpeed, v1: b.finalSpeed, d: b.distance };
   });
   const decel = (br.v0 - br.v1) / 1.5;
-  ok('brakes decelerate strongly (>= 7 m/s^2)', decel >= 7, `from ${(br.v0 * 3.6).toFixed(1)} to ${(br.v1 * 3.6).toFixed(1)} km/h in 1.5 s = ${decel.toFixed(1)} m/s^2 (${(decel / 9.81).toFixed(2)} g), ${br.d.toFixed(1)} m`);
+  ok('brakes decelerate firmly (>= 4.5 m/s^2 incl. pedal ramp; 0.8.1 realistic brakes)', decel >= 4.5, `from ${(br.v0 * 3.6).toFixed(1)} to ${(br.v1 * 3.6).toFixed(1)} km/h in 1.5 s = ${decel.toFixed(1)} m/s^2 (${(decel / 9.81).toFixed(2)} g), ${br.d.toFixed(1)} m`);
   const rev = await page.evaluate(() => { const g = window.__game; return g.simulate({ throttle: 0, brake: 1, steer: 0, handbrake: false }, 2.5).finalSpeed; });
   ok('holding brake at standstill reverses', rev < -1, `${(rev * 3.6).toFixed(1)} km/h`);
   const upright = (await st(page)).up;

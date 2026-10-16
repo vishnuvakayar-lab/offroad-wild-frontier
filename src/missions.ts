@@ -53,7 +53,7 @@ const deliverStart: Pose = { x: DELIVER_PTS[0][0] + 8, z: DELIVER_PTS[0][1] - 10
 /** Medal targets from the clean test bot's time on the Scout (deterministic, tests/phase6b): gold = bot x 1.2,
  *  silver = x 1.5, bronze = x 2 (rounded to 0.5 s). The human-like bot (reaction delay, input noise, slower corners)
  *  must still reach bronze; see tests/phase6b-block.mjs. */
-export const BOT_TIMES: Record<string, number> = { 'race-loop': 31.07, 'race-dash': 26.35, 'ch-mud': 9.1, 'ch-climb': 48.13, 'rs-tow': 25.7, 'rs-deliver': 45.63 };
+export const BOT_TIMES: Record<string, number> = { 'race-loop': 43.88, 'race-dash': 38.55, 'ch-mud': 15.95, 'ch-climb': 63.5, 'rs-tow': 37.3, 'rs-deliver': 65.02 }; // 0.8.1 pace (clean bot); rs-tow scaled x1.45 (bot did not finish)
 export const MEDAL_FACTORS = { gold: 1.2, silver: 1.5, bronze: 2 };
 const r05 = (x: number) => Math.round(x * 2) / 2;
 const fromBot = (id: string) => ({ gold: r05(BOT_TIMES[id] * MEDAL_FACTORS.gold), silver: r05(BOT_TIMES[id] * MEDAL_FACTORS.silver), bronze: r05(BOT_TIMES[id] * MEDAL_FACTORS.bronze) });

@@ -9,7 +9,7 @@ const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args
 const page = await (await b.newContext({ viewport: { width: 1280, height: 720 } })).newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
 const fr = (n) => page.evaluate(async (n) => { for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r)); }, n);
 await page.goto(APP + '?noopening&dev=1'); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 180000 });
-ok('Build 0.8.1', /Build 0\.8\.1/.test(await page.textContent('body')));
+ok('Build 0.8.1+', /Build 0\.8\.1/.test(await page.textContent('body')));
 await page.evaluate(() => { const g = window.__game; g.setPreset('low'); g.setVehicle('f110'); g.play(); g.skipIntro?.(); }); await page.waitForFunction(() => window.__game.phase === 'playing'); await fr(20);
 const S = await page.evaluate(() => window.__game.state());
 // cockpit head motion while accelerating hard, vibration at speed
@@ -29,8 +29,8 @@ const sh = await page.evaluate(() => { const out = {}; const g = window.__game; 
 ok('default shake per drive mode: PRO/SIM/OFF-ROAD medium, ARCADE low', sh.pro === 'medium' && sh.sim === 'medium' && sh.offroad === 'medium' && sh.arcade === 'low', JSON.stringify(sh));
 // SIMULATION high-speed consequence
 const hs = await page.evaluate((S) => { const g = window.__game, out = {};
-  for (const id of ['pro', 'sim']) { g.profile(id); g.teleport(S.x, S.z, S.yaw); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: false }, 0.5);
-    let t = 0; while (g.state().speed * 3.6 < 80 && t < 25) { g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 0.1); t += 0.1; }
+  for (const id of ['pro', 'sim']) { g.profile(id); const PAD = g.testPad(); g.place(PAD.x, PAD.y + 1.2, PAD.z, 0); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: false }, 0.5);
+    let t = 0; while (g.state().speed * 3.6 < 52 && t < 25) { g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 0.1); t += 0.1; }
     const v0 = g.state().speed * 3.6, y0 = g.state().yaw; let minUp = 1;
     for (let i = 0; i < 15; i++) { g.simulate({ throttle: 0.5, brake: 0, steer: 0.5, handbrake: false }, 0.1); minUp = Math.min(minUp, g.state().up); }
     let dy = g.state().yaw - y0; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI;

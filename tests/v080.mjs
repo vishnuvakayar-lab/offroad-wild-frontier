@@ -50,7 +50,7 @@ page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => {
 const t0 = Date.now();
 await page.goto(APP + '?noopening&dev=1'); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 240000 });
 const loadS = ((Date.now() - t0) / 1000).toFixed(1);
-ok('boots to menu, Build 0.8.0', /Build 0\.8\.0/.test(await page.textContent('body')), `load ${loadS} s`);
+ok('boots to menu, Build 0.8.x', /Build 0\.8\.\d/.test(await page.textContent('body')), `load ${loadS} s`);
 await page.evaluate(() => { window.__noAutoPause = true; });
 await shot(page, 'menu.png');
 const nos = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: innerWidth, sh: document.documentElement.scrollHeight, ch: innerHeight }));
@@ -60,7 +60,7 @@ ok('menu: no page scroll', nos.sw <= nos.cw + 1 && nos.sh <= nos.ch + 1, JSON.st
 const man = await page.evaluate(async () => { const h = document.querySelector('link[rel=manifest]').href; const j = await (await fetch(h)).json(); return { h, start: j.start_url, scope: j.scope, icons: j.icons.map((i) => i.src) }; });
 ok('manifest: relative start_url/scope/icons (stays inside the deploy folder)', man.start === './' && man.scope === './' && man.icons.every((s) => !s.startsWith('/')), JSON.stringify(man));
 const swTxt = await page.evaluate(async () => { const r = await fetch('./sw.js'); return r.ok ? (await r.text()).slice(0, 4000) : null; });
-ok('service worker file built with precache list + version cache', !!swTxt && /owf-0\.8\.0/.test(swTxt) && /assets\//.test(swTxt), swTxt ? 'sw.js present' : 'missing');
+ok('service worker file built with precache list + version cache', !!swTxt && /owf-0\.8\./.test(swTxt) && /assets\//.test(swTxt), swTxt ? 'sw.js present' : 'missing');
 const swReg = await page.evaluate(async () => { if (!('serviceWorker' in navigator)) return 'unsupported'; for (let i = 0; i < 30; i++) { const r = await navigator.serviceWorker.getRegistration(); if (r) return r.scope; await new Promise((r) => setTimeout(r, 200)); } return 'not registered'; });
 ok('service worker registration scope = this folder (or unsupported/http)', swReg === 'unsupported' || swReg === 'not registered' ? !APP.startsWith('https') && !/localhost/.test(APP) : new URL(swReg).pathname === new URL(APP).pathname, swReg);
 
@@ -99,12 +99,12 @@ ok('one-tap camera reset -> Pro Chase', (await page.evaluate(() => window.__game
 const prof = await page.evaluate((S) => {
   const g = window.__game; const out = {};
   for (const id of g.profileIds) {
-    g.profile(id); g.setGear?.('A');
-    g.teleport(S.x, S.z, S.yaw); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: false }, 1);
+    g.profile(id); g.setGear?.('A'); const PAD = g.testPad(); const pad = () => g.place(PAD.x, PAD.y + 1.2, PAD.z, 0);
+    pad(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: false }, 1);
     let t = 0; while (g.state().speed * 3.6 < 50 && t < 20) { g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 0.05); t += 0.05; }
     const a = g.state(); let d = 0, px = a.x, pz = a.z, tb = 0;
     while (g.state().speed > 0.3 && tb < 15) { g.simulate({ throttle: 0, brake: 1, steer: 0, handbrake: false }, 0.05); tb += 0.05; const s = g.state(); d += Math.hypot(s.x - px, s.z - pz); px = s.x; pz = s.z; }
-    g.teleport(S.x, S.z, S.yaw); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: false }, 0.5);
+    pad(); g.simulate({ throttle: 0, brake: 0, steer: 0, handbrake: false }, 0.5);
     let tt = 0; while (g.state().speed * 3.6 < 30 && tt < 10) { g.simulate({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 0.05); tt += 0.05; }
     const y0 = g.state().yaw; g.simulate({ throttle: 0.4, brake: 0, steer: 1, handbrake: false }, 1.5); const y1 = g.state().yaw;
     let dy = y1 - y0; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI;

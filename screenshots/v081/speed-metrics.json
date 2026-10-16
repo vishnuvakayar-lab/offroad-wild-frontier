@@ -1,0 +1,786 @@
+{
+ "grade": 24,
+ "flat": null,
+ "veh": {
+  "scout": {
+   "pro": {
+    "t30": 2.8,
+    "t50": 6.8,
+    "top": 54.8,
+    "cap": 59.6
+   },
+   "offroad": {
+    "t30": 2.9,
+    "t50": 7.2,
+    "top": 54.5,
+    "cap": 59.6
+   },
+   "sim": {
+    "t30": 3.1,
+    "t50": 7.7,
+    "top": 54.2,
+    "cap": 59.6
+   },
+   "arcade": {
+    "t30": 2.4,
+    "t50": 5.5,
+    "top": 55.5,
+    "cap": 59.6
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.6,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.5,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 15.9
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -12.4,
+   "downhill": {
+    "maxKmh": 47.6,
+    "cap": 59.6
+   },
+   "sand4s": {
+    "m": 17,
+    "kmh": 27.8
+   },
+   "climb4H": {
+    "rise10s": 6.7,
+    "maxKmh": 29.5
+   },
+   "climb4L": {
+    "rise10s": 8.7,
+    "maxKmh": 25.4
+   }
+  },
+  "f110": {
+   "pro": {
+    "t30": 3.3,
+    "t50": 8.2,
+    "top": 54.3,
+    "cap": 60
+   },
+   "offroad": {
+    "t30": 3.5,
+    "t50": 8.8,
+    "top": 54.1,
+    "cap": 60
+   },
+   "sim": {
+    "t30": 3.6,
+    "t50": 9.4,
+    "top": 53.8,
+    "cap": 60
+   },
+   "arcade": {
+    "t30": 2.8,
+    "t50": 6.6,
+    "top": 55.2,
+    "cap": 60
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.5,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.4,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 15.9
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -11.9,
+   "downhill": {
+    "maxKmh": 46.9,
+    "cap": 60
+   },
+   "sand4s": {
+    "m": 14.6,
+    "kmh": 24.2
+   },
+   "climb4H": {
+    "rise10s": 5.9,
+    "maxKmh": 14.8
+   },
+   "climb4L": {
+    "rise10s": 6.7,
+    "maxKmh": 25.5
+   }
+  },
+  "sahara": {
+   "pro": {
+    "t30": 2.9,
+    "t50": 6.8,
+    "top": 55.2,
+    "cap": 60
+   },
+   "offroad": {
+    "t30": 3,
+    "t50": 7.2,
+    "top": 54.9,
+    "cap": 60
+   },
+   "sim": {
+    "t30": 3.1,
+    "t50": 7.7,
+    "top": 54.7,
+    "cap": 60
+   },
+   "arcade": {
+    "t30": 2.4,
+    "t50": 5.5,
+    "top": 55.9,
+    "cap": 60
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.6,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.5,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 16
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.1
+   },
+   "reverse": -12.4,
+   "downhill": {
+    "maxKmh": 47.6,
+    "cap": 60
+   },
+   "sand4s": {
+    "m": 17.7,
+    "kmh": 29.8
+   },
+   "climb4H": {
+    "rise10s": 6.7,
+    "maxKmh": 26.5
+   },
+   "climb4L": {
+    "rise10s": 7.1,
+    "maxKmh": 26.1
+   }
+  },
+  "voyager": {
+   "pro": {
+    "t30": 3.4,
+    "t50": 8.5,
+    "top": 54.2,
+    "cap": 60
+   },
+   "offroad": {
+    "t30": 3.5,
+    "t50": 9.1,
+    "top": 53.9,
+    "cap": 60
+   },
+   "sim": {
+    "t30": 3.7,
+    "t50": 9.8,
+    "top": 53.6,
+    "cap": 60
+   },
+   "arcade": {
+    "t30": 2.9,
+    "t50": 6.8,
+    "top": 55.1,
+    "cap": 60
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.5,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.4,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 15.9
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -11.9,
+   "downhill": {
+    "maxKmh": 46.5,
+    "cap": 60
+   },
+   "sand4s": {
+    "m": 14.2,
+    "kmh": 23.6
+   },
+   "climb4H": {
+    "rise10s": 5.4,
+    "maxKmh": 13.8
+   },
+   "climb4L": {
+    "rise10s": 6.7,
+    "maxKmh": 25.2
+   }
+  },
+  "pickup": {
+   "pro": {
+    "t30": 3.5,
+    "t50": 9,
+    "top": 53.9,
+    "cap": 60
+   },
+   "offroad": {
+    "t30": 3.7,
+    "t50": 9.7,
+    "top": 53.6,
+    "cap": 60
+   },
+   "sim": {
+    "t30": 3.9,
+    "t50": 10.5,
+    "top": 53.3,
+    "cap": 60
+   },
+   "arcade": {
+    "t30": 3,
+    "t50": 7.2,
+    "top": 54.9,
+    "cap": 60
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.5,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.4,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 15.9
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -11.7,
+   "downhill": {
+    "maxKmh": 45.8,
+    "cap": 60
+   },
+   "sand4s": {
+    "m": 13.4,
+    "kmh": 22.1
+   },
+   "climb4H": {
+    "rise10s": 4.2,
+    "maxKmh": 10.4
+   },
+   "climb4L": {
+    "rise10s": 7.2,
+    "maxKmh": 25.7
+   }
+  },
+  "rally": {
+   "pro": {
+    "t30": 2.3,
+    "t50": 5.2,
+    "top": 55.9,
+    "cap": 60
+   },
+   "offroad": {
+    "t30": 2.4,
+    "t50": 5.5,
+    "top": 55.7,
+    "cap": 60
+   },
+   "sim": {
+    "t30": 2.5,
+    "t50": 5.8,
+    "top": 55.5,
+    "cap": 60
+   },
+   "arcade": {
+    "t30": 2,
+    "t50": 4.2,
+    "top": 56.5,
+    "cap": 60
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.7,
+    "cap": 25
+   },
+   "has4L": false,
+   "4L": {
+    "t30": 2.3,
+    "t50": 5.2,
+    "top": 55.9,
+    "cap": 60
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 16
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -12.9,
+   "downhill": {
+    "maxKmh": 49.1,
+    "cap": 60
+   },
+   "sand4s": {
+    "m": 20.4,
+    "kmh": 31.9
+   },
+   "climb4H": {
+    "rise10s": 8.6,
+    "maxKmh": 30.9
+   },
+   "climb4L": {
+    "rise10s": 8.6,
+    "maxKmh": 30.9
+   }
+  },
+  "recovery": {
+   "pro": {
+    "t30": 4.1,
+    "t50": null,
+    "top": 44.6,
+    "cap": 48
+   },
+   "offroad": {
+    "t30": 4.3,
+    "t50": null,
+    "top": 44.4,
+    "cap": 48
+   },
+   "sim": {
+    "t30": 4.6,
+    "t50": null,
+    "top": 44.2,
+    "cap": 48
+   },
+   "arcade": {
+    "t30": 3.4,
+    "t50": null,
+    "top": 45.1,
+    "cap": 48
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.4,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.3,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 45,
+    "m": 12.9
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.12
+   },
+   "reverse": -11.2,
+   "downhill": {
+    "maxKmh": 42.6,
+    "cap": 48
+   },
+   "sand4s": {
+    "m": 12,
+    "kmh": 20
+   },
+   "climb4H": {
+    "rise10s": 0,
+    "maxKmh": 2.7
+   },
+   "climb4L": {
+    "rise10s": 6.8,
+    "maxKmh": 24.7
+   }
+  },
+  "van": {
+   "pro": {
+    "t30": 4,
+    "t50": 10.8,
+    "top": 53,
+    "cap": 59.6
+   },
+   "offroad": {
+    "t30": 4.2,
+    "t50": 11.7,
+    "top": 52.7,
+    "cap": 59.6
+   },
+   "sim": {
+    "t30": 4.4,
+    "t50": 12.7,
+    "top": 52.3,
+    "cap": 59.6
+   },
+   "arcade": {
+    "t30": 3.3,
+    "t50": 8.4,
+    "top": 54.1,
+    "cap": 59.6
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.4,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.3,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 16
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -11.3,
+   "downhill": {
+    "maxKmh": 45,
+    "cap": 59.6
+   },
+   "sand4s": {
+    "m": 11.7,
+    "kmh": 19.2
+   },
+   "climb4H": {
+    "rise10s": 2,
+    "maxKmh": 6.7
+   },
+   "climb4L": {
+    "rise10s": 6.9,
+    "maxKmh": 25.1
+   }
+  },
+  "ltv": {
+   "pro": {
+    "t30": 2.6,
+    "t50": 6.4,
+    "top": 53.8,
+    "cap": 58
+   },
+   "offroad": {
+    "t30": 2.7,
+    "t50": 6.8,
+    "top": 53.6,
+    "cap": 58
+   },
+   "sim": {
+    "t30": 2.8,
+    "t50": 7.2,
+    "top": 53.4,
+    "cap": 58
+   },
+   "arcade": {
+    "t30": 2.2,
+    "t50": 5.2,
+    "top": 54.5,
+    "cap": 58
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.6,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.5,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 15.9
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -12.6,
+   "downhill": {
+    "maxKmh": 48.3,
+    "cap": 58
+   },
+   "sand4s": {
+    "m": 18.9,
+    "kmh": 30.7
+   },
+   "climb4H": {
+    "rise10s": 7,
+    "maxKmh": 30.8
+   },
+   "climb4L": {
+    "rise10s": 9.2,
+    "maxKmh": 25.5
+   }
+  },
+  "patrol": {
+   "pro": {
+    "t30": 4,
+    "t50": null,
+    "top": 49.7,
+    "cap": 54.6
+   },
+   "offroad": {
+    "t30": 4.2,
+    "t50": null,
+    "top": 49.4,
+    "cap": 54.6
+   },
+   "sim": {
+    "t30": 4.4,
+    "t50": null,
+    "top": 49.2,
+    "cap": 54.6
+   },
+   "arcade": {
+    "t30": 3.3,
+    "t50": 12.3,
+    "top": 50.5,
+    "cap": 54.6
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.4,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.3,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 50,
+    "m": 15.7
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.11
+   },
+   "reverse": -11.3,
+   "downhill": {
+    "maxKmh": 44.7,
+    "cap": 54.6
+   },
+   "sand4s": {
+    "m": 12.3,
+    "kmh": 20.5
+   },
+   "climb4H": {
+    "rise10s": 2.1,
+    "maxKmh": 6.7
+   },
+   "climb4L": {
+    "rise10s": 7,
+    "maxKmh": 25.3
+   }
+  },
+  "mrap": {
+   "pro": {
+    "t30": 4.8,
+    "t50": null,
+    "top": 44,
+    "cap": 48
+   },
+   "offroad": {
+    "t30": 5.1,
+    "t50": null,
+    "top": 43.8,
+    "cap": 48
+   },
+   "sim": {
+    "t30": 5.4,
+    "t50": null,
+    "top": 43.6,
+    "cap": 48
+   },
+   "arcade": {
+    "t30": 4,
+    "t50": null,
+    "top": 44.7,
+    "cap": 48
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.3,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.2,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 44,
+    "m": 12.7
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.12
+   },
+   "reverse": -10.6,
+   "downhill": {
+    "maxKmh": 42.7,
+    "cap": 48
+   },
+   "sand4s": {
+    "m": 10.2,
+    "kmh": 17.1
+   },
+   "climb4H": {
+    "rise10s": 0,
+    "maxKmh": 2.8
+   },
+   "climb4L": {
+    "rise10s": 6.7,
+    "maxKmh": 23.3
+   }
+  },
+  "cargo6": {
+   "pro": {
+    "t30": 4.6,
+    "t50": null,
+    "top": 41.7,
+    "cap": 44.7
+   },
+   "offroad": {
+    "t30": 4.8,
+    "t50": null,
+    "top": 41.5,
+    "cap": 44.7
+   },
+   "sim": {
+    "t30": 5.1,
+    "t50": null,
+    "top": 41.3,
+    "cap": 44.7
+   },
+   "arcade": {
+    "t30": 3.8,
+    "t50": null,
+    "top": 42.2,
+    "cap": 44.7
+   },
+   "low": {
+    "t30": null,
+    "t50": null,
+    "top": 24.4,
+    "cap": 25
+   },
+   "has4L": true,
+   "4L": {
+    "t30": null,
+    "t50": null,
+    "top": 27.2,
+    "cap": 28
+   },
+   "stop": {
+    "fromKmh": 42,
+    "m": 11.5
+   },
+   "coast": {
+    "from": 40,
+    "after3s": 28,
+    "decel": 1.13
+   },
+   "reverse": -10.9,
+   "downhill": {
+    "maxKmh": 41.2,
+    "cap": 44.7
+   },
+   "sand4s": {
+    "m": 11.1,
+    "kmh": 18.6
+   },
+   "climb4H": {
+    "rise10s": 0,
+    "maxKmh": 2.8
+   },
+   "climb4L": {
+    "rise10s": 6.7,
+    "maxKmh": 23.3
+   }
+  }
+ }
+}

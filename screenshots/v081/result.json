@@ -1,0 +1,57 @@
+{
+ "res": [
+  {
+   "n": "Build 0.8.1+",
+   "p": true,
+   "d": ""
+  },
+  {
+   "n": "cockpit: head leans with acceleration (subtle, <= 7 cm) and vibrates at speed",
+   "p": true,
+   "d": "head {\"x\":-0.04960655220806112,\"y\":0.0002945591688231066,\"z\":-0.0020398506739771676} vib 0.0013 (rest vib 0.0000)"
+  },
+  {
+   "n": "hood: low forward rig, above terrain",
+   "p": true,
+   "d": "above 2.07 m, 2.18 m from car origin"
+  },
+  {
+   "n": "cinematic: low side tracking shot reached (wheel height, close)",
+   "p": true,
+   "d": "above 0.76 m, 3.9 m"
+  },
+  {
+   "n": "default shake per drive mode: PRO/SIM/OFF-ROAD medium, ARCADE low",
+   "p": true,
+   "d": "{\"arcade\":\"low\",\"sim\":\"medium\",\"offroad\":\"medium\",\"pro\":\"medium\"}"
+  },
+  {
+   "n": "SIMULATION at speed: turns less (understeer) and rolls more than PRO in the same corner",
+   "p": true,
+   "d": "{\"pro\":{\"kmh\":52,\"yawDegS\":34.7,\"maxRollDeg\":0.7},\"sim\":{\"kmh\":52,\"yawDegS\":25.7,\"maxRollDeg\":1.2}}"
+  },
+  {
+   "n": "no page errors",
+   "p": true,
+   "d": ""
+  }
+ ],
+ "hs": {
+  "pro": {
+   "kmh": 52,
+   "yawDegS": 34.7,
+   "maxRollDeg": 0.7
+  },
+  "sim": {
+   "kmh": 52,
+   "yawDegS": 25.7,
+   "maxRollDeg": 1.2
+  }
+ },
+ "sh": {
+  "arcade": "low",
+  "sim": "medium",
+  "offroad": "medium",
+  "pro": "medium"
+ }
+}

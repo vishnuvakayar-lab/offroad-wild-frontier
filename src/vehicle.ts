@@ -566,7 +566,7 @@ export class Vehicle {
       } else this.slip[i] = 0;
       const rear = i >= 2;
       ctrl.setWheelFrictionSlip(i, gripK);
-      const hsK = !rear && P.hiSpeed ? 1 - 0.4 * P.hiSpeed * THREE.MathUtils.clamp((Math.abs(speed) * 3.6 - 55) / 45, 0, 1) * Math.min(1, Math.abs(this.steer) / 0.25) : 1; // SIM: speed-sensitive understeer
+      const hsK = !rear && P.hiSpeed ? 1 - 0.4 * P.hiSpeed * THREE.MathUtils.clamp((Math.abs(speed) * 3.6 - 35) / 25, 0, 1) * Math.min(1, Math.abs(this.steer) / 0.25) : 1; // SIM: speed-sensitive understeer
       ctrl.setWheelSideFrictionStiffness(i, hsK * sp.side * sp0.side * P.side * (soft ? 1 : 1 - 0.1 * this.wet) * (rear && inp.handbrake ? 0.35 : 1));
       ctrl.setWheelSteering(i, rear ? 0 : this.steer);
       // traction limit for force above the arcade baseline: the tuned tyre model always delivers the high-range per-wheel
@@ -640,7 +640,7 @@ export class Vehicle {
     // SIMULATION high-speed consequence: extra weight-transfer roll moment (as if the centre of mass sat 0.18 m higher)
     // tau_local = (0, h, 0) x (-m a) -> about the forward axis = h * m * a_lat; real lateral acceleration only, wheels down
     if (P.hiSpeed && contacts >= 2) {
-      const kmhS = Math.abs(speed) * 3.6, hk = P.hiSpeed * THREE.MathUtils.clamp((kmhS - 50) / 40, 0, 1);
+      const kmhS = Math.abs(speed) * 3.6, hk = P.hiSpeed * THREE.MathUtils.clamp((kmhS - 30) / 25, 0, 1);
       if (hk > 0) { const rq = this.body.rotation(); const tz = 0.18 * this.spec.mass * this.accLocal.x * hk * dt;
         const t = new THREE.Vector3(0, 0, tz).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w)); this.body.applyTorqueImpulse({ x: t.x, y: t.y, z: t.z }, true); }
     }

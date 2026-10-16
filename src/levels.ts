@@ -30,8 +30,8 @@ const L1: MissionDef = {
   desc: 'Learn the basics on an easy sand trail: drive through the 13 flag gates and stop inside the finish circle.',
   start: L1_START, gates: gatesFrom(L1_ROUTE, 16), limit: 90, zone: L1_FINISH, weather: 'clear',
   path: [{ x: L1_START.x, z: L1_START.z }, ...L1_ROUTE.map(([x, z]) => ({ x, z })), { x: L1_FINISH.x, z: L1_FINISH.z }],
-  // targets: clean test bot 17.07 s on the Scout -> gold x1.2, silver x1.5, bronze x2 (tests/rework-block.mjs re-measures)
-  targets: { gold: 20.5, silver: 25.5, bronze: 34 }, reward: 200,
+  // targets: clean test bot 23.70 s on the Scout at the 0.8.1 pace -> gold x1.2, silver x1.5, bronze x2 (tests/rework-block.mjs re-measures)
+  targets: { gold: 28.5, silver: 35.5, bronze: 47.5 }, reward: 200,
   tips: {
     [-1]: 'Accelerate and steer through the flag gates',
     0: 'Good! Follow the flags towards the desert',

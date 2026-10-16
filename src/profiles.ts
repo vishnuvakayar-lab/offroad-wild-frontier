@@ -8,7 +8,7 @@ export interface DriveProfile {
   steerLim: number; steerRate: number; throttleExp: number; engine: number; brake: number;
   grip: number; side: number; softGrip: number; softDrag: number;
   stiff: number; travel: number; damp: number; lean: number; assist: number; yawCap: number; stability: number;
-  /** high-speed consequence (SIMULATION): front tyres lose cornering stiffness and the body rolls harder above ~55 km/h */
+  /** high-speed consequence (SIMULATION): front tyres lose cornering stiffness and the body rolls harder above ~35 km/h */
   hiSpeed?: number;
   /** default camera shake for this mode (the player can override it in Settings) */
   shake: 'off' | 'low' | 'medium' | 'high';
