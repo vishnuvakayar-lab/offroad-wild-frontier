@@ -1,6 +1,6 @@
 // OFFROAD: WILD FRONTIER service worker (generated at build). Scope = the folder it is served from (e.g. /preview/).
-const CACHE = 'owf-0.8.1-mvbb2lpm';
-const FILES = ["./","index.html","manifest.webmanifest","favicon.svg","icon-180.png","icon-192.png","icon-512.png","assets/index-Cl8ULQqZ.js","assets/game-pcB2eHEW.js","assets/rapier-7yogRuGw.js","assets/index-iWToyg0p.css"];
+const CACHE = 'owf-0.8.2-mvbg664c';
+const FILES = ["./","index.html","manifest.webmanifest","favicon.svg","icon-180.png","icon-192.png","icon-512.png","assets/index-BeCYQIe3.js","assets/game-iF0iNsNX.js","assets/rapier-7yogRuGw.js","assets/index-iWToyg0p.css"];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('owf-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
