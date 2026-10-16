@@ -12,6 +12,14 @@ export interface DriveInput { throttle: number; brake: number; steer: number; ha
 export type Transfer = '2H' | '4H' | '4L' | 'AWD';
 /** Transmission selector: A = automatic (brake at standstill engages reverse), or manual P / R / N / D. */
 export type GearSel = 'A' | 'P' | 'R' | 'N' | 'D';
+/** 0.8.1 realistic pace: drive force scale (was 1.0 = ~11 m/s^2 launch), speed caps (m/s) and progressive pedal */
+export const DRIVE_SCALE = 0.22; // reverse drive scale
+export const PEAK_FORCE_K = 0.32, POWER_K = 2.6; // per wheel: peak N = engine*0.5, power W = engine*1.75 (scout ~32 kW at the wheels)
+export const NORMAL_CAP_MIN = 40 / 3.6, NORMAL_CAP_MAX = 60 / 3.6, LOW_SPEED_CAP = 25 / 3.6, LOW_RANGE_CAP = 28 / 3.6, REVERSE_CAP = 14 / 3.6;
+export const PEDAL_RAMP_S = 0.7;
+export type SpeedMode = 'normal' | 'low';
+/** per-vehicle NORMAL top speed: 46 % of the old arcade top speed, clamped to 40..60 km/h */
+export const normalCap = (top: number) => Math.min(NORMAL_CAP_MAX, Math.max(NORMAL_CAP_MIN, top * 0.46));
 export const LOW_RANGE = 2.6;          // 4L reduction ratio: x2.6 wheel torque, top speed / 2.6
 export const SHIFT_ON_FLY_KMH = 60;
 export const LOW_RANGE_MAX_KMH = 8;    // 4L in/out only when stopped or creeping below this speed    // 2H <-> 4H allowed below this speed
@@ -21,7 +29,7 @@ export interface ShiftResult { ok: boolean; msg: string }
 /** Per-surface handling. frictionSlip limits tyre grip (Rapier raycast vehicle);
  *  drag is a speed-proportional resistance (sinking into mud / ploughing sand). */
 export const SURFACE_PARAMS: Record<Surface, { slip: number; side: number; drag: number; label: string }> = {
-  ground: { slip: 1.5, side: 1.0, drag: 0.04, label: 'Dirt' },
+  ground: { slip: 1.5, side: 1.0, drag: 0.012, label: 'Dirt' },
   sand: { slip: 0.75, side: 0.7, drag: 0.28, label: 'Sand' },
   mud: { slip: 0.42, side: 0.45, drag: 0.55, label: 'Mud' },
   // rock: hard but loose scree on top - less grip than packed dirt, very little drag
@@ -60,6 +68,8 @@ export class Vehicle {
   paint!: THREE.MeshStandardMaterial;
   lampMat!: THREE.MeshStandardMaterial;
   rearGlow!: THREE.PointLight; lightsOn = false;
+  static speedMode: SpeedMode = 'normal';
+  thrRamp = 0; capKmh = 0;
   /** per-wheel telemetry for particles/audio */
   slip = [0, 0, 0, 0];
   contact: (THREE.Vector3 | null)[] = [null, null, null, null];
@@ -474,39 +484,48 @@ export class Vehicle {
     // speed-sensitive steering, smoothed
     const sp0 = this.spec;
     const P = this.profile;
-    const maxSteer = (sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 28)) * P.steerLim;
+    const maxSteer = (sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 16)) * P.steerLim; // full speed-sensitivity by ~58 km/h
     const target = inp.steer * maxSteer;
     this.steer += (target - this.steer) * Math.min(1, dt * P.steerRate);
     // profile throttle curve (exponent < 1 = punchy, > 1 = progressive)
-    inp = { ...inp, throttle: inp.throttle > 0 ? Math.pow(inp.throttle, P.throttleExp) : 0 };
+    const thrT = inp.throttle > 0 ? Math.pow(inp.throttle, P.throttleExp) : 0;
+    // progressive pedal: force builds over ~0.7 s, lifts off quickly
+    this.thrRamp = thrT > this.thrRamp ? Math.min(thrT, this.thrRamp + dt / PEDAL_RAMP_S) : Math.max(thrT, this.thrRamp - dt * 6);
+    inp = { ...inp, throttle: this.thrRamp };
 
     // drive / brake / reverse logic (transmission selector + transfer case)
     let engine = 0, brake = 0;
     const bs = (sp0.mass / 1650) * P.brake; // brake impulses scale with mass (and the profile's brake force)
     const low = this.transfer === '4L' ? LOW_RANGE : 1;
-    const force = sp0.engine * low * P.engine, top = sp0.topSpeed / low, rev = sp0.reverse / low;
-    const fwdDrive = (t: number) => force * t * Math.max(0, 1 - Math.max(0, speed) / top);
+    const capN = Vehicle.speedMode === 'low' ? Math.min(LOW_SPEED_CAP, normalCap(sp0.topSpeed)) : normalCap(sp0.topSpeed);
+    const top = this.transfer === '4L' ? Math.min(LOW_RANGE_CAP, capN) : capN, rev = Math.min(REVERSE_CAP, sp0.reverse / low);
+    this.capKmh = top * 3.6;
+    const force = sp0.engine * DRIVE_SCALE * low * P.engine;
+    // power-limited drive (per wheel): traction-level force at crawl speed, constant power above it (gears), tapering at the cap.
+    // 4L multiplies the low-speed force (x2.6) but not the power, so it pulls harder slowly and tops out lower.
+    const fMax = sp0.engine * PEAK_FORCE_K * low * P.engine, powerW = sp0.engine * POWER_K * P.engine;
+    const fwdDrive = (t: number) => t * Math.min(fMax, powerW / Math.max(0.5, Math.abs(speed))) * Math.max(0, 1 - Math.pow(Math.max(0, speed) / top, 4));
     const revDrive = (t: number) => -force * 0.6 * t * Math.max(0, 1 - Math.max(0, -speed) / rev);
     const sel = this.sel;
     if (sel === 'A') {
       if (inp.throttle > 0.01) {
-        if (speed < -0.8) brake = 70 * bs * inp.throttle;
+        if (speed < -0.8) brake = 46 * bs * inp.throttle;
         else engine = fwdDrive(inp.throttle);
       }
       if (inp.brake > 0.01) {
-        if (speed > 0.8) brake = Math.max(brake, 70 * bs * inp.brake);
+        if (speed > 0.8) brake = Math.max(brake, 46 * bs * inp.brake);
         else if (inp.throttle <= 0.01) engine = revDrive(inp.brake);
       }
     } else if (sel === 'D' || sel === 'R') {
       if (inp.throttle > 0.01) {
         const against = sel === 'D' ? speed < -0.8 : speed > 0.8; // rolling the wrong way: throttle brakes first
-        if (against) brake = 70 * bs * inp.throttle; else engine = sel === 'D' ? fwdDrive(inp.throttle) : revDrive(inp.throttle);
+        if (against) brake = 46 * bs * inp.throttle; else engine = sel === 'D' ? fwdDrive(inp.throttle) : revDrive(inp.throttle);
       }
-      if (inp.brake > 0.01) brake = Math.max(brake, 70 * bs * inp.brake);
+      if (inp.brake > 0.01) brake = Math.max(brake, 46 * bs * inp.brake);
     } else if (sel === 'N') {
-      if (inp.brake > 0.01) brake = 70 * bs * inp.brake;
+      if (inp.brake > 0.01) brake = 46 * bs * inp.brake;
     } else brake = 200 * bs; // P: parking pawl
-    if (inp.throttle <= 0.01 && inp.brake <= 0.01 && sel !== 'P') brake = sel === 'N' ? 1.2 * bs : 4 * bs * low; // engine braking (stronger in low range) / rolling resistance
+    if (inp.throttle <= 0.01 && inp.brake <= 0.01 && sel !== 'P') brake = sel === 'N' ? 1.5 * bs : 6 * bs * low; // engine braking (stronger in low range) / rolling resistance
     // torque split: 2H drives only the rear axle (same total force), 4H/4L/AWD split it evenly
     // 2H: rear axle only (same total force); 4H/4L/AWD: front/rear split from the vehicle spec (frontSplit, default 50 %)
     const fsp = sp0.frontSplit ?? 0.5;
@@ -547,7 +566,8 @@ export class Vehicle {
       } else this.slip[i] = 0;
       const rear = i >= 2;
       ctrl.setWheelFrictionSlip(i, gripK);
-      ctrl.setWheelSideFrictionStiffness(i, sp.side * sp0.side * P.side * (soft ? 1 : 1 - 0.1 * this.wet) * (rear && inp.handbrake ? 0.35 : 1));
+      const hsK = !rear && P.hiSpeed ? 1 - 0.4 * P.hiSpeed * THREE.MathUtils.clamp((Math.abs(speed) * 3.6 - 55) / 45, 0, 1) * Math.min(1, Math.abs(this.steer) / 0.25) : 1; // SIM: speed-sensitive understeer
+      ctrl.setWheelSideFrictionStiffness(i, hsK * sp.side * sp0.side * P.side * (soft ? 1 : 1 - 0.1 * this.wet) * (rear && inp.handbrake ? 0.35 : 1));
       ctrl.setWheelSteering(i, rear ? 0 : this.steer);
       // traction limit for force above the arcade baseline: the tuned tyre model always delivers the high-range per-wheel
       // force; anything beyond it (2H doubling the rear, 4L multiplication) is limited by load x grip -> wheelspin instead
@@ -617,6 +637,16 @@ export class Vehicle {
       const yawRate = w.x * up.x + w.y * up.y + w.z * up.z, wanted = inp.steer * 1.2 * Math.sign(speed || 1);
       const excess = yawRate - wanted; if (Math.abs(excess) > 0.4) { const tq = -excess * this.inertiaY * P.stability * dt; this.body.applyTorqueImpulse({ x: up.x * tq, y: up.y * tq, z: up.z * tq }, true); }
     }
+    // SIMULATION high-speed consequence: extra weight-transfer roll moment (as if the centre of mass sat 0.18 m higher)
+    // tau_local = (0, h, 0) x (-m a) -> about the forward axis = h * m * a_lat; real lateral acceleration only, wheels down
+    if (P.hiSpeed && contacts >= 2) {
+      const kmhS = Math.abs(speed) * 3.6, hk = P.hiSpeed * THREE.MathUtils.clamp((kmhS - 50) / 40, 0, 1);
+      if (hk > 0) { const rq = this.body.rotation(); const tz = 0.18 * this.spec.mass * this.accLocal.x * hk * dt;
+        const t = new THREE.Vector3(0, 0, tz).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w)); this.body.applyTorqueImpulse({ x: t.x, y: t.y, z: t.z }, true); }
+    }
+    // hard speed limiter on the chassis (also downhill): wheels down -> full velocity, airborne -> horizontal only
+    { const lv = this.body.linvel(), capV = (speed >= 0 ? top : rev) * 1.03, hv = Math.hypot(lv.x, lv.z), tv = contacts > 0 ? Math.hypot(lv.x, lv.y, lv.z) : hv;
+      if (tv > capV) { const k = capV / tv; this.body.setLinvel(contacts > 0 ? { x: lv.x * k, y: lv.y * k, z: lv.z * k } : { x: lv.x * k, y: lv.y, z: lv.z * k }, true); } }
     // surface resistance (mud suction, sand ploughing) + light aero drag
     if (contacts > 0) {
       const v = this.body.linvel();

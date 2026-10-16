@@ -72,6 +72,7 @@ for (const spec of which) {
   const [px, py] = await center(page, '#btn-play');
   const tPlay = Date.now(); if (desk) await page.mouse.click(px, py); else await page.touchscreen.tap(px, py);
   await page.waitForFunction(() => window.__game.phase === 'playing', null, { timeout: 15000 }).catch(() => {});
+  await page.evaluate(() => { window.__startPose = window.__game.state(); });
   m.playPhase = await page.evaluate(() => window.__game.phase); m.toPlayingMs = Date.now() - tPlay;
   const gl = await page.evaluate(() => { const c = document.getElementById('game'); const g = c.getContext('webgl2') || c.getContext('webgl'); return { ok: !!g && !g.isContextLost(), lostOverlay: !document.getElementById('gl-lost').classList.contains('hidden') }; });
   m.gl = gl;
@@ -143,12 +144,13 @@ for (const spec of which) {
   await up(page, 4);
   }
   await release('KeyW', 1);
-  // BRAKE from speed
+  // BRAKE from speed: back on the open spawn straight first (earlier steering checks can leave the car nosed into scenery)
+  await page.evaluate(() => { const s = window.__startPose; window.__game.teleport(s.x, s.z, s.yaw); }); await hold(page, 600, 10);
   await press('KeyW', '#pd-gas', 4); await hold(page, 1500, 20); await release('KeyW', 4);
   const c0 = await pose(page); const bHit = await press('KeyS', '#pd-brake', 5); await hold(page, 1000, 15); const c1 = await pose(page);
   m.brake = { hit: bHit, fromKmh: +(c0.speed * 3.6).toFixed(1), toKmh: +(c1.speed * 3.6).toFixed(1) };
   // keep holding at a standstill -> reverse
-  await hold(page, 3500, 50); const c2 = await pose(page); await release('KeyS', 5);
+  let c2 = await pose(page); for (let t = 0; t < 4500 && c2.speed > -0.5; t += 300) { await hold(page, 300, 5); c2 = await pose(page); } await release('KeyS', 5);
   m.reverse = { kmh: +(c2.speed * 3.6).toFixed(1) };
   ok(`${L}: BRAKE decelerates; holding BRAKE at a standstill reverses`, m.brake.toKmh < m.brake.fromKmh - 5 && c2.speed < -0.5, `brake ${m.brake.fromKmh} -> ${m.brake.toKmh} km/h in 1 s (target ${bHit}); after holding ${m.reverse.kmh} km/h`);
   // release really releases

@@ -3,7 +3,7 @@ export type TouchMode = 'auto' | 'on' | 'off';
 import type { WeatherId } from './weather';
 import type { ControlScheme } from './input';
 import type { ProfileId } from './profiles';
-export interface Settings { preset: Preset; showFps: boolean; touch: TouchMode; weather: WeatherId; volume: number; muted: boolean; intro: boolean; vehicle: string; paints: Record<string, number>; controls: ControlScheme; autoThrottle: boolean; camDist: number; camHeight: number; shake: boolean; wheelSens: number; ctlV: number; shakeLevel: ShakeLevel; profile: ProfileId; }
+export interface Settings { preset: Preset; showFps: boolean; touch: TouchMode; weather: WeatherId; volume: number; muted: boolean; intro: boolean; vehicle: string; paints: Record<string, number>; controls: ControlScheme; autoThrottle: boolean; camDist: number; camHeight: number; shake: boolean; wheelSens: number; ctlV: number; shakeLevel: ShakeLevel; profile: ProfileId; shakeUser?: boolean; speedMode?: 'normal' | 'low'; }
 export type ShakeLevel = 'off' | 'low' | 'medium' | 'high';
 export const SHAKE_K: Record<ShakeLevel, number> = { off: 0, low: 0.45, medium: 1, high: 1.7 };
 

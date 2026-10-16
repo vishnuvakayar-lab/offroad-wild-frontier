@@ -46,7 +46,8 @@ const errors = [];
     await page.evaluate((id) => { window.__game.setVehicle(id); document.getElementById('btn-play').click(); }, id);
     await page.waitForFunction(() => window.__game.phase === 'playing'); await frames(page, 30);
     const a0 = await page.evaluate(() => window.__game.wheelAngle());
-    await page.keyboard.press('KeyC'); await page.waitForTimeout(300);
+    // 0.8.x: 9-mode cycle pro > far > cockpit > hood > bumper > cinematic > wheel > mirror > orbit
+    await page.evaluate(() => window.__game.cam('far')); await page.keyboard.press('KeyC'); await page.waitForTimeout(300);
     const m1 = await page.evaluate(() => window.__game.camMode);
     await page.keyboard.down('KeyA'); await hold(page, 900, 60);
     const aL = await page.evaluate(() => window.__game.wheelAngle());
@@ -55,11 +56,11 @@ const errors = [];
     const aR = await page.evaluate(() => window.__game.wheelAngle()); await shot(page, `cam-driver-right-${id}.png`); await page.keyboard.up('KeyD');
     ok(`${id}: C key -> driver view; 3D steering wheel rotates with steering (left/right opposite)`, m1 === 'cockpit' && a0 !== null && aL < -0.5 && aR > 0.5, `mode ${m1}, angle rest ${a0?.toFixed(2)} left ${aL?.toFixed(2)} right ${aR?.toFixed(2)} rad`);
     await page.waitForTimeout(800);
-    await page.keyboard.press('KeyC'); await page.keyboard.down('KeyW'); await page.waitForTimeout(1200);
+    await page.evaluate(() => window.__game.cam('wheel')); await page.keyboard.press('KeyC'); await page.keyboard.down('KeyW'); await page.waitForTimeout(1200);
     const m2 = await page.evaluate(() => [window.__game.camMode, document.getElementById('game').classList.contains('mirrored')]);
     await shot(page, `cam-mirror-${id}.png`); await page.keyboard.up('KeyW');
     ok(`${id}: C -> left mirror view (image flipped)`, m2[0] === 'mirror' && m2[1], JSON.stringify(m2));
-    await page.click('#btn-cam'); await page.waitForTimeout(300);
+    await page.evaluate(() => window.__game.cam('mirror')); await page.click('#btn-cam'); await page.waitForTimeout(300);
     const m3 = await page.evaluate(() => window.__game.camMode);
     const c0 = await page.evaluate(() => window.__game.state().camera);
     await page.mouse.move(700, 400); await page.mouse.down(); await page.mouse.move(400, 380, { steps: 10 }); await page.mouse.up();
@@ -67,7 +68,7 @@ const errors = [];
     await shot(page, `cam-orbit-${id}.png`);
     ok(`${id}: 🎥 button -> 360° orbit; mouse drag rotates around the vehicle`, m3 === 'orbit' && Math.hypot(c1.x - c0.x, c1.z - c0.z) > 2, `moved ${Math.hypot(c1.x - c0.x, c1.z - c0.z).toFixed(1)} m`);
     await page.click('#btn-cam'); await frames(page, 20);
-    ok(`${id}: button cycles back to chase`, (await page.evaluate(() => window.__game.camMode)) === 'chase'); await shot(page, `cam-chase-${id}.png`);
+    ok(`${id}: button cycles back to Pro Chase`, (await page.evaluate(() => window.__game.camMode)) === 'pro'); await shot(page, `cam-chase-${id}.png`);
     await page.keyboard.press('Escape'); await page.click('#btn-menu').catch(() => {}); await page.waitForTimeout(400);
   }
   // split-screen

@@ -809,6 +809,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     car.setProfile(id); car2?.setProfile(id);
     $('prof-chip').textContent = PROFILES[id].label;
     document.querySelectorAll<HTMLElement>('#prof-pop [data-prof]').forEach((x) => x.classList.toggle('on', x.dataset.prof === id));
+    // each drive mode brings its default camera shake unless the player picked one in Settings
+    if (!quiet && !settings.shakeUser) { settings.shakeLevel = PROFILES[id].shake; settings.shake = settings.shakeLevel !== 'off'; saveSettings(settings); refreshUI(); }
     if (!quiet) toast(`🚙 ${PROFILES[id].label}: ${PROFILES[id].desc}`);
   }
   $('prof-pop').innerHTML = PROFILE_ORDER.map((id) => `<button data-prof="${id}">${PROFILES[id].label}</button>`).join('');
@@ -828,7 +830,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   let camMode: CamMode = (CAM_MODES as string[]).includes(sessionStorage.getItem(CAM_KEY) ?? '') ? sessionStorage.getItem(CAM_KEY) as CamMode : 'pro';
   let orbitYaw = 0, orbitPitch = 0.35, orbitIdle = 0, lookBack = false, lookBackK = 0;
   const blendFrom = { pos: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 62, t: 1 };
-  const cine = { pos: new THREE.Vector3(), set: false, t: 0 };
+  const cine = { pos: new THREE.Vector3(), set: false, t: 0, side: false, sideSign: 1 };
   const eyeW = new THREE.Vector3(), aheadW = new THREE.Vector3(), tmpL = new THREE.Vector3();
   const startBlend = () => { blendFrom.pos.copy(camera.position); blendFrom.q.copy(camera.quaternion); blendFrom.fov = camera.fov; blendFrom.t = 0; };
   const isChase = (m: CamMode) => m === 'pro' || m === 'far';
@@ -868,7 +870,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     const sp = car.spec, c = sp.cabin, ch = sp.chassis, W = sp.wheel;
     switch (m) {
       case 'cockpit': return [car.eye.clone(), new THREE.Vector3(car.eye.x, car.eye.y - 0.9, car.eye.z + 10)];
-      case 'hood': { const y = c.y + c.hy + 0.05, z = c.z + c.hz + 0.15; return [new THREE.Vector3(0, y, z), new THREE.Vector3(0, y - 0.9, z + 12)]; }
+      case 'hood': { const y = ch.y + ch.hy + 0.42, z = ch.hz - 0.35; return [new THREE.Vector3(0, y, z), new THREE.Vector3(0, y - 0.55, z + 12)]; } // low + forward: bonnet edge, for narrow trails / water
       case 'bumper': { const y = ch.y - ch.hy + 0.35, z = ch.hz + 0.25; return [new THREE.Vector3(0, y, z), new THREE.Vector3(0, y - 0.25, z + 12)]; }
       case 'wheel': { const x = W.x + W.w / 2 + 0.3, y = W.y + 0.05; return [new THREE.Vector3(x, y, W.zf - W.r - 0.9), new THREE.Vector3(x - 0.15, y - 0.25, W.zf + 8)]; }
       default: { const mx = c.hx + 0.32, my = c.y - c.hy + 0.55, mz = c.z + c.hz - 0.15; return [new THREE.Vector3(mx, my, mz), new THREE.Vector3(mx + 0.9, my - 0.45, mz - 12)]; } // mirror
@@ -876,7 +878,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   }
   /** camera feedback amount from Settings (Off / Low / Medium / High) */
   const shakeK = () => SHAKE_K[settings.shakeLevel] ?? 1;
-  let shakeKick = 0;
+  let shakeKick = 0; const headOff = new THREE.Vector3(); let headVy = 0, camVib = 0;
   function viewCamera(dt: number) {
     lookBackK += ((lookBack ? 1 : 0) - lookBackK) * Math.min(1, dt * 9);
     const p = car.group.position;
@@ -889,6 +891,13 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       // trackside tracking shot: a fixed point ahead of / beside the vehicle; re-placed when the car is past it or too far
       const f = car.forward(), v = car.body.linvel(), sp = Math.hypot(v.x, v.z);
       cine.t += dt;
+      if (cine.side) { // low-angle side tracking shot: rides alongside at wheel height so articulation / suspension travel is visible
+        const W = car.spec.wheel, rx = f.z, rz = -f.x, gs = cine.sideSign, off = W.x + 2.6, zc = (W.zf + W.zr) / 2;
+        tmpL.set(p.x + rx * off * gs + f.x * zc, 0, p.z + rz * off * gs + f.z * zc); tmpL.y = Math.max(heightAt(tmpL.x, tmpL.z) + 0.35, p.y - 0.35);
+        if (!cine.set) { cine.pos.copy(tmpL); cine.set = true; } else cine.pos.lerp(tmpL, 1 - Math.exp(-dt * 6));
+        camera.position.copy(cine.pos); camera.lookAt(p.x + f.x * zc, p.y - 0.25, p.z + f.z * zc); camera.fov = baseFov + 6;
+        if (cine.t > 7) { cine.side = false; cine.set = false; cine.t = 0; startBlend(); blendFrom.t = 0.999; }
+      } else {
       const dist = cine.set ? cine.pos.distanceTo(p) : 1e9, behind = cine.set && (cine.pos.x - p.x) * f.x + (cine.pos.z - p.z) * f.z < -8;
       if (!cine.set || dist > 45 || behind || cine.t > 9) {
         const side = Math.random() < 0.5 ? -1 : 1, ahead = 14 + Math.min(30, sp * 2.2), off = 6 + Math.random() * 5;
@@ -897,6 +906,8 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       }
       camera.position.copy(cine.pos); camera.lookAt(p.x, p.y + 0.6, p.z);
       camera.fov = THREE.MathUtils.clamp(2400 / Math.max(8, cine.pos.distanceTo(p)) / 2.2, 22, baseFov);
+      if (cine.t > 6 && !cine.side) { cine.side = true; cine.sideSign = Math.random() < 0.5 ? -1 : 1; cine.set = false; cine.t = 0; startBlend(); blendFrom.t = 0.999; }
+      }
     } else {
       // internal / on-body views ride the sprung body (lean = suspension pitch/roll); look-around + look-back rotate the view
       if (camMode === 'cockpit' && !car.cockpitOn) car.setCockpit(true);
@@ -904,6 +915,18 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
       const [e, a] = rig(camMode);
       const yaw = lookYaw + lookBackK * Math.PI, pitch = -lookPitch * 0.6;
       tmpL.subVectors(a, e).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw); tmpL.y += pitch * 10; a.copy(e).add(tmpL);
+      { // head motion: leans against lateral / longitudinal acceleration (vehicle space), strongest in the cockpit; Off..High setting
+        const k = shakeK() * (camMode === 'cockpit' ? 1 : camMode === 'hood' || camMode === 'bumper' ? 0.5 : 0.3);
+        headOff.x += (THREE.MathUtils.clamp(-car.accLocal.x * 0.006, -0.07, 0.07) * k - headOff.x) * Math.min(1, dt * 6);
+        headOff.z += (THREE.MathUtils.clamp(-car.accLocal.y * 0.004, -0.05, 0.05) * k - headOff.z) * Math.min(1, dt * 6);
+        // interior vibration: speed x surface roughness, plus chassis vertical jolts (suspension bumps)
+        const v = car.body.linvel(), sp = Math.hypot(v.x, v.z), surf = car.surface();
+        const rough = surf === 'rock' ? 1 : surf === 'mud' ? 0.6 : surf === 'ground' ? 0.35 : 0.25;
+        const bump = Math.min(1, Math.abs(v.y - headVy) / Math.max(dt, 1e-3) / 40); headVy = v.y;
+        const amp = (Math.min(1, sp / 20) * rough * 0.006 + bump * 0.02) * k;
+        headOff.y = (Math.sin(clock * 53) + Math.sin(clock * 37.3) * 0.6) * amp;
+        e.add(headOff); a.add(headOff); camVib = amp;
+      }
       eyeW.copy(e); car.bodyVis.localToWorld(eyeW); aheadW.copy(a); car.bodyVis.localToWorld(aheadW);
       const gy = heightAt(eyeW.x, eyeW.z) + 0.25; if (eyeW.y < gy) eyeW.y = gy; // never below the terrain
       camera.position.copy(eyeW); camera.up.set(0, 1, 0).applyQuaternion(car.group.quaternion); camera.lookAt(aheadW); camera.up.set(0, 1, 0);
@@ -917,6 +940,16 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camera.updateProjectionMatrix();
   }
   setCamMode(camMode, true); setProfile(settings.profile ?? 'pro', true); blendFrom.t = 1;
+  // LOW / NORMAL speed limit (physics limiter in Vehicle.step)
+  function setSpeedMode(m: 'normal' | 'low', quiet = false) {
+    settings.speedMode = m; saveSettings(settings); Vehicle.speedMode = m;
+    $('spd-chip').textContent = m === 'low' ? 'LOW 25' : 'NORMAL'; $('spd-chip').classList.toggle('on', m === 'low');
+    document.querySelectorAll<HTMLElement>('#seg-speed button').forEach((b) => b.classList.toggle('on', b.dataset.v === m));
+    if (!quiet) toast(m === 'low' ? '🐢 Speed limit LOW: 25 km/h' : `Speed limit NORMAL: ${Math.round(car.capKmh || 50)} km/h max`);
+  }
+  setSpeedMode(settings.speedMode ?? 'normal', true);
+  $('spd-chip').onclick = (e) => { e.stopPropagation(); setSpeedMode(settings.speedMode === 'low' ? 'normal' : 'low'); };
+  document.querySelectorAll<HTMLElement>('#seg-speed button').forEach((b) => b.onclick = () => setSpeedMode(b.dataset.v as 'normal' | 'low'));
   // ---------- configurable key bindings + gamepad settings ----------
   const keyName = (c: string) => c.replace(/^Key/, '').replace(/^Digit/, '').replace('Arrow', '').replace('Space', 'Space').replace('Escape', 'Esc');
   function renderBindings() {
@@ -1041,7 +1074,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   $<HTMLInputElement>('chk-fps').onchange = (e) => { settings.showFps = (e.target as HTMLInputElement).checked; saveSettings(settings); refreshUI(); };
   $<HTMLInputElement>('rng-camdist').oninput = (e) => { settings.camDist = Number((e.target as HTMLInputElement).value); saveSettings(settings); };
   $<HTMLInputElement>('rng-camheight').oninput = (e) => { settings.camHeight = Number((e.target as HTMLInputElement).value); saveSettings(settings); };
-  document.querySelectorAll<HTMLElement>('#seg-shake button').forEach((b) => b.onclick = () => { settings.shakeLevel = b.dataset.v as ShakeLevel; settings.shake = settings.shakeLevel !== 'off'; saveSettings(settings); refreshUI(); });
+  document.querySelectorAll<HTMLElement>('#seg-shake button').forEach((b) => b.onclick = () => { settings.shakeUser = true; settings.shakeLevel = b.dataset.v as ShakeLevel; settings.shake = settings.shakeLevel !== 'off'; saveSettings(settings); refreshUI(); });
   $<HTMLInputElement>('chk-intro').onchange = (e) => { settings.intro = (e.target as HTMLInputElement).checked; saveSettings(settings); };
   $<HTMLInputElement>('chk-mute').onchange = (e) => { settings.muted = (e.target as HTMLInputElement).checked; saveSettings(settings); audio.setVolume(settings.volume, settings.muted); refreshUI(); };
   $<HTMLInputElement>('rng-volume').oninput = (e) => { settings.volume = Number((e.target as HTMLInputElement).value); saveSettings(settings); audio.setVolume(settings.volume, settings.muted); };
@@ -1343,7 +1376,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
 
     // ---- HUD ----
     if (phase === 'playing' || phase === 'paused') {
-      $('hud-speed').textContent = Math.round(Math.abs(car.forwardSpeed()) * 3.6).toString();
+      { const lv = car.body.linvel(); $('hud-speed').textContent = Math.round(Math.hypot(lv.x, lv.y, lv.z) * 3.6).toString(); } // real speed from velocity
       $('hud-gear').textContent = car.sel === 'P' ? 'P' : car.sel === 'N' ? 'N' : car.gear < 0 ? 'R' : (car.sel === 'D' ? 'D' : '') + String(car.gear);
       if (input.touchActive) { ($('pd-gas').querySelector('.fill') as HTMLElement).style.height = `${Math.round(input.gasV * 100)}%`; ($('pd-brake').querySelector('.fill') as HTMLElement).style.height = `${Math.round(input.brakeV * 100)}%`; }
       { // traction / status indicator
@@ -1432,10 +1465,14 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     setVehicle: (id: string) => { settings.vehicle = id; saveSettings(settings); setVehicle(id); },
     split: { start: () => startSplit(), stop: () => { stopSplit(); setPhase('menu'); }, get on() { return split; }, setP2: (d: DriveInput | null) => { input.override2 = d; },
       p2: () => { if (!car2) return null; const t = car2.body.translation(); return { x: t.x, y: t.y, z: t.z, speed: car2.forwardSpeed(), steer: car2.steer, input: drive2, p1input: lastInput }; } },
+    /** test-only flat pad (2 km long, 400 m up, 'ground' surface) for repeatable flat-road pace numbers */
+    testPad: () => { if (!(window as any).__pad0) { const b = world.createRigidBody(RAPIER.RigidBodyDesc.fixed()); world.createCollider(RAPIER.ColliderDesc.cuboid(20, 1, 1000).setTranslation(-400, 399, 0), b); (window as any).__pad0 = true; } return { x: -400, y: 400, z: -950 }; },
+    place: (x: number, y: number, z: number, yaw: number) => { car.reset(x, y, z, yaw); camInit = false; },
+    speedMode: (m: 'normal' | 'low') => setSpeedMode(m, true), get capKmh() { return car.capKmh; },
     profile: (id: ProfileId) => setProfile(id, true), get profileId() { return car.profile.id; }, profileIds: PROFILE_ORDER,
     cam: (m: CamMode) => setCamMode(m), get camMode() { return camMode; }, camModes: CAM_MODES, resetCam: () => resetCam(), lookBack: (v: boolean) => { lookBack = v; },
     input: { get last() { return input.lastDevice; }, get pad() { return { index: input.padIndex, name: input.padName }; }, bindings: () => JSON.parse(JSON.stringify(input.bindings)), setBinding: (a: Action, c: string[]) => input.setBinding(a, c), resetBindings: () => input.resetBindings() },
-    camInfo: () => { const p = camera.position; const g = heightAt(p.x, p.z); const t = car.body.translation(); return { mode: camMode, x: p.x, y: p.y, z: p.z, aboveGround: p.y - g, distToCar: p.distanceTo(new THREE.Vector3(t.x, t.y, t.z)), fov: camera.fov, blend: blendFrom.t, lookBackK }; }, orbit: (yaw: number, pitch = 0.35) => { orbitYaw = yaw; orbitPitch = pitch; orbitIdle = 0; },
+    camInfo: () => { const p = camera.position; const g = heightAt(p.x, p.z); const t = car.body.translation(); return { mode: camMode, x: p.x, y: p.y, z: p.z, aboveGround: p.y - g, distToCar: p.distanceTo(new THREE.Vector3(t.x, t.y, t.z)), fov: camera.fov, blend: blendFrom.t, lookBackK, head: { x: headOff.x, y: headOff.y, z: headOff.z }, vib: camVib, cineSide: !!cine.side }; }, orbit: (yaw: number, pitch = 0.35) => { orbitYaw = yaw; orbitPitch = pitch; orbitIdle = 0; },
     wheelAngle: () => car.steeringWheel?.rotation.z ?? null,
     wheelUI: () => ({ deg: input.wheelDeg, held: input.wheelHeld, value: input.wheelValue, steer: lastInput.steer, p2deg: input.p2wheel.wheelDeg, p2angle: car2?.steeringWheel?.rotation.z ?? null }),
     camOverride: (c: [[number, number, number], [number, number, number]] | null) => { camOverride = c; },
