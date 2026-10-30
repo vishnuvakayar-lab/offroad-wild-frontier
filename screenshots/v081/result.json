@@ -2,23 +2,23 @@
  "res": [
   {
    "n": "Build 0.8.1+",
-   "p": false,
+   "p": true,
    "d": ""
   },
   {
    "n": "cockpit: head leans with acceleration (subtle, <= 7 cm) and vibrates at speed",
    "p": true,
-   "d": "head {\"x\":-0.03950934817681667,\"y\":0.003183265493024579,\"z\":-0.0008517208454660422} vib 0.0031 (rest vib 0.0000)"
+   "d": "head {\"x\":-0.01697480329544147,\"y\":-0.003365508456497791,\"z\":-0.011891057283423588} vib 0.0037 (rest vib 0.0000)"
   },
   {
    "n": "hood: low forward rig, above terrain",
    "p": true,
-   "d": "above 1.86 m, 2.01 m from car origin"
+   "d": "above 1.94 m, 2.00 m from car origin"
   },
   {
    "n": "cinematic: low side tracking shot reached (wheel height, close)",
-   "p": true,
-   "d": "above 0.74 m, 4.1 m"
+   "p": false,
+   "d": "above 1.57 m, 3.7 m"
   },
   {
    "n": "default shake per drive mode: PRO/SIM/OFF-ROAD medium, ARCADE low",
@@ -27,8 +27,8 @@
   },
   {
    "n": "SIMULATION at speed: turns less (understeer) and rolls more than PRO in the same corner",
-   "p": true,
-   "d": "{\"pro\":{\"kmh\":52,\"yawDegS\":34.7,\"maxRollDeg\":0.7},\"sim\":{\"kmh\":52,\"yawDegS\":25.7,\"maxRollDeg\":1.2}}"
+   "p": false,
+   "d": "{\"pro\":{\"kmh\":53,\"yawDegS\":17.5,\"maxRollDeg\":1.9},\"sim\":{\"kmh\":53,\"yawDegS\":12.5,\"maxRollDeg\":1.3}}"
   },
   {
    "n": "no page errors",
@@ -38,14 +38,14 @@
  ],
  "hs": {
   "pro": {
-   "kmh": 52,
-   "yawDegS": 34.7,
-   "maxRollDeg": 0.7
+   "kmh": 53,
+   "yawDegS": 17.5,
+   "maxRollDeg": 1.9
   },
   "sim": {
-   "kmh": 52,
-   "yawDegS": 25.7,
-   "maxRollDeg": 1.2
+   "kmh": 53,
+   "yawDegS": 12.5,
+   "maxRollDeg": 1.3
   }
  },
  "sh": {

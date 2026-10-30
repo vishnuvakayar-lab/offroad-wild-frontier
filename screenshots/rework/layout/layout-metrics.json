@@ -79,7 +79,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 7.2
+    "moved": 7.7
    }
   },
   "pause": {
@@ -185,7 +185,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 9.7
+    "moved": 10
    }
   },
   "pause": {
@@ -291,7 +291,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 9.6
+    "moved": 9
    }
   },
   "pause": {
@@ -397,7 +397,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 8.5
+    "moved": 7.2
    }
   },
   "pause": {
@@ -503,7 +503,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 9.4
+    "moved": 8.3
    }
   },
   "pause": {
@@ -609,7 +609,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 9.3
+    "moved": 9.5
    }
   },
   "pause": {
@@ -715,7 +715,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 7.2
+    "moved": 6.4
    }
   },
   "pause": {
@@ -821,7 +821,7 @@
    "drive": {
     "steer": 1,
     "throttle": 1,
-    "moved": 7.2
+    "moved": 8
    }
   },
   "pause": {

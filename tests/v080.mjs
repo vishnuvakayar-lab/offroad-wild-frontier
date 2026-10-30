@@ -50,7 +50,7 @@ page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => {
 const t0 = Date.now();
 await page.goto(APP + '?noopening&dev=1'); await page.waitForFunction(() => window.__game?.phase === 'menu', null, { timeout: 240000 });
 const loadS = ((Date.now() - t0) / 1000).toFixed(1);
-ok('boots to menu, Build 0.8.x', /Build 0\.8\.\d/.test(await page.textContent('body')), `load ${loadS} s`);
+ok('boots to menu, Build 0.8.x', /Build 0\.9\.\d/.test(await page.textContent('body')), `load ${loadS} s`);
 await page.evaluate(() => { window.__noAutoPause = true; });
 await shot(page, 'menu.png');
 const nos = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: innerWidth, sh: document.documentElement.scrollHeight, ch: innerHeight }));
