@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
 import { surfaceAt, puddleAt, type Surface } from './terrain';
 import { TrackMarks } from './tracks';
-import { type VehicleSpec } from './vehicles';
+import { type VehicleSpec, vehicleById } from './vehicles';
 import { Kit, mergeStatic, type Mats, type Lod } from './kit';
+import { powertrainFor, engineTorque, engineDrag, physSurface, SURF, magic, type Powertrain, type PhysSurface } from './physics';
 import { PROFILES, type DriveProfile, type ProfileId } from './profiles';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -12,15 +13,12 @@ export interface DriveInput { throttle: number; brake: number; steer: number; ha
 export type Transfer = '2H' | '4H' | '4L' | 'AWD';
 /** Transmission selector: A = automatic (brake at standstill engages reverse), or manual P / R / N / D. */
 export type GearSel = 'A' | 'P' | 'R' | 'N' | 'D';
-/** 0.8.1 realistic pace: drive force scale (was 1.0 = ~11 m/s^2 launch), speed caps (m/s) and progressive pedal */
-export const DRIVE_SCALE = 0.22; // reverse drive scale
-export const PEAK_FORCE_K = 0.32, POWER_K = 2.6; // per wheel: peak N = engine*0.5, power W = engine*1.75 (scout ~32 kW at the wheels)
-export const NORMAL_CAP_MIN = 40 / 3.6, NORMAL_CAP_MAX = 60 / 3.6, LOW_SPEED_CAP = 25 / 3.6, LOW_RANGE_CAP = 28 / 3.6, REVERSE_CAP = 14 / 3.6;
-export const PEDAL_RAMP_S = 0.7;
-export type SpeedMode = 'normal' | 'low';
-/** per-vehicle NORMAL top speed: 46 % of the old arcade top speed, clamped to 40..60 km/h */
+/** user-facing speed limiter setpoints (m/s): the limiter only closes the throttle (no velocity clamping) */
+export const NORMAL_CAP_MIN = 40 / 3.6, NORMAL_CAP_MAX = 60 / 3.6, LOW_SPEED_CAP = 25 / 3.6, REVERSE_CAP = 14 / 3.6;
+export const PEDAL_RAMP_S = 0.25;
+export type SpeedMode = 'normal' | 'low' | 'off';
+/** per-vehicle NORMAL limiter setpoint (km/h pace of the previous builds): clamped to 40..60 km/h */
 export const normalCap = (top: number) => Math.min(NORMAL_CAP_MAX, Math.max(NORMAL_CAP_MIN, top * 0.46));
-export const LOW_RANGE = 2.6;          // 4L reduction ratio: x2.6 wheel torque, top speed / 2.6
 export const SHIFT_ON_FLY_KMH = 60;
 export const LOW_RANGE_MAX_KMH = 8;    // 4L in/out only when stopped or creeping below this speed    // 2H <-> 4H allowed below this speed
 export const DIR_SHIFT_KMH = 2;        // D <-> R only below this speed
@@ -28,13 +26,7 @@ export interface ShiftResult { ok: boolean; msg: string }
 
 /** Per-surface handling. frictionSlip limits tyre grip (Rapier raycast vehicle);
  *  drag is a speed-proportional resistance (sinking into mud / ploughing sand). */
-export const SURFACE_PARAMS: Record<Surface, { slip: number; side: number; drag: number; label: string }> = {
-  ground: { slip: 1.5, side: 1.0, drag: 0.012, label: 'Dirt' },
-  sand: { slip: 0.75, side: 0.7, drag: 0.28, label: 'Sand' },
-  mud: { slip: 0.42, side: 0.45, drag: 0.55, label: 'Mud' },
-  // rock: hard but loose scree on top - less grip than packed dirt, very little drag
-  rock: { slip: 1.12, side: 0.82, drag: 0.05, label: 'Rock' },
-};
+export const SURFACE_PARAMS: Record<Surface, { label: string }> = { ground: { label: 'Dirt' }, sand: { label: 'Sand' }, mud: { label: 'Mud' }, rock: { label: 'Rock' } };
 
 export class Vehicle {
   body: RAPIER_NS.RigidBody;
@@ -69,6 +61,8 @@ export class Vehicle {
   lampMat!: THREE.MeshStandardMaterial;
   rearGlow!: THREE.PointLight; lightsOn = false;
   static speedMode: SpeedMode = 'normal';
+  /** test hook: force one tyre surface everywhere (null = terrain) */
+  static forceSurf: PhysSurface | null = null;
   thrRamp = 0; capKmh = 0;
   /** per-wheel telemetry for particles/audio */
   slip = [0, 0, 0, 0];
@@ -85,7 +79,7 @@ export class Vehicle {
   wheelReq = [0, 0, 0, 0];
   /** wheel angular speed (rad/s) from the physics wheels */
   wheelRate = [0, 0, 0, 0];
-  private lastRot = [0, 0, 0, 0];
+  // (lastRot removed in 0.9.0)
   ratio = 1; engineForce = 0;
 
   spec: VehicleSpec;
@@ -94,7 +88,7 @@ export class Vehicle {
   private scene: THREE.Scene;
   /** how high above the terrain the chassis centre must spawn so the wheels are not buried */
   spawnLift: number;
-  private inertiaY = 4800;
+  inertiaY = 4800;
 
   /** `headless` (multiplayer server): physics only, no visual model. */
   readonly headless: boolean;
@@ -108,6 +102,7 @@ export class Vehicle {
       { x: W.x, y: W.y, z: W.zf }, { x: -W.x, y: W.y, z: W.zf }, // front left (+x is the vehicle's left), front right
       { x: W.x, y: W.y, z: W.zr }, { x: -W.x, y: W.y, z: W.zr }, // rear left, rear right
     ];
+    this.pt = powertrainFor(spec.id);
     this.spawnLift = Math.max(1.4, -(W.y - spec.susp.rest - W.r) + 0.15);
     const ch = spec.chassis, cab = spec.cabin;
     const inertia = spec.inertia ?? [
@@ -116,7 +111,7 @@ export class Vehicle {
       (spec.mass / 12) * ((2 * ch.hx) ** 2 + (2 * ch.hy) ** 2) * 2.2,
     ];
     const bd = R.RigidBodyDesc.dynamic().setTranslation(0, 2, 0).setCanSleep(false)
-      .setLinearDamping(0.02).setAngularDamping(0.4);
+      .setLinearDamping(0).setAngularDamping(0.05); // no artificial damping: resistance comes from tyres, aero and suspension
     this.body = world.createRigidBody(bd);
     // main chassis collider; explicit mass props with a low centre of mass for stability
     const cd = R.ColliderDesc.cuboid(ch.hx, ch.hy, ch.hz).setTranslation(0, ch.y, 0).setFriction(0.4)
@@ -136,8 +131,9 @@ export class Vehicle {
       this.ctrl.setWheelSuspensionRelaxation(i, su.relaxation);
       this.ctrl.setWheelMaxSuspensionTravel(i, su.travel);
       this.ctrl.setWheelMaxSuspensionForce(i, 120000 * (spec.mass / 1650));
-      this.ctrl.setWheelFrictionSlip(i, SURFACE_PARAMS.ground.slip);
-      this.ctrl.setWheelSideFrictionStiffness(i, 1);
+      // Rapier only supplies the spring/damper suspension; all tyre forces come from the tyre model in step()
+      this.ctrl.setWheelFrictionSlip(i, 0);
+      this.ctrl.setWheelSideFrictionStiffness(i, 0);
     }
     if (!headless) { this.setProfile(Vehicle.defaultProfile); this.buildModel(paint); scene!.add(this.group); }
   }
@@ -415,6 +411,7 @@ export class Vehicle {
     this.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true);
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    this.w = [0, 0, 0, 0]; this.gearIdx = 1; this.thrRamp = 0; this.shiftT = 0; this.autoDir = 1; this.kappa = [0, 0, 0, 0]; this.rpm = this.pt.idle; this.steer = 0;
     this.lastV = null; this.accLocal.set(0, 0); this.lean = { pitch: 0, roll: 0, vp: 0, vr: 0 }; this.braking = false;
     this.steer = 0;
     this.tracks?.reset();
@@ -472,8 +469,25 @@ export class Vehicle {
     this.sel = g; return { ok: true, msg: g };
   }
 
+  // ===================== 0.9.0 real vehicle model =====================
+  /** powertrain data (engine curve, gearbox, transfer case, aero, brakes, anti-roll bars) */
+  pt!: Powertrain;
+  /** wheel angular velocity (rad/s), visual wheel angle */
+  w = [0, 0, 0, 0]; private wAng = [0, 0, 0, 0];
+  /** current automatic gear (1-based), shift timer (s), last driving direction in Auto */
+  gearIdx = 1; private shiftT = 0; private autoDir = 1;
+  /** user diff lock (axle diffs locked; centre is always locked in 4H/4L) */
+  diffLock = false;
+  /** last tyre telemetry: slip ratio, slip angle (rad), surface per wheel, wheel load (N) */
+  kappa = [0, 0, 0, 0]; alpha = [0, 0, 0, 0]; phys: (PhysSurface | null)[] = [null, null, null, null]; load = [0, 0, 0, 0];
+  /** total ratio engine -> wheel in the current gear (incl. final drive + transfer) */
+  totalRatio = 0; converterLocked = false; engineTorqueNm = 0;
+  /** limiter setpoint (m/s) when the optional speed limiter is on, 0 = off */
+  limitV = 0;
+  static readonly SUB = 2; // tyre / wheel / drivetrain substeps per physics step (60 Hz world -> 120 Hz tyre model)
+
   step(dt: number, inp: DriveInput) {
-    const ctrl = this.ctrl;
+    const ctrl = this.ctrl, sp0 = this.spec, P = this.profile, pt = this.pt;
     const speed = this.forwardSpeed();
     { // cosmetic mud build-up (visual only; no effect on physics)
       let mudW = 0, sandW = 0; for (const s of this.surfaces) { if (s === 'mud') mudW++; else if (s === 'sand') sandW++; }
@@ -481,107 +495,225 @@ export class Vehicle {
       if (mudW) this.dirt = Math.min(1, this.dirt + dt * 0.08 * (mudW / 4) * sp);
       else if (sandW && this.dirt < 0.3) this.dirt = Math.min(0.3, this.dirt + dt * 0.01 * sp);
     }
-    // speed-sensitive steering, smoothed
-    const sp0 = this.spec;
-    const P = this.profile;
-    const maxSteer = (sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 16)) * P.steerLim; // full speed-sensitivity by ~58 km/h
-    const target = inp.steer * maxSteer;
-    this.steer += (target - this.steer) * Math.min(1, dt * P.steerRate);
-    // profile throttle curve (exponent < 1 = punchy, > 1 = progressive)
+    // steering: rack angle limited by the vehicle's lock, quicker ratio at parking speed (variable-ratio rack), finite steering rate
+    const maxSteer = (sp0.steerLow - (sp0.steerLow - sp0.steerHigh) * Math.min(1, Math.abs(speed) / 16)) * P.steerLim;
+    this.steer += (inp.steer * maxSteer - this.steer) * Math.min(1, dt * P.steerRate);
+    // pedal map (profile) + throttle-body / turbo response lag (~0.25 s)
     const thrT = inp.throttle > 0 ? Math.pow(inp.throttle, P.throttleExp) : 0;
-    // progressive pedal: force builds over ~0.7 s, lifts off quickly
     this.thrRamp = thrT > this.thrRamp ? Math.min(thrT, this.thrRamp + dt / PEDAL_RAMP_S) : Math.max(thrT, this.thrRamp - dt * 6);
-    inp = { ...inp, throttle: this.thrRamp };
+    const pedal = this.thrRamp;
 
-    // drive / brake / reverse logic (transmission selector + transfer case)
-    let engine = 0, brake = 0;
-    const bs = (sp0.mass / 1650) * P.brake; // brake impulses scale with mass (and the profile's brake force)
-    const low = this.transfer === '4L' ? LOW_RANGE : 1;
-    const capN = Vehicle.speedMode === 'low' ? Math.min(LOW_SPEED_CAP, normalCap(sp0.topSpeed)) : normalCap(sp0.topSpeed);
-    const top = this.transfer === '4L' ? Math.min(LOW_RANGE_CAP, capN) : capN, rev = Math.min(REVERSE_CAP, sp0.reverse / low);
-    this.capKmh = top * 3.6;
-    const force = sp0.engine * DRIVE_SCALE * low * P.engine;
-    // power-limited drive (per wheel): traction-level force at crawl speed, constant power above it (gears), tapering at the cap.
-    // 4L multiplies the low-speed force (x2.6) but not the power, so it pulls harder slowly and tops out lower.
-    const fMax = sp0.engine * PEAK_FORCE_K * low * P.engine, powerW = sp0.engine * POWER_K * P.engine;
-    const fwdDrive = (t: number) => t * Math.min(fMax, powerW / Math.max(0.5, Math.abs(speed))) * Math.max(0, 1 - Math.pow(Math.max(0, speed) / top, 4));
-    const revDrive = (t: number) => -force * 0.6 * t * Math.max(0, 1 - Math.max(0, -speed) / rev);
+    // ---- selector logic -> gear direction, engine throttle, brake pedal
+    let dir = 0, thr = 0, brk = 0, park = false;
     const sel = this.sel;
     if (sel === 'A') {
-      if (inp.throttle > 0.01) {
-        if (speed < -0.8) brake = 46 * bs * inp.throttle;
-        else engine = fwdDrive(inp.throttle);
-      }
-      if (inp.brake > 0.01) {
-        if (speed > 0.8) brake = Math.max(brake, 46 * bs * inp.brake);
-        else if (inp.throttle <= 0.01) engine = revDrive(inp.brake);
-      }
+      if (pedal > 0.01) { if (speed < -0.8) brk = pedal; else { dir = 1; thr = pedal; this.autoDir = 1; } }
+      if (inp.brake > 0.01) { if (speed > 0.8 || inp.handbrake) brk = Math.max(brk, inp.brake); else if (pedal <= 0.01) { dir = -1; thr = inp.brake; this.autoDir = -1; } }
+      if (dir === 0) dir = this.autoDir;
     } else if (sel === 'D' || sel === 'R') {
-      if (inp.throttle > 0.01) {
-        const against = sel === 'D' ? speed < -0.8 : speed > 0.8; // rolling the wrong way: throttle brakes first
-        if (against) brake = 46 * bs * inp.throttle; else engine = sel === 'D' ? fwdDrive(inp.throttle) : revDrive(inp.throttle);
-      }
-      if (inp.brake > 0.01) brake = Math.max(brake, 46 * bs * inp.brake);
-    } else if (sel === 'N') {
-      if (inp.brake > 0.01) brake = 46 * bs * inp.brake;
-    } else brake = 200 * bs; // P: parking pawl
-    if (inp.throttle <= 0.01 && inp.brake <= 0.01 && sel !== 'P') brake = sel === 'N' ? 1.5 * bs : 6 * bs * low; // engine braking (stronger in low range) / rolling resistance
-    // torque split: 2H drives only the rear axle (same total force), 4H/4L/AWD split it evenly
-    // 2H: rear axle only (same total force); 4H/4L/AWD: front/rear split from the vehicle spec (frontSplit, default 50 %)
-    const fsp = sp0.frontSplit ?? 0.5;
-    const split = this.transfer === '2H' ? [0, 0, 2, 2] : [2 * fsp, 2 * fsp, 2 * (1 - fsp), 2 * (1 - fsp)];
-    this.ratio = low; this.engineForce = (engine / low) * 4; // engine drive force referred to the wheels in high range (all wheels)
+      dir = sel === 'D' ? 1 : -1;
+      if (pedal > 0.01) { if (sel === 'D' ? speed < -0.8 : speed > 0.8) brk = pedal; else thr = pedal; }
+      if (inp.brake > 0.01) brk = Math.max(brk, inp.brake);
+    } else if (sel === 'N') { if (inp.brake > 0.01) brk = inp.brake; }
+    else park = true;
+    // optional speed limiter (user setting): works on the throttle only, like a real limiter (it cannot brake downhill)
+    const capN = Vehicle.speedMode === 'off' ? 0 : Vehicle.speedMode === 'low' ? Math.min(LOW_SPEED_CAP, normalCap(sp0.topSpeed)) : normalCap(sp0.topSpeed);
+    this.limitV = capN; this.capKmh = capN * 3.6;
+    if (dir > 0 && capN > 0) thr *= THREE.MathUtils.clamp((capN - speed) / 1.2, 0, 1);
+    if (dir < 0) thr *= THREE.MathUtils.clamp((REVERSE_CAP + speed) / 1.2, 0, 1); // ECU reverse-speed limiter
 
-    let contacts = 0, dragSum = 0;
-    const v = this.body.linvel();
-    const r = this.body.rotation();
-    const right = new THREE.Vector3(-1, 0, 0).applyQuaternion(new THREE.Quaternion(r.x, r.y, r.z, r.w));
-    const latV = Math.abs(v.x * right.x + v.y * right.y + v.z * right.z);
-    for (let i = 0; i < 4; i++) {
-      const inContact = ctrl.wheelIsInContact(i);
-      let s: Surface | null = null;
-      this.inPuddle[i] = false;
-      if (inContact) {
-        const p = ctrl.wheelContactPoint(i);
-        s = p ? surfaceAt(p.x, p.z) : 'ground';
-        if (p) { (this.contact[i] ??= new THREE.Vector3()).set(p.x, p.y, p.z); this.inPuddle[i] = !!puddleAt(p.x, p.z); }
-        contacts++;
-      } else this.contact[i] = null;
-      this.surfaces[i] = s;
-      const sp = SURFACE_PARAMS[s ?? 'ground'];
-      const surf = s ?? 'ground';
-      const soft = surf === 'mud' || surf === 'sand';
-      // tyres: rock uses the hard-surface rating; wet weather (rain) cuts hard-ground / rock grip, a puddle cuts it more
-      const wetK = soft ? 1 : 1 - 0.14 * this.wet - (this.inPuddle[i] ? 0.12 : 0);
-      const gripK = sp0.grip[surf === 'rock' ? 'ground' : surf] * sp.slip * P.grip * (soft ? P.softGrip : 1) * wetK;
-      const dragK = sp.drag * (surf === 'ground' || surf === 'rock' ? 1 : sp0.drag[surf] * P.softDrag);
-      dragSum += inContact ? dragK + (this.inPuddle[i] ? 0.35 : 0) : 0;
-      // slip estimate: requested drive force vs available grip (Rapier clamps the forward impulse at
-      // suspensionForce * frictionSlip) plus sideways sliding
-      if (inContact) {
-        const grip = (ctrl.wheelSuspensionForce(i) ?? 0) * gripK;
-        const req = Math.abs(engine * split[i]) + (inp.handbrake && i >= 2 ? 3000 * bs : 0);
-        const lon = req > grip && req > 0 ? (req - grip) / req : 0;
-        this.slip[i] = Math.min(1, lon + latV / 7);
-      } else this.slip[i] = 0;
-      const rear = i >= 2;
-      ctrl.setWheelFrictionSlip(i, gripK);
-      const hsK = !rear && P.hiSpeed ? 1 - 0.4 * P.hiSpeed * THREE.MathUtils.clamp((Math.abs(speed) * 3.6 - 35) / 25, 0, 1) * Math.min(1, Math.abs(this.steer) / 0.25) : 1; // SIM: speed-sensitive understeer
-      ctrl.setWheelSideFrictionStiffness(i, hsK * sp.side * sp0.side * P.side * (soft ? 1 : 1 - 0.1 * this.wet) * (rear && inp.handbrake ? 0.35 : 1));
-      ctrl.setWheelSteering(i, rear ? 0 : this.steer);
-      // traction limit for force above the arcade baseline: the tuned tyre model always delivers the high-range per-wheel
-      // force; anything beyond it (2H doubling the rear, 4L multiplication) is limited by load x grip -> wheelspin instead
-      const reqF = engine * split[i];
-      let outF = reqF;
-      if (inContact) { const cap = Math.max(Math.abs(engine) / low, (ctrl.wheelSuspensionForce(i) ?? 0) * gripK); outF = Math.sign(reqF) * Math.min(Math.abs(reqF), cap); }
-      ctrl.setWheelEngineForce(i, outF); this.wheelReq[i] = reqF; this.wheelForce[i] = outF;
-      ctrl.setWheelBrake(i, rear && inp.handbrake ? 160 * bs : brake);
-      // visual wheel-spin on loose surfaces under power
-      if (split[i] > 0) this.extraSpin[i] += Math.sign(engine) * (inContact ? this.slip[i] : Math.abs(engine) / force) * dt * 20;
+    // ---- gearbox (automatic with torque converter) + transfer case
+    const lowK = this.transfer === '4L' ? pt.low : 1;
+    const maxGear = this.transfer === '4L' ? Math.min(2, pt.gears.length) : pt.gears.length;
+    if (this.gearIdx > maxGear) this.gearIdx = maxGear;
+    const twoH = this.transfer === '2H', awd = this.transfer === 'AWD';
+    const fs = twoH ? 0 : (sp0.frontSplit ?? 0.5);
+    const r = sp0.wheel.r, Iw = this.wheelInertia;
+    const drivenS = () => twoH ? (this.w[2] + this.w[3]) / 2 : awd ? fs * (this.w[0] + this.w[1]) / 2 + (1 - fs) * (this.w[2] + this.w[3]) / 2 : (this.w[0] + this.w[1] + this.w[2] + this.w[3]) / 4;
+    const ratioOf = (g: number) => (dir < 0 ? pt.reverse : pt.gears[g - 1]) * pt.final * lowK;
+    let total = dir === 0 || park ? 0 : ratioOf(this.gearIdx);
+    let rpmW = Math.abs(drivenS() * total) * 30 / Math.PI;
+    if (dir > 0 && !park && this.shiftT <= 0) { // shift schedule: later upshifts with more throttle, kick-down
+      const span = pt.redline - pt.idle;
+      const up = Math.min(pt.redline * 0.96, pt.idle + (0.42 + 0.52 * thr) * span), dn = pt.idle + (0.18 + 0.38 * thr) * span;
+      if (rpmW > up && this.gearIdx < maxGear) { this.gearIdx++; this.shiftT = 0.25; }
+      else if (this.gearIdx > 1 && rpmW < dn && rpmW * pt.gears[this.gearIdx - 2] / pt.gears[this.gearIdx - 1] < up * 0.92) { this.gearIdx--; this.shiftT = 0.2; }
+      total = ratioOf(this.gearIdx); rpmW = Math.abs(drivenS() * total) * 30 / Math.PI;
     }
+    if (dir <= 0 || Math.abs(speed) < 0.3 && thr < 0.05) { if (dir <= 0) this.gearIdx = 1; }
+    this.shiftT = Math.max(0, this.shiftT - dt);
+    // torque converter: slips below lock-up (stall speed rises with throttle), multiplies torque while slipping
+    const stall = pt.idle + thr * (Math.min(pt.rpmT * 1.15, pt.redline * 0.55) - pt.idle);
+    const locked = total > 0 && this.gearIdx >= 2 && rpmW > pt.idle * 1.25 && rpmW > stall * 0.9;
+    let rpm = total === 0 ? pt.idle + thr * (pt.redline * 0.7 - pt.idle) : locked ? rpmW : Math.max(rpmW, stall, pt.idle);
+    let Te: number;
+    if (total === 0) Te = 0;
+    else if (rpm >= pt.redline) Te = -engineDrag(pt, rpm); // rev limiter: fuel cut
+    else if (thr > 0.01) Te = engineTorque(pt, rpm) * thr * P.engine * (sp0.engine / vehicleById(sp0.id).engine) /* engine upgrades: +9 % torque per level */ - (1 - thr) * engineDrag(pt, rpm);
+    else Te = rpm > pt.idle * 1.1 ? -engineDrag(pt, rpm) : 0; // engine braking above idle
+    let TR = 1;
+    if (!locked && total > 0) {
+      const SR = Math.min(1, rpmW / Math.max(1, rpm));
+      TR = 1 + 1.1 * Math.max(0, 1 - SR / 0.88);         // converter torque multiplication (~2.1 at stall)
+      if (thr <= 0.01) Te = 0.16 * pt.torque * Math.max(0, 1 - rpmW / (pt.idle * 1.2)) - (rpmW > pt.idle * 1.2 ? engineDrag(pt, rpm) * SR : 0); // idle creep / weak coupling
+    }
+    if (this.shiftT > 0.1) Te *= 0.35; // torque reduction during the shift
+    // traction control (ARCADE): cuts engine torque while a driven wheel is spinning hard
+    if (P.stability > 0 && Te > 0) { const ks = twoH ? Math.max(this.kappa[2], this.kappa[3]) : Math.max(...this.kappa); if (ks > 0.25) Te *= Math.max(0.3, 1 - (ks - 0.25) * 2 * P.stability); }
+    this.engineTorqueNm = Te; this.totalRatio = total; this.converterLocked = locked;
+    const Td = Te * TR * total * pt.eff * Math.sign(dir || 1); // axle torque, all driven wheels together (N m)
+    const Ie = locked ? pt.engInertia * total * total : 0;   // engine inertia reflected through the gears (only when coupled)
+
+    // ---- brakes: service brake split front/rear, handbrake on the rear, park pawl locks the driveline
+    const bMax = pt.brakeG * sp0.mass * 9.81 * r * P.brake;
+    const Tb = [0, 0, 0, 0];
+    for (let i = 0; i < 4; i++) Tb[i] = brk * bMax * (i < 2 ? pt.brakeFront : 1 - pt.brakeFront) / 2;
+    if (inp.handbrake) { Tb[2] += 0.45 * sp0.mass * 9.81 * r; Tb[3] += 0.45 * sp0.mass * 9.81 * r; }
+    if (park) for (let i = 0; i < 4; i++) if (!twoH || i >= 2) Tb[i] += 2 * sp0.mass * 9.81 * r;
+    if (sel === 'N' && !brk) { /* free rolling */ }
+
+    // ---- suspension (spring + damper per wheel, Rapier ray-cast) -> wheel loads; anti-roll bars
     ctrl.updateVehicle(dt);
-    for (let i = 0; i < 4; i++) { const r = ctrl.wheelRotation(i) ?? 0; this.wheelRate[i] = (r - this.lastRot[i]) / dt; this.lastRot[i] = r; }
-    { // local acceleration for the sprung-body lean + brake lights
+    const rq = this.body.rotation(), Q = Vehicle._q2.set(rq.x, rq.y, rq.z, rq.w);
+    const fwdC = Vehicle._f.set(0, 0, 1).applyQuaternion(Q), upC = Vehicle._u.set(0, 1, 0).applyQuaternion(Q);
+    const t0 = this.body.translation();
+    let contacts = 0;
+    const Fz = [0, 0, 0, 0], comp = [0, 0, 0, 0];
+    for (let i = 0; i < 4; i++) {
+      const inC = ctrl.wheelIsInContact(i); this.inPuddle[i] = false;
+      comp[i] = inC ? this.spec.susp.rest - (ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest) : 0;
+      if (inC) {
+        const p = ctrl.wheelContactPoint(i);
+        const s = p ? surfaceAt(p.x, p.z) : 'ground';
+        if (p) { (this.contact[i] ??= new THREE.Vector3()).set(p.x, p.y, p.z); this.inPuddle[i] = !!puddleAt(p.x, p.z); }
+        this.surfaces[i] = s; this.phys[i] = Vehicle.forceSurf ?? physSurface(s, p?.x ?? 0, p?.z ?? 0, this.wet, this.inPuddle[i]);
+        Fz[i] = Math.max(0, ctrl.wheelSuspensionForce(i) ?? 0); contacts++;
+      } else { this.contact[i] = null; this.surfaces[i] = null; this.phys[i] = null; }
+    }
+    for (const [a, b, k] of [[0, 1, pt.arbF], [2, 3, pt.arbR]] as const) {
+      const F = k * (comp[a] - comp[b]) * P.stiff;
+      if (F === 0 || (!this.contact[a] && !this.contact[b])) continue;
+      for (const [i, s] of [[a, 1], [b, -1]] as const) {
+        const c = this.conn[i], hp = Vehicle._p.set(c.x, c.y, c.z).applyQuaternion(Q).add(Vehicle._t.set(t0.x, t0.y, t0.z));
+        this.body.applyImpulseAtPoint({ x: upC.x * F * s * dt, y: upC.y * F * s * dt, z: upC.z * F * s * dt }, hp, true);
+        if (this.contact[i]) Fz[i] = Math.max(0, Fz[i] + F * s);
+      }
+    }
+    this.load = Fz;
+
+    // Ackermann steering geometry: inside wheel turns more
+    const L = sp0.wheel.zf - sp0.wheel.zr, Tk = 2 * sp0.wheel.x, d0 = this.steer;
+    let dL = d0, dR = d0;
+    if (Math.abs(d0) > 1e-4) { const R = L / Math.tan(Math.abs(d0)), inn = Math.atan(L / Math.max(0.5, R - Tk / 2)), out = Math.atan(L / (R + Tk / 2)); if (d0 > 0) { dL = inn; dR = out; } else { dL = -out; dR = -inn; } }
+    const delta = [dL, dR, 0, 0];
+
+    // ESC (ARCADE): brake a single wheel when the yaw rate departs from the driver's intended path
+    if (P.stability > 0 && contacts >= 3 && Math.abs(speed) > 5) {
+      const av = this.body.angvel(), yr = av.x * upC.x + av.y * upC.y + av.z * upC.z;
+      const want = THREE.MathUtils.clamp(speed * Math.tan(d0) / L / (1 + 0.0025 * speed * speed), -9 / Math.abs(speed), 9 / Math.abs(speed));
+      const e = yr - want, sg = Math.sign(want || yr);
+      const k = 0.35 * sp0.mass * 9.81 * r * P.stability;
+      if (e * sg > 0.12) Tb[sg > 0 ? 1 : 0] += k * Math.min(1, (e * sg - 0.12) * 3);           // oversteer: brake the outer front
+      else if (e * sg < -0.25) Tb[sg > 0 ? 2 : 3] += k * 0.6 * Math.min(1, (-e * sg - 0.25) * 3); // understeer: brake the inner rear
+    }
+
+    // ---- tyre / wheel / driveline integration at SUB x the physics rate
+    const SUB = Vehicle.SUB, h = dt / SUB, VLOW = 2, VLAT = 2.5;
+    const mShare = sp0.mass / 4;
+    const tw = Vehicle._tw, fw = Vehicle._fw, sw = Vehicle._sw, nrm = Vehicle._n, pnt = Vehicle._pp;
+    const Fx = [0, 0, 0, 0], kx = [0, 0, 0, 0], mu = [0, 0, 0, 0], vxs = [0, 0, 0, 0], vys = [0, 0, 0, 0];
+    const fwV: THREE.Vector3[] = this._fwV, swV: THREE.Vector3[] = this._swV;
+    for (let sub = 0; sub < SUB; sub++) {
+      // 1. contact kinematics + longitudinal force and its slope dFx/domega at the current wheel speed
+      for (let i = 0; i < 4; i++) {
+        const cp = this.contact[i];
+        if (!cp || Fz[i] <= 0) { Fx[i] = 0; kx[i] = 0; mu[i] = 0; continue; }
+        const S = SURF[this.phys[i]!];
+        const n = ctrl.wheelContactNormal(i); nrm.set(n?.x ?? 0, n?.y ?? 1, n?.z ?? 0);
+        tw.copy(fwdC).applyAxisAngle(upC, delta[i]);
+        fw.copy(tw).addScaledVector(nrm, -tw.dot(nrm)).normalize(); sw.crossVectors(nrm, fw);
+        fwV[i].copy(fw); swV[i].copy(sw);
+        const vp = this.body.velocityAtPoint(cp); pnt.set(vp.x, vp.y, vp.z);
+        const vx = pnt.dot(fw), vy = pnt.dot(sw); vxs[i] = vx; vys[i] = vy;
+        const tyre = sp0.grip[this.surfaces[i] === 'rock' || this.surfaces[i] === 'ground' || !this.surfaces[i] ? 'ground' : this.surfaces[i] as 'sand' | 'mud'];
+        const loadK = THREE.MathUtils.clamp(1 - 0.1 * (Fz[i] / (mShare * 9.81) - 1), 0.8, 1.1); // load sensitivity
+        mu[i] = S.mu * tyre * P.grip * (S.soft ? P.softGrip : 1) * loadK * (this.inPuddle[i] ? 0.85 : 1);
+        const den = Math.max(Math.abs(vx), VLOW), kap = (this.w[i] * r - vx) / den, B = S.B;
+        Fx[i] = mu[i] * Fz[i] * magic(B, S.C, kap);
+        // secant slope dFx/domega through the zero-slip origin (<= the initial slope): the implicit wheel update can never
+        // overshoot past zero slip (stable at any step) yet a hard-spinning or locked wheel recovers at its true force
+        const kMax = mu[i] * Fz[i] * S.C * B * r / den, sv = this.w[i] * r - vx;
+        kx[i] = Math.abs(sv) > 1e-4 ? Math.min(kMax, Math.abs(Fx[i] * r / sv)) : kMax;
+      }
+      // 2. driveline modes (implicit in the tyre force): open diffs = equal torque, locked = common speed
+      const w = this.w, Iax = 2 * Iw;
+      const axleDiff = (a: number, b: number) => { // difference mode of one axle (zero when locked)
+        if (this.diffLock) { const m = (w[a] + w[b]) / 2; w[a] = w[b] = m; return; }
+        const d = (w[a] - w[b]) / 2, kk = r * (kx[a] + kx[b]);
+        const nd = d + h * (-r * (Fx[a] - Fx[b])) / (Iax + h * kk);
+        const s = (w[a] + w[b]) / 2; w[a] = s + nd; w[b] = s - nd;
+      };
+      const sumMode = (ids: number[], T: number, I: number) => { // common (sum) mode of the wheels in ids
+        let F = 0, K = 0, s = 0; for (const i of ids) { F += Fx[i]; K += kx[i]; s += w[i]; } s /= ids.length;
+        const ds = h * (T - r * F) / (I + h * r * K); for (const i of ids) w[i] += ds;
+      };
+      if (twoH) { sumMode([2, 3], Td, Iax + Ie); sumMode([0, 1], 0, Iax); }
+      else if (awd) { sumMode([0, 1], Td * fs, Iax + Ie * fs); sumMode([2, 3], Td * (1 - fs), Iax + Ie * (1 - fs));
+        const mf = (w[0] + w[1]) / 2, mr = (w[2] + w[3]) / 2, c = (mr - mf) * 0.12; w[0] += c; w[1] += c; w[2] -= c; w[3] -= c; } // viscous centre coupling
+      else sumMode([0, 1, 2, 3], Td, 2 * Iax + Ie); // part-time 4H / 4L: centre locked
+      axleDiff(0, 1); axleDiff(2, 3);
+      // 3. brakes (friction torque, never reverses the wheel) with ABS, plus brake-based traction control (BTC, as on
+      //    modern 4x4s): a driven wheel spinning faster than its partner on the same open diff gets braked, which sends
+      //    torque across the diff to the wheel that has grip.
+      const btc = [0, 0, 0, 0];
+      if (!this.diffLock && Td !== 0 && Math.abs(speed) < 14) for (const [a2, b2] of (twoH ? [[2, 3]] : [[0, 1], [2, 3]])) {
+        const ex = Math.abs(w[a2] - w[b2]) * r - 1.0; if (ex <= 0) continue;
+        const fast = Math.abs(w[a2]) > Math.abs(w[b2]) ? a2 : b2;
+        btc[fast] = Math.min(Math.abs(Td) * 0.6, Math.abs(Td) * 0.25 * ex);
+      }
+      for (let i = 0; i < 4; i++) {
+        let tb = Tb[i] + btc[i]; if (tb <= 0) continue;
+        // ABS: modulates line pressure so the brake torque never exceeds what the tyre can transmit (wheel stays near peak slip)
+        if (brk > 0 && !park && this.contact[i] && Math.abs(vxs[i]) > 1.5 && !(inp.handbrake && i >= 2)) {
+          tb = Math.min(tb, r * mu[i] * Fz[i] * 0.97);
+          if ((w[i] * r - vxs[i]) / Math.abs(vxs[i]) * Math.sign(vxs[i]) < -0.18) tb = 0; // wheel locking: dump pressure until it spins back up
+        }
+        const db = h * tb / Iw; w[i] = Math.abs(w[i]) <= db ? 0 : w[i] - Math.sign(w[i]) * db;
+      }
+      // 4. final tyre forces from the new wheel speeds -> chassis (applied at the contact patch)
+      for (let i = 0; i < 4; i++) {
+        const cp = this.contact[i];
+        if (!cp || mu[i] <= 0) { this.kappa[i] = 0; this.alpha[i] = 0; continue; }
+        const S = SURF[this.phys[i]!], vx = vxs[i], vy = vys[i];
+        const kap = (w[i] * r - vx) / Math.max(Math.abs(vx), VLOW);
+        const fx = mu[i] * Fz[i] * magic(S.B, S.C, kap), ux = THREE.MathUtils.clamp(fx / (mu[i] * Fz[i]), -1, 1);
+        const al = Math.atan2(vy, Math.max(Math.abs(vx), VLAT));
+        const muY = mu[i] * sp0.side * P.side;
+        const fy = -muY * Fz[i] * magic(S.B * 0.9, S.C * 0.85, al) * Math.sqrt(Math.max(0.04, 1 - ux * ux)); // friction ellipse
+        // rolling resistance incl. sinkage: a spinning / sliding tyre digs into soft ground
+        const soft = S.soft ? P.softDrag * sp0.drag[this.surfaces[i] === 'sand' ? 'sand' : 'mud'] : 1;
+        const crr = (S.crr + S.dig * Math.min(1, Math.max(0, Math.abs(kap) - 0.08) * 2)) * soft;
+        const frr = -Math.sign(vx) * Math.min(crr * Fz[i], Math.abs(vx) * mShare / h);
+        const fwater = this.inPuddle[i] ? -45 * vx * Math.abs(vx) : 0;
+        const fl = fx + frr + fwater;
+        const f = fwV[i], s = swV[i];
+        this.body.applyImpulseAtPoint({ x: (f.x * fl + s.x * fy) * h, y: (f.y * fl + s.y * fy) * h, z: (f.z * fl + s.z * fy) * h }, cp, true);
+        this.kappa[i] = kap; this.alpha[i] = al; this.wheelForce[i] = fx;
+      }
+    }
+    for (let i = 0; i < 4; i++) {
+      this.wAng[i] += this.w[i] * dt; this.wheelRate[i] = this.w[i];
+      const drv = twoH ? (i >= 2 ? 0.5 : 0) : (i < 2 ? fs : 1 - fs) / 2 * 2 / 2 * 2;
+      this.wheelReq[i] = (Td * (twoH ? (i >= 2 ? 0.5 : 0) : i < 2 ? fs / 2 : (1 - fs) / 2)) / r; void drv;
+      this.slip[i] = this.contact[i] ? Math.min(1, Math.abs(this.kappa[i]) * 1.6 + Math.max(0, Math.abs(this.alpha[i]) - 0.05) * 2.5) : 0;
+      ctrl.setWheelSteering(i, delta[i]);
+    }
+    this.ratio = lowK; this.engineForce = Td / r;
+    // aerodynamic drag at the centre of mass
+    { const v = this.body.linvel(), vm = Math.hypot(v.x, v.y, v.z), k = 0.5 * 1.2 * pt.cda * vm * dt;
+      this.body.applyImpulse({ x: -k * v.x, y: -k * v.y, z: -k * v.z }, true); }
+
+    { // local acceleration (camera / brake lights) + visual sprung-body lean (cosmetic, small)
       const v1 = this.body.linvel(), q = this.body.rotation();
       if (this.lastV) {
         const qq = new THREE.Quaternion(q.x, q.y, q.z, q.w).invert();
@@ -591,71 +723,22 @@ export class Vehicle {
         this.accLocal.y += (THREE.MathUtils.clamp(a.z, -25, 25) - this.accLocal.y) * k;
       }
       this.lastV = { x: v1.x, y: v1.y, z: v1.z };
-      // spring-damper towards the target lean (looks like body roll / dive / squat on the springs)
-      const L = this.lean, lk = P.lean, tp = THREE.MathUtils.clamp(-this.accLocal.y * 0.0055 * lk, -0.07, 0.07), tr = THREE.MathUtils.clamp(this.accLocal.x * 0.0065 * lk, -0.08, 0.08);
-      // landing: a sudden stop of the downward velocity dips the nose / squats the body (damped, never a bounce loop)
+      const Ln = this.lean, lk = P.lean * 0.5, tp = THREE.MathUtils.clamp(-this.accLocal.y * 0.0055 * lk, -0.05, 0.05), tr = THREE.MathUtils.clamp(this.accLocal.x * 0.0065 * lk, -0.05, 0.05);
       const jolt = Math.max(0, v1.y - this.lastVy); this.lastVy = v1.y; this.landJolt = jolt;
-      if (jolt > 2.5) L.vp += Math.min(0.6, (jolt - 2.5) * 0.08);
-      L.vp += ((tp - L.pitch) * 90 - L.vp * 11) * dt; L.pitch += L.vp * dt;
-      L.vr += ((tr - L.roll) * 80 - L.vr * 10) * dt; L.roll += L.vr * dt;
-      this.braking = (inp.brake > 0.05 && speed > 0.5) || (inp.handbrake && Math.abs(speed) > 0.5);
+      Ln.vp += ((tp - Ln.pitch) * 90 - Ln.vp * 11) * dt; Ln.pitch += Ln.vp * dt;
+      Ln.vr += ((tr - Ln.roll) * 80 - Ln.vr * 10) * dt; Ln.roll += Ln.vr * dt;
+      this.braking = (brk > 0.05 && Math.abs(speed) > 0.5) || (inp.handbrake && Math.abs(speed) > 0.5);
     }
-
-    // simple automatic gearbox -> engine RPM for audio/HUD
-    this.throttle = Math.max(inp.throttle, engine < 0 ? inp.brake : 0);
-    const kmh = Math.abs(speed) * 3.6;
-    const gk = (normalCap(sp0.topSpeed) / low * 3.6) / 130; // gear ladder from the vehicle's NORMAL cap; 4L divides it by the 2.6 reduction (same road speed -> higher RPM)
-    const GEARS = (this.transfer === '4L' ? [0, 18, 36, 58] : [0, 18, 36, 58, 82, 108, 140]).map((g) => g * gk); // low range holds the first 3 gears -> same road speed revs higher
-    let gI = 1; while (gI < GEARS.length - 1 && kmh > GEARS[gI]) gI++;
-    this.gear = speed < -0.5 || sel === 'R' ? -1 : gI;
-    const lo = GEARS[gI - 1], hi = GEARS[gI];
-    const avgSlip = (this.slip[0] + this.slip[1] + this.slip[2] + this.slip[3]) / 4;
-    const frac = Math.min(1, (kmh - lo) / (hi - lo));
-    let rpmT = gI === 1 ? 900 + frac * 4300 : 2400 + frac * 2800;
-    rpmT += this.throttle * (900 + avgSlip * 2600) * (contacts ? 1 : 2.5);
-    rpmT = Math.min(6500, Math.max(850, rpmT));
-    this.rpm += (rpmT - this.rpm) * Math.min(1, dt * 6);
-
-    // arcade steering assist: a yaw torque proportional to steering input that fades in with speed,
-    // so the vehicle turns more readily at speed than raw tyre grip would allow (only with >=3 wheels down)
-    if (contacts >= 3 && Math.abs(speed) > 2 && sp0.assist > 0) {
-      const rq = this.body.rotation();
-      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w));
-      const w = this.body.angvel(); const yawRate = w.x * up.x + w.y * up.y + w.z * up.z;
-      const fade = Math.min(1, (Math.abs(speed) - 2) / 12);
-      const want = inp.steer * sp0.assist * P.assist * fade * Math.sign(speed);
-      // don't add more once the yaw rate already exceeds ~1.1 rad/s in that direction (prevents spins)
-      const room = Math.max(0, P.yawCap - Math.sign(want) * yawRate);
-      const tq = (this.inertiaY * want * Math.min(1, room)) * dt;
-      this.body.applyTorqueImpulse({ x: up.x * tq, y: up.y * tq, z: up.z * tq }, true);
-    }
-
-    // ARCADE stability assist: damps yaw that the driver isn't asking for (anti-spin), only with wheels down
-    if (P.stability > 0 && contacts >= 3) {
-      const w = this.body.angvel(), rq = this.body.rotation();
-      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w));
-      const yawRate = w.x * up.x + w.y * up.y + w.z * up.z, wanted = inp.steer * 1.2 * Math.sign(speed || 1);
-      const excess = yawRate - wanted; if (Math.abs(excess) > 0.4) { const tq = -excess * this.inertiaY * P.stability * dt; this.body.applyTorqueImpulse({ x: up.x * tq, y: up.y * tq, z: up.z * tq }, true); }
-    }
-    // SIMULATION high-speed consequence: extra weight-transfer roll moment (as if the centre of mass sat 0.18 m higher)
-    // tau_local = (0, h, 0) x (-m a) -> about the forward axis = h * m * a_lat; real lateral acceleration only, wheels down
-    if (P.hiSpeed && contacts >= 2) {
-      const kmhS = Math.abs(speed) * 3.6, hk = P.hiSpeed * THREE.MathUtils.clamp((kmhS - 30) / 25, 0, 1);
-      if (hk > 0) { const rq = this.body.rotation(); const tz = 0.18 * this.spec.mass * this.accLocal.x * hk * dt;
-        const t = new THREE.Vector3(0, 0, tz).applyQuaternion(new THREE.Quaternion(rq.x, rq.y, rq.z, rq.w)); this.body.applyTorqueImpulse({ x: t.x, y: t.y, z: t.z }, true); }
-    }
-    // hard speed limiter on the chassis (also downhill): wheels down -> full velocity, airborne -> horizontal only
-    { const lv = this.body.linvel(), capV = (speed >= 0 ? top : rev) * 1.03, hv = Math.hypot(lv.x, lv.z), tv = contacts > 0 ? Math.hypot(lv.x, lv.y, lv.z) : hv;
-      if (tv > capV) { const k = capV / tv; this.body.setLinvel(contacts > 0 ? { x: lv.x * k, y: lv.y * k, z: lv.z * k } : { x: lv.x * k, y: lv.y, z: lv.z * k }, true); } }
-    // surface resistance (mud suction, sand ploughing) + light aero drag
-    if (contacts > 0) {
-      const v = this.body.linvel();
-      const k = (dragSum / 4) * sp0.mass;
-      const vh = Math.hypot(v.x, v.z);
-      const aero = 0.45 * vh;
-      this.body.applyImpulse({ x: -(k + aero) * v.x * dt, y: 0, z: -(k + aero) * v.z * dt }, true);
-    }
+    this.throttle = thr;
+    this.gear = dir < 0 ? -1 : this.gearIdx;
+    this.rpm += (Math.min(pt.redline, rpm) - this.rpm) * Math.min(1, dt * 15);
   }
+  private _fwV = [0, 1, 2, 3].map(() => new THREE.Vector3()); private _swV = [0, 1, 2, 3].map(() => new THREE.Vector3());
+  private static _q2 = new THREE.Quaternion(); private static _f = new THREE.Vector3(); private static _u = new THREE.Vector3();
+  private static _p = new THREE.Vector3(); private static _t = new THREE.Vector3(); private static _tw = new THREE.Vector3();
+  private static _fw = new THREE.Vector3(); private static _sw = new THREE.Vector3(); private static _n = new THREE.Vector3(); private static _pp = new THREE.Vector3();
+  /** tyre + rim rotational inertia (kg m^2), grows with wheel size */
+  get wheelInertia() { const r = this.spec.wheel.r, m = 20 + 2000 * (r - 0.36) ** 2; return 0.55 * m * r * r; }
 
   /** Copy physics state to visuals; also lay tyre tracks on soft ground. */
   sync() {
@@ -670,9 +753,9 @@ export class Vehicle {
       const len = this.ctrl.wheelSuspensionLength(i) ?? this.spec.susp.rest;
       const w = this.wheelMeshes[i];
       w.position.set(c.x, c.y - len, c.z);
-      w.rotation.y = i < 2 ? this.steer : 0;
+      w.rotation.y = i < 2 ? (this.ctrl.wheelSteering(i) ?? this.steer) : 0;
       const spin = w.children[0];
-      spin.rotation.x = (this.ctrl.wheelRotation(i) ?? 0) + this.extraSpin[i];
+      spin.rotation.x = this.wAng[i];
       // continuous tyre tracks on soft ground
       const s = this.surfaces[i];
       if (s && s !== 'ground' && s !== 'rock' && this.ctrl.wheelIsInContact(i) && !this.inPuddle[i]) {

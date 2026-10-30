@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
 import { buildTerrain, heightAt, ZONES, wetMaterials, waterMat, PUDDLES, TREES, setTerrainDetail, surfaceAt, TRAIL, SCREE, HAIRPINS } from './terrain';
-import { Vehicle, SURFACE_PARAMS, LOW_RANGE, type DriveInput, type GearSel, type Transfer } from './vehicle';
+import { Vehicle, SURFACE_PARAMS, normalCap, type DriveInput, type GearSel, type Transfer } from './vehicle';
 import { TrackMarks } from './tracks';
 import { VEHICLES, PAINTS, vehicleById, stats, CATEGORIES } from './vehicles';
 import { Input, PAD, ACTION_LABEL, type Action } from './input';
@@ -246,7 +246,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   // drivetrain: gear selector (A/P/R/N/D) + transfer case (2H/4H/4L/AWD) with interlocks
   const drvNote = (m: string) => { $('drv-note').textContent = m; };
   const shiftGear = (gs: GearSel) => { const r = car.setGear(gs); if (!r.ok) { toast('⛔ ' + r.msg); drvNote(r.msg); } else drvNote(''); refreshDrv(); return r; };
-  const shiftTransfer = (t: Transfer) => { const r = car.setTransfer(t); if (!r.ok) { toast('⛔ ' + r.msg); drvNote(r.msg); } else { drvNote(t === '4L' ? 'Low range: x' + LOW_RANGE + ' torque, top speed / ' + LOW_RANGE : ''); toast(t + (t === '4L' ? ' · low range' : t === '2H' ? ' · rear-wheel drive' : ' · four-wheel drive')); } refreshDrv(); return r; };
+  const shiftTransfer = (t: Transfer) => { const r = car.setTransfer(t); if (!r.ok) { toast('⛔ ' + r.msg); drvNote(r.msg); } else { drvNote(t === '4L' ? 'Low range: ' + car.pt.low.toFixed(2) + ':1 reduction, gears 1-2' : ''); toast(t + (t === '4L' ? ' · low range' : t === '2H' ? ' · rear-wheel drive' : ' · four-wheel drive')); } refreshDrv(); return r; };
   const refreshDrv = () => {
     $('drv-gear').textContent = car.sel === 'A' ? 'A' : car.sel; $('drv-mode').textContent = car.transfer;
     document.querySelectorAll<HTMLButtonElement>('#drv-sel button').forEach((b) => b.classList.toggle('on', b.dataset.g === car.sel));
@@ -455,7 +455,6 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     car.step(STEP, d);
     if (car2) car2.step(STEP, drive2);
     if (stuck) {
-      stuck.body.setLinearDamping(stuck.surface() === 'mud' ? 0.7 : 0.05); // bogged down in the mud
       stuck.step(STEP, STUCK_IN);
     }
     if (rope && winching) { winchAcc += STEP; if (winchAcc > 0.2 && ropeLen > 3) { winchAcc = 0; makeRope(Math.max(3, ropeLen - 0.35)); } }
@@ -942,14 +941,14 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
   }
   setCamMode(camMode, true); setProfile(settings.profile ?? 'pro', true); blendFrom.t = 1;
   // LOW / NORMAL speed limit (physics limiter in Vehicle.step)
-  function setSpeedMode(m: 'normal' | 'low', quiet = false) {
+  function setSpeedMode(m: 'normal' | 'low' | 'off', quiet = false) {
     settings.speedMode = m; saveSettings(settings); Vehicle.speedMode = m;
-    $('spd-chip').textContent = m === 'low' ? 'LOW 25' : 'NORMAL'; $('spd-chip').classList.toggle('on', m === 'low');
+    $('spd-chip').textContent = m === 'low' ? 'LOW 25' : m === 'off' ? 'LIMIT OFF' : 'NORMAL'; $('spd-chip').classList.toggle('on', m === 'low');
     document.querySelectorAll<HTMLElement>('#seg-speed button').forEach((b) => b.classList.toggle('on', b.dataset.v === m));
-    if (!quiet) toast(m === 'low' ? '🐢 Speed limit LOW: 25 km/h' : `Speed limit NORMAL: ${Math.round(car.capKmh || 50)} km/h max`);
+    if (!quiet) toast(m === 'low' ? '🐢 Speed limiter LOW: 25 km/h' : m === 'off' ? 'Speed limiter OFF: top speed = engine, gearing & terrain' : `Speed limiter NORMAL: ${Math.round(normalCap(car.spec.topSpeed) * 3.6)} km/h`);
   }
   setSpeedMode(settings.speedMode ?? 'normal', true);
-  $('spd-chip').onclick = (e) => { e.stopPropagation(); setSpeedMode(settings.speedMode === 'low' ? 'normal' : 'low'); };
+  $('spd-chip').onclick = (e) => { e.stopPropagation(); setSpeedMode(settings.speedMode === 'low' ? 'off' : settings.speedMode === 'off' ? 'normal' : 'low'); };
   document.querySelectorAll<HTMLElement>('#seg-speed button').forEach((b) => b.onclick = () => setSpeedMode(b.dataset.v as 'normal' | 'low'));
   // ---------- configurable key bindings + gamepad settings ----------
   const keyName = (c: string) => c.replace(/^Key/, '').replace(/^Digit/, '').replace('Arrow', '').replace('Space', 'Space').replace('Escape', 'Esc');
@@ -1254,6 +1253,9 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camera.fov = baseFov; camera.updateProjectionMatrix();
   }
 
+  /** test hook body: the same fixed-step accumulator as frame(), driven by a synthetic frame dt */
+  function advance(dt: number) { const d = input.override ?? IDLE; lastInput = d; acc += dt; let n = 0; while (acc >= STEP && n < 8) { physStep(d); acc -= STEP; n++; } if (n === 8) acc = 0; }
+
   function frame(now: number) {
     const rawDt = Math.min(0.5, Math.max(0, (now - last) / 1000)); // online prediction keeps real time even at low fps
     const dt = Math.min(0.1, (now - last) / 1000); last = now; clock += dt;
@@ -1469,7 +1471,7 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     /** test-only flat pad (2 km long, 400 m up, 'ground' surface) for repeatable flat-road pace numbers */
     testPad: () => { if (!(window as any).__pad0) { const b = world.createRigidBody(RAPIER.RigidBodyDesc.fixed()); world.createCollider(RAPIER.ColliderDesc.cuboid(150, 1, 1000).setTranslation(-400, 399, 0), b); (window as any).__pad0 = true; } return { x: -400, y: 400, z: -950 }; },
     place: (x: number, y: number, z: number, yaw: number) => { car.reset(x, y, z, yaw); camInit = false; },
-    speedMode: (m: 'normal' | 'low') => setSpeedMode(m, true), get capKmh() { return car.capKmh; },
+    speedMode: (m: 'normal' | 'low' | 'off') => setSpeedMode(m, true), get capKmh() { return car.capKmh; },
     profile: (id: ProfileId) => setProfile(id, true), get profileId() { return car.profile.id; }, profileIds: PROFILE_ORDER,
     cam: (m: CamMode) => setCamMode(m), get camMode() { return camMode; }, camModes: CAM_MODES, resetCam: () => resetCam(), lookBack: (v: boolean) => { lookBack = v; },
     input: { get last() { return input.lastDevice; }, get pad() { return { index: input.padIndex, name: input.padName }; }, bindings: () => JSON.parse(JSON.stringify(input.bindings)), setBinding: (a: Action, c: string[]) => input.setBinding(a, c), resetBindings: () => input.resetBindings() },
@@ -1538,6 +1540,12 @@ export async function boot(RAPIER: typeof RAPIER_NS, setLoad: (pct: number, text
     camShake: () => shakeAmp,
     impacts: () => audio.impacts,
     drive: () => ({ sel: car.sel, transfer: car.transfer, modes: car.driveModes.slice(), wheelForce: car.wheelForce.slice(), wheelReq: car.wheelReq.slice(), wheelRate: car.wheelRate.slice(), ratio: car.ratio, engineForce: car.engineForce, frontSplit: car.spec.frontSplit ?? 0.5, gear: car.gear, rpm: car.rpm, steerAngle: car.steer, kmh: car.forwardSpeed() * 3.6 }),
+    /** 0.9.0 physics telemetry (tyre loads, wheel speeds, slip, engine) */
+    phys: () => ({ load: car.load.slice(), w: car.w.slice(), kappa: car.kappa.slice(), alpha: car.alpha.slice(), surf: car.phys.slice(), gear: car.gear, rpm: car.rpm, Te: car.engineTorqueNm, ratio: car.totalRatio, locked: car.converterLocked, mass: car.body.mass(), diffLock: car.diffLock, limit: car.limitV * 3.6 }),
+    forceSurface: (sf: string | null) => { Vehicle.forceSurf = sf as any; },
+    setDiffLock: (on: boolean) => { car.diffLock = on; },
+    /** render-rate consistency: advance the real accumulator loop with a fixed frame dt */
+    frames: (i: DriveInput, fps: number, seconds: number) => { input.override = i; const n = Math.round(seconds * fps); for (let k = 0; k < n; k++) advance(1 / fps); input.override = null; car.sync(); return { speed: car.forwardSpeed(), pos: car.body.translation() }; },
     setGear: (gs: GearSel) => shiftGear(gs), setTransfer: (t: Transfer) => shiftTransfer(t),
     pedals: () => ({ gas: input.gasV, brake: input.brakeV, wheelDeg: input.wheelDeg, wheel: input.wheelValue }),
     get dusk() { return { k: duskK, exposure: renderer.toneMappingExposure, sun: sun.intensity }; },
