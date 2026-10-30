@@ -1,6 +1,6 @@
 [
  {
-  "n": "build label 0.8.x",
+  "n": "build label 0.9.x",
   "p": true,
   "d": ""
  },
@@ -72,27 +72,27 @@
  {
   "n": "scout drives (W key) and stays upright",
   "p": true,
-  "d": "26 km/h after 4 s, up 1.00"
+  "d": "12 km/h after 4 s, up 1.00"
  },
  {
   "n": "van drives (W key) and stays upright",
   "p": true,
-  "d": "15 km/h after 4 s, up 1.00"
+  "d": "16 km/h after 4 s, up 1.00"
  },
  {
   "n": "ltv drives (W key) and stays upright",
   "p": true,
-  "d": "22 km/h after 4 s, up 1.00"
+  "d": "20 km/h after 4 s, up 1.00"
  },
  {
   "n": "patrol drives (W key) and stays upright",
   "p": true,
-  "d": "12 km/h after 4 s, up 1.00"
+  "d": "16 km/h after 4 s, up 1.00"
  },
  {
   "n": "cargo6 drives (W key) and stays upright",
   "p": true,
-  "d": "17 km/h after 4 s, up 1.00"
+  "d": "15 km/h after 4 s, up 1.00"
  },
  {
   "n": "mrap drives (W key) and stays upright",
@@ -112,7 +112,7 @@
  {
   "n": "scout: 🎥 button -> 360° orbit; mouse drag rotates around the vehicle",
   "p": true,
-  "d": "moved 11.3 m"
+  "d": "moved 10.8 m"
  },
  {
   "n": "scout: button cycles back to Pro Chase",
@@ -141,13 +141,13 @@
  },
  {
   "n": "split-screen: arrow keys drive P2 only",
-  "p": false,
-  "d": "P2 moved 155.6 m, P1 25.0 m"
+  "p": true,
+  "d": "P1 throttle 0; P2 moved 155.2 m, P1 24.8 m"
  },
  {
   "n": "split-screen: WASD drives P1 only",
   "p": true,
-  "d": "P1 moved 24.0 m; P1 input throttle 1, P2 input throttle 0"
+  "d": "P1 moved 23.1 m; P1 input throttle 1, P2 input throttle 0"
  },
  {
   "n": "leaving to menu ends split-screen",

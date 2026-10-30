@@ -36,7 +36,7 @@ const hs = await page.evaluate((S) => { const g = window.__game, out = {};
     let dy = g.state().yaw - y0; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI;
     out[id] = { kmh: +v0.toFixed(0), yawDegS: +(Math.abs(dy) * 180 / Math.PI / 1.5).toFixed(1), maxRollDeg: +(Math.acos(Math.min(1, minUp)) * 180 / Math.PI).toFixed(1) }; }
   g.profile('pro'); return out; }, S);
-ok('SIMULATION at speed: turns less (understeer) and rolls more than PRO in the same corner', hs.sim.yawDegS < hs.pro.yawDegS && hs.sim.maxRollDeg > hs.pro.maxRollDeg, JSON.stringify(hs));
+ok('SIMULATION at speed: turns less (understeer) than PRO in the same corner (0.9.0: scripted extra roll removed; roll now comes only from suspension/anti-roll bars)', hs.sim.yawDegS < hs.pro.yawDegS, JSON.stringify(hs));
 ok('no page errors', errs.length === 0, errs[0] || '');
 const pass = res.filter((r) => r.p).length; console.log(`\nv081: ${pass}/${res.length} PASS`);
 fs.writeFileSync(OUT + 'result.json', JSON.stringify({ res, hs, sh }, null, 1)); await b.close(); process.exit(pass === res.length ? 0 : 1);
