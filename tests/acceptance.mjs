@@ -306,7 +306,7 @@ for (const [label, w, h] of [['mobile-portrait-390x844', 390, 844], ['mobile-lan
   const pf = {}, aa = {};
   for (const p of ['low', 'medium', 'high']) {
     const e0 = errors.length;
-    await page.keyboard.press('Escape'); await page.click('#btn-settings2');
+    await page.waitForFunction(() => window.__game.phase === 'playing'); await page.click('#btn-pause'); await page.click('#btn-settings2');
     await page.click(`#seg-preset button[data-v="${p}"]`); await page.click('#btn-close-drawer'); await page.waitForFunction(() => window.__game.phase === 'playing'); /* closing Settings opened from Pause resumes play */
     await page.evaluate(() => { window.__game.teleport(-100, 30, 1.2); window.__game.setInput({ throttle: 1, brake: 0, steer: 0.2, handbrake: false }); });
     await page.waitForTimeout(1500);
