@@ -1,0 +1,222 @@
+veh | surface | 0-50 s | 0-100 s | top km/h (limiter OFF, flat)
+scout | asphalt | 2.7 | 7.8 | 191.5
+scout | gravel | 2.8 | 8.2 | 182.5
+scout | rock | 2.7 | 7.9 | 166
+scout | wet | 4 | 9.6 | 158
+scout | sand | 3.6 | 10.3 | 143.7
+scout | softsand | 11.1 | - | 91
+scout | mud | 9.1 | 17.9 | 120.6
+scout | rest ΣFz 16101 N vs m·g 16187 N | stop gravel 50:13.6 m 100:51.9 m, asphalt 50:11.8 m 100:43.6 m | 4L 44.8 km/h @5997 rpm | coast A 0.46 / N 0.38 m/s² | limiter N 58.7/59.6 L 24.3/25 | reverse -13.1
+PASS  scout: suspension carries the car (ΣFz = m·g ±3 %)  16101/16187
+PASS  scout: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  191.5/182.5/143.7/91/120.6
+PASS  scout: 0-50 on gravel physically plausible (2-14 s)  2.8
+PASS  scout: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.9 g, 43.6 m
+PASS  scout: braking on gravel weaker than on asphalt  0.76 < 0.9 g
+PASS  scout: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  44.8
+PASS  scout: engine braking (coast in gear decelerates harder than in N)  0.46 vs 0.38
+PASS  scout: optional NORMAL limiter holds its setpoint  58.7/59.6
+PASS  scout: optional LOW limiter ~25 km/h  24.3
+PASS  scout: reverse works (ECU reverse limiter)  -13.1
+f110 | asphalt | 2.8 | 8.3 | 205.2
+f110 | gravel | 2.9 | 8.8 | 195.1
+f110 | rock | 2.8 | 8.5 | 169.4
+f110 | wet | 4.2 | 10.3 | 160.3
+f110 | sand | 3.7 | 11.1 | 146.2
+f110 | softsand | 11.6 | - | 84.8
+f110 | mud | 10.4 | 20 | 117.6
+f110 | rest ΣFz 22357 N vs m·g 22563 N | stop gravel 50:14 m 100:55.2 m, asphalt 50:12.6 m 100:46.9 m | 4L 31 km/h @6249 rpm | coast A 0.47 / N 0.34 m/s² | limiter N 59.1/60 L 24.4/25 | reverse -13
+PASS  f110: suspension carries the car (ΣFz = m·g ±3 %)  22357/22563
+PASS  f110: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  205.2/195.1/146.2/84.8/117.6
+PASS  f110: 0-50 on gravel physically plausible (2-14 s)  2.9
+PASS  f110: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.84 g, 46.9 m
+PASS  f110: braking on gravel weaker than on asphalt  0.71 < 0.84 g
+PASS  f110: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  31
+PASS  f110: engine braking (coast in gear decelerates harder than in N)  0.47 vs 0.34
+PASS  f110: optional NORMAL limiter holds its setpoint  59.1/60
+PASS  f110: optional LOW limiter ~25 km/h  24.4
+PASS  f110: reverse works (ECU reverse limiter)  -13
+voyager | asphalt | 3 | 8.8 | 192.3
+voyager | gravel | 3.6 | 9.8 | 181.9
+voyager | rock | 3.1 | 9 | 162.6
+voyager | wet | 4.9 | 11.4 | 151.3
+voyager | sand | 4.6 | 12.3 | 138.1
+voyager | softsand | 11.7 | - | 86.3
+voyager | mud | 11.5 | 21.6 | 111.5
+voyager | rest ΣFz 23906 N vs m·g 24035 N | stop gravel 50:15.3 m 100:60.1 m, asphalt 50:13.7 m 100:51.3 m | 4L 31.6 km/h @4597 rpm | coast A 0.5 / N 0.35 m/s² | limiter N 59.1/60 L 24.5/25 | reverse -13.4
+PASS  voyager: suspension carries the car (ΣFz = m·g ±3 %)  23906/24035
+PASS  voyager: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  192.3/181.9/138.1/86.3/111.5
+PASS  voyager: 0-50 on gravel physically plausible (2-14 s)  3.6
+PASS  voyager: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.77 g, 51.3 m
+PASS  voyager: braking on gravel weaker than on asphalt  0.65 < 0.77 g
+PASS  voyager: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  31.6
+PASS  voyager: engine braking (coast in gear decelerates harder than in N)  0.5 vs 0.35
+PASS  voyager: optional NORMAL limiter holds its setpoint  59.1/60
+PASS  voyager: optional LOW limiter ~25 km/h  24.5
+PASS  voyager: reverse works (ECU reverse limiter)  -13.4
+sahara | asphalt | 3.1 | 8.3 | 206.9
+sahara | gravel | 3.2 | 8.7 | 196.3
+sahara | rock | 3.1 | 8.4 | 174.1
+sahara | wet | 4.4 | 10.2 | 162.4
+sahara | sand | 4.2 | 11.5 | 141.2
+sahara | softsand | 23.6 | - | 56.2
+sahara | mud | 13.4 | 24.2 | 103.2
+sahara | rest ΣFz 26732 N vs m·g 26487 N | stop gravel 50:14.7 m 100:57.5 m, asphalt 50:13.1 m 100:48.8 m | 4L 52.3 km/h @5997 rpm | coast A 0.48 / N 0.33 m/s² | limiter N 59/60 L 24.3/25 | reverse -13
+PASS  sahara: suspension carries the car (ΣFz = m·g ±3 %)  26732/26487
+PASS  sahara: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  206.9/196.3/141.2/56.2/103.2
+PASS  sahara: 0-50 on gravel physically plausible (2-14 s)  3.2
+PASS  sahara: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.81 g, 48.8 m
+PASS  sahara: braking on gravel weaker than on asphalt  0.68 < 0.81 g
+PASS  sahara: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  52.3
+PASS  sahara: engine braking (coast in gear decelerates harder than in N)  0.48 vs 0.33
+PASS  sahara: optional NORMAL limiter holds its setpoint  59/60
+PASS  sahara: optional LOW limiter ~25 km/h  24.3
+PASS  sahara: reverse works (ECU reverse limiter)  -13
+pickup | asphalt | 3.4 | 10.3 | 174.3
+pickup | gravel | 3.6 | 11 | 165.1
+pickup | rock | 3.3 | 10.4 | 148.4
+pickup | wet | 4.9 | 12.6 | 138.6
+pickup | sand | 4.7 | 14.9 | 121.8
+pickup | softsand | 17.5 | - | 68.6
+pickup | mud | 13.2 | - | 95.3
+pickup | rest ΣFz 21389 N vs m·g 21582 N | stop gravel 50:14.9 m 100:58.6 m, asphalt 50:13.4 m 100:49.7 m | 4L 33.1 km/h @4399 rpm | coast A 0.5 / N 0.37 m/s² | limiter N 59/60 L 24.6/25 | reverse -13.2
+PASS  pickup: suspension carries the car (ΣFz = m·g ±3 %)  21389/21582
+PASS  pickup: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  174.3/165.1/121.8/68.6/95.3
+PASS  pickup: 0-50 on gravel physically plausible (2-14 s)  3.6
+PASS  pickup: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.79 g, 49.7 m
+PASS  pickup: braking on gravel weaker than on asphalt  0.67 < 0.79 g
+PASS  pickup: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  33.1
+PASS  pickup: engine braking (coast in gear decelerates harder than in N)  0.5 vs 0.37
+PASS  pickup: optional NORMAL limiter holds its setpoint  59/60
+PASS  pickup: optional LOW limiter ~25 km/h  24.6
+PASS  pickup: reverse works (ECU reverse limiter)  -13.2
+rally | asphalt | 1.9 | 5.4 | 214.3
+rally | gravel | 2.2 | 5.9 | 206.8
+rally | rock | 2 | 5.5 | 202
+rally | wet | 3.3 | 7.1 | 192.1
+rally | sand | 3.6 | 8.8 | 157.2
+rally | softsand | - | - | 0.4
+rally | mud | 19.9 | - | 78.9
+rally | rest ΣFz 12405 N vs m·g 12263 N | stop gravel 50:11.5 m 100:45.5 m, asphalt 50:10.1 m 100:38.1 m | 4L n/a | coast A 0.57 / N 0.35 m/s² | limiter N 59.3/60 L 24.5/25 | reverse -14.6
+PASS  rally: suspension carries the car (ΣFz = m·g ±3 %)  12405/12263
+PASS  rally: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  214.3/206.8/157.2/0.4/78.9
+PASS  rally: 0-50 on gravel physically plausible (2-14 s)  2.2
+PASS  rally: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  1.03 g, 38.1 m
+PASS  rally: braking on gravel weaker than on asphalt  0.87 < 1.03 g
+PASS  rally: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  undefined
+PASS  rally: engine braking (coast in gear decelerates harder than in N)  0.57 vs 0.35
+PASS  rally: optional NORMAL limiter holds its setpoint  59.3/60
+PASS  rally: optional LOW limiter ~25 km/h  24.5
+PASS  rally: reverse works (ECU reverse limiter)  -14.6
+recovery | asphalt | 6 | 23.9 | 116.2
+recovery | gravel | 6.5 | 29.4 | 108.2
+recovery | rock | 6 | - | 99.1
+recovery | wet | 7.1 | - | 91.7
+recovery | sand | 7.8 | - | 81.6
+recovery | softsand | - | - | 47.3
+recovery | mud | 13.1 | - | 72.4
+recovery | rest ΣFz 42384 N vs m·g 42183 N | stop gravel 50:17.6 m 100:68.4 m, asphalt 50:15 m 100:56.5 m | 4L 18 km/h @2699 rpm | coast A 0.48 / N 0.42 m/s² | limiter N 46.7/48 L 23.9/25 | reverse -13.3
+PASS  recovery: suspension carries the car (ΣFz = m·g ±3 %)  42384/42183
+PASS  recovery: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  116.2/108.2/81.6/47.3/72.4
+PASS  recovery: 0-50 on gravel physically plausible (2-14 s)  6.5
+PASS  recovery: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.7 g, 56.5 m
+PASS  recovery: braking on gravel weaker than on asphalt  0.58 < 0.7 g
+PASS  recovery: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  18
+PASS  recovery: engine braking (coast in gear decelerates harder than in N)  0.48 vs 0.42
+PASS  recovery: optional NORMAL limiter holds its setpoint  46.7/48
+PASS  recovery: optional LOW limiter ~25 km/h  23.9
+PASS  recovery: reverse works (ECU reverse limiter)  -13.3
+van | asphalt | 4.4 | 14.9 | 149.3
+van | gravel | 4.5 | 16.2 | 139
+van | rock | 4.4 | 15.3 | 124.1
+van | wet | 5.1 | 17.5 | 116.6
+van | sand | 5.3 | - | 98.3
+van | softsand | 18.4 | - | 55.3
+van | mud | 10.9 | - | 85.2
+van | rest ΣFz 28469 N vs m·g 28449 N | stop gravel 50:14.5 m 100:56.8 m, asphalt 50:13.3 m 100:49.3 m | 4L 25.9 km/h @4397 rpm | coast A 0.45 / N 0.36 m/s² | limiter N 58.4/59.6 L 24.2/25 | reverse -13.1
+PASS  van: suspension carries the car (ΣFz = m·g ±3 %)  28469/28449
+PASS  van: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  149.3/139/98.3/55.3/85.2
+PASS  van: 0-50 on gravel physically plausible (2-14 s)  4.5
+PASS  van: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.8 g, 49.3 m
+PASS  van: braking on gravel weaker than on asphalt  0.69 < 0.8 g
+PASS  van: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  25.9
+PASS  van: engine braking (coast in gear decelerates harder than in N)  0.45 vs 0.36
+PASS  van: optional NORMAL limiter holds its setpoint  58.4/59.6
+PASS  van: optional LOW limiter ~25 km/h  24.2
+PASS  van: reverse works (ECU reverse limiter)  -13.1
+ltv | asphalt | 3 | 9.5 | 160.7
+ltv | gravel | 3.2 | 10.2 | 153.9
+ltv | rock | 3 | 9.7 | 142.7
+ltv | wet | 4.1 | 11.3 | 135.3
+ltv | sand | 3.9 | 12.8 | 122.4
+ltv | softsand | 8.3 | - | 86.4
+ltv | mud | 8.2 | 19.3 | 108.9
+ltv | rest ΣFz 14597 N vs m·g 14715 N | stop gravel 50:13.3 m 100:51.5 m, asphalt 50:11.4 m 100:42.3 m | 4L 27.6 km/h @4496 rpm | coast A 0.59 / N 0.41 m/s² | limiter N 57/58 L 24.3/25 | reverse -13.5
+PASS  ltv: suspension carries the car (ΣFz = m·g ±3 %)  14597/14715
+PASS  ltv: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  160.7/153.9/122.4/86.4/108.9
+PASS  ltv: 0-50 on gravel physically plausible (2-14 s)  3.2
+PASS  ltv: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.93 g, 42.3 m
+PASS  ltv: braking on gravel weaker than on asphalt  0.76 < 0.93 g
+PASS  ltv: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  27.6
+PASS  ltv: engine braking (coast in gear decelerates harder than in N)  0.59 vs 0.41
+PASS  ltv: optional NORMAL limiter holds its setpoint  57/58
+PASS  ltv: optional LOW limiter ~25 km/h  24.3
+PASS  ltv: reverse works (ECU reverse limiter)  -13.5
+patrol | asphalt | 4.5 | 15.1 | 138.1
+patrol | gravel | 4.7 | 16.7 | 129
+patrol | rock | 4.5 | 15.6 | 121.2
+patrol | wet | 5.7 | 18.5 | 113.3
+patrol | sand | 5.6 | 24.8 | 100.3
+patrol | softsand | 15.4 | - | 62.8
+patrol | mud | 9.9 | - | 87.2
+patrol | rest ΣFz 37471 N vs m·g 37278 N | stop gravel 50:15.2 m 100:59.3 m, asphalt 50:13.5 m 100:50.1 m | 4L 27.1 km/h @3199 rpm | coast A 0.49 / N 0.41 m/s² | limiter N 53.5/54.6 L 23.9/25 | reverse -13.4
+PASS  patrol: suspension carries the car (ΣFz = m·g ±3 %)  37471/37278
+PASS  patrol: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  138.1/129/100.3/62.8/87.2
+PASS  patrol: 0-50 on gravel physically plausible (2-14 s)  4.7
+PASS  patrol: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.79 g, 50.1 m
+PASS  patrol: braking on gravel weaker than on asphalt  0.66 < 0.79 g
+PASS  patrol: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  27.1
+PASS  patrol: engine braking (coast in gear decelerates harder than in N)  0.49 vs 0.41
+PASS  patrol: optional NORMAL limiter holds its setpoint  53.5/54.6
+PASS  patrol: optional LOW limiter ~25 km/h  23.9
+PASS  patrol: reverse works (ECU reverse limiter)  -13.4
+cargo6 | asphalt | 6.5 | 27.1 | 114.7
+cargo6 | gravel | 6.9 | 36.5 | 104.2
+cargo6 | rock | 6.6 | - | 95
+cargo6 | wet | 7.8 | - | 89.8
+cargo6 | sand | 7.8 | - | 82.1
+cargo6 | softsand | 20.4 | - | 53.9
+cargo6 | mud | 11.2 | - | 72
+cargo6 | rest ΣFz 51365 N vs m·g 51012 N | stop gravel 50:16 m 100:62.2 m, asphalt 50:13.7 m 100:51.4 m | 4L 24.4 km/h @2599 rpm | coast A 0.46 / N 0.41 m/s² | limiter N 43.4/44.7 L 24/25 | reverse -13.2
+PASS  cargo6: suspension carries the car (ΣFz = m·g ±3 %)  51365/51012
+PASS  cargo6: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  114.7/104.2/82.1/53.9/72
+PASS  cargo6: 0-50 on gravel physically plausible (2-14 s)  6.9
+PASS  cargo6: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.77 g, 51.4 m
+PASS  cargo6: braking on gravel weaker than on asphalt  0.63 < 0.77 g
+PASS  cargo6: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  24.4
+PASS  cargo6: engine braking (coast in gear decelerates harder than in N)  0.46 vs 0.41
+PASS  cargo6: optional NORMAL limiter holds its setpoint  43.4/44.7
+PASS  cargo6: optional LOW limiter ~25 km/h  24
+PASS  cargo6: reverse works (ECU reverse limiter)  -13.2
+mrap | asphalt | 7.4 | 28.6 | 115.7
+mrap | gravel | 7.8 | 38.1 | 104.5
+mrap | rock | 7.5 | - | 92.7
+mrap | wet | 8.3 | - | 87
+mrap | sand | 9.3 | - | 79.3
+mrap | softsand | - | - | 31
+mrap | mud | 14.2 | - | 67.7
+mrap | rest ΣFz 64467 N vs m·g 63765 N | stop gravel 50:16.3 m 100:70 m, asphalt 50:14 m 100:55.7 m | 4L 34 km/h @2698 rpm | coast A 0.44 / N 0.39 m/s² | limiter N 46.6/48 L 23.8/25 | reverse -13.2
+PASS  mrap: suspension carries the car (ΣFz = m·g ±3 %)  64467/63765
+PASS  mrap: top speed is surface dependent (asphalt ≥ gravel > sand > soft sand, mud slowest group)  115.7/104.5/79.3/31/67.7
+PASS  mrap: 0-50 on gravel physically plausible (2-14 s)  7.8
+PASS  mrap: braking 100->0 on asphalt ≤ 1.15 g and ≥ 0.6 g (tyre-limited, ABS)  0.71 g, 55.7 m
+PASS  mrap: braking on gravel weaker than on asphalt  0.56 < 0.71 g
+PASS  mrap: 4L top speed set by gearing (12-60 km/h, at redline in 2nd)  34
+PASS  mrap: engine braking (coast in gear decelerates harder than in N)  0.44 vs 0.39
+PASS  mrap: optional NORMAL limiter holds its setpoint  46.6/48
+PASS  mrap: optional LOW limiter ~25 km/h  23.8
+PASS  mrap: reverse works (ECU reverse limiter)  -13.2
+fps consistency {"30":{"kmh":81.5,"m":77.7},"60":{"kmh":81.5,"m":77.7},"120":{"kmh":81.5,"m":77.7}}
+PASS  30/60/120 fps give the same result (±2 % distance)  77.7 / 77.7 / 77.7 m
+PASS  no page errors  
+
+speed: 122/122 PASS

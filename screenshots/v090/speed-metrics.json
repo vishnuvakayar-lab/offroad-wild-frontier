@@ -1,0 +1,1019 @@
+{
+ "veh": {
+  "scout": {
+   "rest": {
+    "sumFz": 16095,
+    "mg": 16187
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 2.5,
+     "t100": 7.5,
+     "top": 191.7
+    },
+    "gravel": {
+     "t50": 2.9,
+     "t100": 8.2,
+     "top": 182.6
+    },
+    "rock": {
+     "t50": 2.6,
+     "t100": 7.8,
+     "top": 166.2
+    },
+    "wet": {
+     "t50": 4,
+     "t100": 9.5,
+     "top": 158.3
+    },
+    "sand": {
+     "t50": 3.3,
+     "t100": 10.2,
+     "top": 143.2
+    },
+    "softsand": {
+     "t50": 8.7,
+     "t100": null,
+     "top": 93.8
+    },
+    "mud": {
+     "t50": 6.5,
+     "t100": 15.5,
+     "top": 125
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 13.7,
+     "decelG": 0.72
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 52.1,
+     "decelG": 0.76
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 11.9,
+     "decelG": 0.84
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 43.7,
+     "decelG": 0.9
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 44.9,
+    "rpm": 5999,
+    "ratio": 21.5
+   },
+   "coastA": 0.46,
+   "coastN": 0.38,
+   "lim_normal": {
+    "top": 58.7,
+    "cap": 59.6
+   },
+   "lim_low": {
+    "top": 24.3,
+    "cap": 25
+   },
+   "reverse": -13.2
+  },
+  "f110": {
+   "rest": {
+    "sumFz": 22364,
+    "mg": 22563
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 2.7,
+     "t100": 7.9,
+     "top": 205.8
+    },
+    "gravel": {
+     "t50": 2.9,
+     "t100": 8.8,
+     "top": 195
+    },
+    "rock": {
+     "t50": 2.7,
+     "t100": 8.3,
+     "top": 169.8
+    },
+    "wet": {
+     "t50": 4.3,
+     "t100": 10.4,
+     "top": 160.1
+    },
+    "sand": {
+     "t50": 3.8,
+     "t100": 11.3,
+     "top": 145
+    },
+    "softsand": {
+     "t50": 9.2,
+     "t100": null,
+     "top": 86
+    },
+    "mud": {
+     "t50": 6.6,
+     "t100": 16.4,
+     "top": 124.7
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 14.2,
+     "decelG": 0.7
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 56.4,
+     "decelG": 0.7
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 12.4,
+     "decelG": 0.8
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 48.1,
+     "decelG": 0.82
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 30.9,
+    "rpm": 6247,
+    "ratio": 34.3
+   },
+   "coastA": 0.47,
+   "coastN": 0.34,
+   "lim_normal": {
+    "top": 59.1,
+    "cap": 60
+   },
+   "lim_low": {
+    "top": 24.4,
+    "cap": 25
+   },
+   "reverse": -13.1
+  },
+  "voyager": {
+   "rest": {
+    "sumFz": 23906,
+    "mg": 24035
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 3,
+     "t100": 8.6,
+     "top": 193
+    },
+    "gravel": {
+     "t50": 3.7,
+     "t100": 9.9,
+     "top": 181.9
+    },
+    "rock": {
+     "t50": 3.2,
+     "t100": 9.1,
+     "top": 162.7
+    },
+    "wet": {
+     "t50": 5,
+     "t100": 11.5,
+     "top": 151.1
+    },
+    "sand": {
+     "t50": 4.5,
+     "t100": 12.3,
+     "top": 137.3
+    },
+    "softsand": {
+     "t50": 9.3,
+     "t100": null,
+     "top": 88.3
+    },
+    "mud": {
+     "t50": 7.1,
+     "t100": 17.5,
+     "top": 119.7
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 15.4,
+     "decelG": 0.64
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 60.2,
+     "decelG": 0.65
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 13.6,
+     "decelG": 0.72
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 51,
+     "decelG": 0.77
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 31.7,
+    "rpm": 4598,
+    "ratio": 23.7
+   },
+   "coastA": 0.5,
+   "coastN": 0.36,
+   "lim_normal": {
+    "top": 59.1,
+    "cap": 60
+   },
+   "lim_low": {
+    "top": 24.4,
+    "cap": 25
+   },
+   "reverse": -13.3
+  },
+  "sahara": {
+   "rest": {
+    "sumFz": 26733,
+    "mg": 26487
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 2.9,
+     "t100": 7.8,
+     "top": 207.7
+    },
+    "gravel": {
+     "t50": 3.3,
+     "t100": 8.8,
+     "top": 196.3
+    },
+    "rock": {
+     "t50": 3,
+     "t100": 8.3,
+     "top": 174.4
+    },
+    "wet": {
+     "t50": 4.4,
+     "t100": 10.2,
+     "top": 162.7
+    },
+    "sand": {
+     "t50": 3.9,
+     "t100": 11.5,
+     "top": 140.4
+    },
+    "softsand": {
+     "t50": 11.2,
+     "t100": null,
+     "top": 65.2
+    },
+    "mud": {
+     "t50": 7.9,
+     "t100": 18.8,
+     "top": 117.1
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 15,
+     "decelG": 0.66
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 58.2,
+     "decelG": 0.68
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 12.9,
+     "decelG": 0.76
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 48.8,
+     "decelG": 0.81
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": 3.4,
+    "t100": null,
+    "top": 52.3,
+    "rpm": 5998,
+    "ratio": 20.1
+   },
+   "coastA": 0.48,
+   "coastN": 0.34,
+   "lim_normal": {
+    "top": 59,
+    "cap": 60
+   },
+   "lim_low": {
+    "top": 24.2,
+    "cap": 25
+   },
+   "reverse": -13.1
+  },
+  "pickup": {
+   "rest": {
+    "sumFz": 21389,
+    "mg": 21582
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 3.4,
+     "t100": 10,
+     "top": 174.7
+    },
+    "gravel": {
+     "t50": 3.7,
+     "t100": 11,
+     "top": 165.1
+    },
+    "rock": {
+     "t50": 3.4,
+     "t100": 10.3,
+     "top": 148.7
+    },
+    "wet": {
+     "t50": 5,
+     "t100": 12.5,
+     "top": 139
+    },
+    "sand": {
+     "t50": 4.6,
+     "t100": 15,
+     "top": 121
+    },
+    "softsand": {
+     "t50": 13.1,
+     "t100": null,
+     "top": 68.5
+    },
+    "mud": {
+     "t50": 7.7,
+     "t100": 22.1,
+     "top": 105.9
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 15,
+     "decelG": 0.66
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 60.1,
+     "decelG": 0.65
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 13.2,
+     "decelG": 0.75
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 50.1,
+     "decelG": 0.78
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 33.1,
+    "rpm": 4395,
+    "ratio": 23.7
+   },
+   "coastA": 0.5,
+   "coastN": 0.37,
+   "lim_normal": {
+    "top": 59,
+    "cap": 60
+   },
+   "lim_low": {
+    "top": 24.5,
+    "cap": 25
+   },
+   "reverse": -13.3
+  },
+  "rally": {
+   "rest": {
+    "sumFz": 12407,
+    "mg": 12263
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 2,
+     "t100": 5.5,
+     "top": 213.6
+    },
+    "gravel": {
+     "t50": 2.4,
+     "t100": 6.1,
+     "top": 205.9
+    },
+    "rock": {
+     "t50": 2.1,
+     "t100": 5.7,
+     "top": 201.8
+    },
+    "wet": {
+     "t50": 3.3,
+     "t100": 7.1,
+     "top": 192.2
+    },
+    "sand": {
+     "t50": 3.1,
+     "t100": 8.6,
+     "top": 156.4
+    },
+    "softsand": {
+     "t50": 16.3,
+     "t100": null,
+     "top": 71.2
+    },
+    "mud": {
+     "t50": 7,
+     "t100": 15.1,
+     "top": 130.3
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 11.5,
+     "decelG": 0.85
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 45.5,
+     "decelG": 0.87
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 10.3,
+     "decelG": 0.96
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 38.5,
+     "decelG": 1.02
+    }
+   },
+   "has4L": false,
+   "coastA": 0.58,
+   "coastN": 0.35,
+   "lim_normal": {
+    "top": 59.3,
+    "cap": 60
+   },
+   "lim_low": {
+    "top": 24.5,
+    "cap": 25
+   },
+   "reverse": -14
+  },
+  "recovery": {
+   "rest": {
+    "sumFz": 42400,
+    "mg": 42183
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 5.8,
+     "t100": 23.3,
+     "top": 116.6
+    },
+    "gravel": {
+     "t50": 6.5,
+     "t100": 29.4,
+     "top": 108.2
+    },
+    "rock": {
+     "t50": 6,
+     "t100": null,
+     "top": 99.5
+    },
+    "wet": {
+     "t50": 7.3,
+     "t100": null,
+     "top": 91.4
+    },
+    "sand": {
+     "t50": 7.9,
+     "t100": null,
+     "top": 81.2
+    },
+    "softsand": {
+     "t50": null,
+     "t100": null,
+     "top": 46.5
+    },
+    "mud": {
+     "t50": 11.2,
+     "t100": null,
+     "top": 72.7
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 17.6,
+     "decelG": 0.56
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 68.5,
+     "decelG": 0.57
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 15,
+     "decelG": 0.66
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 56.2,
+     "decelG": 0.7
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 18,
+    "rpm": 2699,
+    "ratio": 31.4
+   },
+   "coastA": 0.48,
+   "coastN": 0.42,
+   "lim_normal": {
+    "top": 46.7,
+    "cap": 48
+   },
+   "lim_low": {
+    "top": 23.9,
+    "cap": 25
+   },
+   "reverse": -13.3
+  },
+  "van": {
+   "rest": {
+    "sumFz": 28469,
+    "mg": 28449
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 4,
+     "t100": 13.9,
+     "top": 150.6
+    },
+    "gravel": {
+     "t50": 4.4,
+     "t100": 15.9,
+     "top": 139.2
+    },
+    "rock": {
+     "t50": 4.2,
+     "t100": 14.7,
+     "top": 125.6
+    },
+    "wet": {
+     "t50": 5.2,
+     "t100": 17.4,
+     "top": 116.9
+    },
+    "sand": {
+     "t50": 5.3,
+     "t100": null,
+     "top": 97.8
+    },
+    "softsand": {
+     "t50": 15.8,
+     "t100": null,
+     "top": 54
+    },
+    "mud": {
+     "t50": 8.6,
+     "t100": null,
+     "top": 85.8
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 14.5,
+     "decelG": 0.68
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 57.1,
+     "decelG": 0.69
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 13.1,
+     "decelG": 0.75
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 49.2,
+     "decelG": 0.8
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 26.4,
+    "rpm": 4399,
+    "ratio": 27.1
+   },
+   "coastA": 0.45,
+   "coastN": 0.37,
+   "lim_normal": {
+    "top": 58.5,
+    "cap": 59.6
+   },
+   "lim_low": {
+    "top": 24.2,
+    "cap": 25
+   },
+   "reverse": -13.2
+  },
+  "ltv": {
+   "rest": {
+    "sumFz": 14594,
+    "mg": 14715
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 2.9,
+     "t100": 9.4,
+     "top": 160.7
+    },
+    "gravel": {
+     "t50": 3.2,
+     "t100": 10.2,
+     "top": 153.9
+    },
+    "rock": {
+     "t50": 3,
+     "t100": 9.6,
+     "top": 142.8
+    },
+    "wet": {
+     "t50": 4.1,
+     "t100": 11.4,
+     "top": 135.4
+    },
+    "sand": {
+     "t50": 3.8,
+     "t100": 12.9,
+     "top": 121.8
+    },
+    "softsand": {
+     "t50": 7.4,
+     "t100": null,
+     "top": 85.9
+    },
+    "mud": {
+     "t50": 5.8,
+     "t100": 17.3,
+     "top": 110.6
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 13.3,
+     "decelG": 0.74
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 52.6,
+     "decelG": 0.75
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 11.5,
+     "decelG": 0.86
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 43.1,
+     "decelG": 0.91
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 27.7,
+    "rpm": 4498,
+    "ratio": 26.8
+   },
+   "coastA": 0.61,
+   "coastN": 0.42,
+   "lim_normal": {
+    "top": 57,
+    "cap": 58
+   },
+   "lim_low": {
+    "top": 24.3,
+    "cap": 25
+   },
+   "reverse": -13.4
+  },
+  "patrol": {
+   "rest": {
+    "sumFz": 37473,
+    "mg": 37278
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 4.3,
+     "t100": 14.5,
+     "top": 138.6
+    },
+    "gravel": {
+     "t50": 4.7,
+     "t100": 16.6,
+     "top": 129
+    },
+    "rock": {
+     "t50": 4.4,
+     "t100": 15.2,
+     "top": 122
+    },
+    "wet": {
+     "t50": 6,
+     "t100": 18.6,
+     "top": 113.2
+    },
+    "sand": {
+     "t50": 5.6,
+     "t100": null,
+     "top": 99.8
+    },
+    "softsand": {
+     "t50": 14.3,
+     "t100": null,
+     "top": 62.4
+    },
+    "mud": {
+     "t50": 8.3,
+     "t100": null,
+     "top": 87.8
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 15.2,
+     "decelG": 0.65
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 60.1,
+     "decelG": 0.65
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 13.4,
+     "decelG": 0.74
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 50.2,
+     "decelG": 0.78
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 27.2,
+    "rpm": 3198,
+    "ratio": 22.5
+   },
+   "coastA": 0.49,
+   "coastN": 0.41,
+   "lim_normal": {
+    "top": 53.5,
+    "cap": 54.6
+   },
+   "lim_low": {
+    "top": 23.9,
+    "cap": 25
+   },
+   "reverse": -13.4
+  },
+  "cargo6": {
+   "rest": {
+    "sumFz": 51376,
+    "mg": 51012
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 6.1,
+     "t100": 26.3,
+     "top": 115.3
+    },
+    "gravel": {
+     "t50": 6.7,
+     "t100": 36.2,
+     "top": 104.3
+    },
+    "rock": {
+     "t50": 6.3,
+     "t100": null,
+     "top": 95.9
+    },
+    "wet": {
+     "t50": 7.5,
+     "t100": null,
+     "top": 90.3
+    },
+    "sand": {
+     "t50": 7.8,
+     "t100": null,
+     "top": 81.7
+    },
+    "softsand": {
+     "t50": 21.1,
+     "t100": null,
+     "top": 53
+    },
+    "mud": {
+     "t50": 10.6,
+     "t100": null,
+     "top": 71.9
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 15.9,
+     "decelG": 0.62
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 62.2,
+     "decelG": 0.63
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 13.6,
+     "decelG": 0.72
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 51.2,
+     "decelG": 0.77
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 24.7,
+    "rpm": 2598,
+    "ratio": 21.2
+   },
+   "coastA": 0.47,
+   "coastN": 0.42,
+   "lim_normal": {
+    "top": 43.5,
+    "cap": 44.7
+   },
+   "lim_low": {
+    "top": 24,
+    "cap": 25
+   },
+   "reverse": -13.3
+  },
+  "mrap": {
+   "rest": {
+    "sumFz": 64474,
+    "mg": 63765
+   },
+   "surf": {
+    "asphalt": {
+     "t50": 6.8,
+     "t100": 27.6,
+     "top": 116.3
+    },
+    "gravel": {
+     "t50": 7.5,
+     "t100": 37.7,
+     "top": 104.7
+    },
+    "rock": {
+     "t50": 7.2,
+     "t100": null,
+     "top": 93.3
+    },
+    "wet": {
+     "t50": 8.2,
+     "t100": null,
+     "top": 87.3
+    },
+    "sand": {
+     "t50": 9.4,
+     "t100": null,
+     "top": 78.9
+    },
+    "softsand": {
+     "t50": null,
+     "t100": null,
+     "top": 29.2
+    },
+    "mud": {
+     "t50": 12.9,
+     "t100": null,
+     "top": 68.5
+    }
+   },
+   "stop": {
+    "gravel50": {
+     "from": 50,
+     "m": 16.7,
+     "decelG": 0.59
+    },
+    "gravel100": {
+     "from": 100,
+     "m": 73.8,
+     "decelG": 0.53
+    },
+    "asphalt50": {
+     "from": 50,
+     "m": 14.3,
+     "decelG": 0.69
+    },
+    "asphalt100": {
+     "from": 100,
+     "m": 61.1,
+     "decelG": 0.64
+    }
+   },
+   "has4L": true,
+   "4L": {
+    "t50": null,
+    "t100": null,
+    "top": 34,
+    "rpm": 2698,
+    "ratio": 18.6
+   },
+   "coastA": 0.44,
+   "coastN": 0.4,
+   "lim_normal": {
+    "top": 46.6,
+    "cap": 48
+   },
+   "lim_low": {
+    "top": 23.8,
+    "cap": 25
+   },
+   "reverse": -13.3
+  }
+ },
+ "fps": {
+  "30": {
+   "kmh": 81.31,
+   "m": 77.18
+  },
+  "60": {
+   "kmh": 81.31,
+   "m": 77.18
+  },
+  "120": {
+   "kmh": 81.31,
+   "m": 77.18
+  }
+ }
+}
