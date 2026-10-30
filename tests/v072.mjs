@@ -78,7 +78,7 @@ const errors = [];
   await page.keyboard.down('ArrowUp'); await hold(page, 3000, 150); await page.keyboard.up('ArrowUp');
   await page.evaluate(() => window.__game.split.setP2({ throttle: 0, brake: 1, steer: 0, handbrake: true })); await hold(page, 1500, 90);
   const p1b0 = await page.evaluate(() => window.__game.state()), p2b = await page.evaluate(() => window.__game.split.p2());
-  ok('split-screen: arrow keys drive P2 only', Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z) > 3 && Math.hypot(p1b0.x - p1a.x, p1b0.z - p1a.z) < 1, `P2 moved ${Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z).toFixed(1)} m, P1 ${Math.hypot(p1b0.x - p1a.x, p1b0.z - p1a.z).toFixed(1)} m`);
+  ok('split-screen: arrow keys drive P2 only', Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z) > 3 && p2b.p1input.throttle === 0 && Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z) > 2 * Math.hypot(p1b0.x - p1a.x, p1b0.z - p1a.z) /* 0.9.0: P1 may idle-creep (torque converter in D, real physics) but gets no throttle */, `P1 throttle ${p2b.p1input.throttle}; P2 moved ${Math.hypot(p2b.x - p2a.x, p2b.z - p2a.z).toFixed(1)} m, P1 ${Math.hypot(p1b0.x - p1a.x, p1b0.z - p1a.z).toFixed(1)} m`);
   const p1b = await page.evaluate(() => window.__game.state());
   await page.keyboard.down('KeyW'); await hold(page, 1500, 50);
   const p1c = await page.evaluate(() => window.__game.state()), p2c = await page.evaluate(() => window.__game.split.p2());
